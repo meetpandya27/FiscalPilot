@@ -750,13 +750,23 @@ llm:
 - [x] Cash flow forecasting (exponential smoothing, runway, seasonal)
 - [x] Tax optimization engine (Section 179, S-Corp, SEP IRA, meals)
 
-### v0.4 — Execution & Actions (Current)
+### v0.4 — Execution & Actions ✅
 - [x] Execution engine with pluggable action executors
 - [x] Human-in-the-loop approval system with tiered autonomy
 - [x] Action proposal pipeline (findings → actions → approval → execution)
 - [x] Dry-run mode with preview and rollback
 - [x] Immutable audit trail for all actions
-- [x] **Restaurant Industry Package** — complete KPI analyzer, QuickBooks mappings, CLI commands
+- [x] **Restaurant Industry Package** — complete vertical solution:
+  - RestaurantAgent (KPI + LLM hybrid analysis)
+  - Square POS connector (payments, items, daily summaries)
+  - RestaurantAnalyzer (15+ industry KPIs)
+  - QuickBooks class/item mappings for food service
+- [x] **Interactive HTML Reports** — Chart.js visualizations:
+  - Severity distribution doughnut chart
+  - Savings by category bar chart
+  - Health score gauge
+  - Responsive design with CSS variables
+- [x] 300 comprehensive tests
 - [ ] Email/Slack notification executors
 - [ ] QuickBooks/Xero write-back executors
 

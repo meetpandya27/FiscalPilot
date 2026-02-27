@@ -5,6 +5,31 @@ All notable changes to FiscalPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.1] - 2026-02-27
+
+### Added
+- **Restaurant Industry Package** — Complete vertical solution for food service businesses:
+  - `RestaurantAgent` — AI-powered analysis combining pure-computation KPIs with LLM strategic recommendations
+  - `SquarePOSConnector` — Full Square API integration for payments, menu items, and daily summaries
+  - `RestaurantAnalyzer` — 15+ industry-specific KPIs (food cost %, labor %, prime cost, RevPASH, etc.)
+  - QuickBooks class/item mappings for restaurant chart of accounts
+  - Industry benchmarks (food ≤32%, labor ≤30%, prime ≤60%)
+- **Interactive HTML Reports** — Beautiful, responsive report export with Chart.js visualizations:
+  - Severity distribution doughnut chart
+  - Savings by category horizontal bar chart  
+  - Health score circular gauge
+  - Finding detail cards with recommendations
+  - Action items table and proposed actions section
+  - Fully responsive CSS with modern design
+- 41 new tests for HTML exporter
+- 44 new tests for restaurant package (RestaurantAgent + SquarePOSConnector)
+- **300 total passing tests**
+
+### Changed
+- Exporters package now exports both `render_markdown` and `render_html`
+- Connector registry includes Square POS
+- Agent registry includes RestaurantAgent
+
 ## [0.4.0] - 2026-02-27
 
 ### Added
