@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [0.5.0] - 2026-02-27
 
 ### Added
+- **Web App for Restaurant Owners** — No coding required:
+  - Streamlit-based UI at `app.py`
+  - Upload CSV/Excel, click Analyze, get report
+  - Docker Compose for one-command setup (`docker-compose up`)
+  - `GETTING_STARTED.md` guide for non-technical users
 - **Menu Engineering Analyzer** — BCG matrix classification for menu items:
   - Star/Plowhorse/Puzzle/Dog classification based on popularity + profitability
   - Per-item recommendations (feature, reprice, promote, remove)

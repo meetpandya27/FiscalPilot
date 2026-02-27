@@ -56,27 +56,41 @@ FiscalPilot runs **entirely on your infrastructure**. Your financial data never 
 
 ---
 
-## ⚡ Quickstart
+## 🍽️ Restaurant Owners: Start Here
 
-### Install
+**No technical skills needed.** Just three steps:
 
-```bash
-pip install fiscalpilot
-```
-
-### Scan a CSV in 30 seconds
+### Step 1: Start the App
 
 ```bash
-# Scan your transaction data
-fiscalpilot scan --csv transactions.csv --company "Joe's Diner" --industry restaurant
-
-# Or use the short alias
-fp scan --csv data.csv --company "Acme Corp" --industry saas
+# If you have Docker installed (ask your IT person):
+git clone https://github.com/meetpandya27/FiscalPilot.git
+cd FiscalPilot
+docker-compose up
 ```
+
+Then open **http://localhost:8501** in your browser.
+
+### Step 2: Upload Your Data
+
+Export your transactions from QuickBooks, Square, or your POS:
+- **QuickBooks:** Reports → Transaction List → Export to Excel
+- **Square:** Transactions → Export CSV
+- **Toast:** Reports → Sales Summary → Download
+
+### Step 3: Get Your Report
+
+Click "Analyze" and instantly see:
+- ✅ Health Grade (A–F)
+- 📊 Food Cost, Labor Cost, Prime Cost analysis
+- 💰 Tip tax credits you may be missing ($5,000–$15,000/year!)
+- 📈 Break-even: how many covers you need daily
+
+**Not tech-savvy?** Check out our [Getting Started Guide](GETTING_STARTED.md) with step-by-step instructions.
 
 ---
 
-## ⚡ Quickstart
+## ⚡ Quickstart (For Developers)
 
 ### Install
 
