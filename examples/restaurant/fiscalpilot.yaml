@@ -1,0 +1,26 @@
+# Example config for a restaurant owner
+llm:
+  model: "gpt-4o"
+  # model: "ollama/llama3.1"  # Uncomment for local/private mode
+  # api_base: "http://localhost:11434"
+
+connectors:
+  - type: csv
+    options:
+      file_path: "./examples/restaurant/transactions.csv"
+
+analyzers:
+  waste_detection: true
+  fraud_detection: true
+  margin_optimization: true
+  cost_reduction: true
+  revenue_leakage: true
+  vendor_analysis: true
+
+security:
+  local_only: false
+  encrypt_at_rest: true
+  redact_pii: true
+
+output_dir: "./fiscalpilot_reports"
+currency: "USD"
