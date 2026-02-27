@@ -1,7 +1,7 @@
 """
-FiscalPilot — The Open-Source AI Financial Copilot.
+FiscalPilot — The Open-Source AI CFO.
 
-Find waste, fraud & abuse. Maximize margins. Cut costs.
+Analyze. Recommend. Execute.
 Your AI-powered CFO that runs on YOUR infrastructure.
 """
 

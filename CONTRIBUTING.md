@@ -122,7 +122,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 feat: add Stripe connector
 fix: handle empty CSV files gracefully
 docs: add restaurant industry guide
-test: add fraud detector agent tests
+test: add risk detector agent tests
 refactor: simplify connector registry
 ```
 
@@ -146,8 +146,8 @@ src/fiscalpilot/
 ├── agents/              # AI agents
 │   ├── base.py          # Base agent class
 │   ├── coordinator.py   # Master coordinator
-│   ├── waste_detector.py
-│   ├── fraud_detector.py
+│   ├── cost_optimizer.py
+│   ├── risk_detector.py
 │   ├── margin_optimizer.py
 │   ├── cost_cutter.py
 │   ├── revenue_analyzer.py

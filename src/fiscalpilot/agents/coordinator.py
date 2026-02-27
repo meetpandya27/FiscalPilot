@@ -18,8 +18,8 @@ import uuid
 from typing import Any
 
 from fiscalpilot.agents.base import BaseAgent
-from fiscalpilot.agents.waste_detector import WasteDetectorAgent
-from fiscalpilot.agents.fraud_detector import FraudDetectorAgent
+from fiscalpilot.agents.cost_optimizer import CostOptimizerAgent
+from fiscalpilot.agents.risk_detector import RiskDetectorAgent
 from fiscalpilot.agents.margin_optimizer import MarginOptimizerAgent
 from fiscalpilot.agents.cost_cutter import CostCutterAgent
 from fiscalpilot.agents.revenue_analyzer import RevenueAnalyzerAgent
@@ -67,9 +67,9 @@ class CoordinatorAgent(BaseAgent):
         analyzers = config.analyzers
 
         if analyzers.cost_optimization:
-            self._agents.append(WasteDetectorAgent(config))
+            self._agents.append(CostOptimizerAgent(config))
         if analyzers.risk_detection:
-            self._agents.append(FraudDetectorAgent(config))
+            self._agents.append(RiskDetectorAgent(config))
         if analyzers.margin_optimization:
             self._agents.append(MarginOptimizerAgent(config))
         if analyzers.cost_reduction:
@@ -174,7 +174,7 @@ Never be vague. Every recommendation should have a clear next step."""
         context = self._build_context(company, dataset)
 
         # Only run cost optimization and cost cutter agents for quick scan
-        quick_agents = [a for a in self._agents if a.name in ("waste_detector", "cost_cutter")]
+        quick_agents = [a for a in self._agents if a.name in ("cost_optimizer", "cost_cutter")]
         if not quick_agents:
             quick_agents = self._agents[:2]
 

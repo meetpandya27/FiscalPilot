@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 - Core multi-agent architecture with Coordinator orchestration
-- 6 specialist agents: Waste Detector, Fraud Detector, Margin Optimizer, Cost Cutter, Revenue Analyzer, Vendor Auditor
+- 6 specialist agents: Cost Optimizer, Risk Detector, Margin Optimizer, Cost Cutter, Revenue Analyzer, Vendor Auditor
 - CSV, Excel, and SQL connectors (ready to use)
 - QuickBooks, Xero, and Plaid connector scaffolds (community contributions welcome)
 - Plugin-style connector system for custom integrations

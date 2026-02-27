@@ -17,9 +17,9 @@ from typing import Any
 
 from fiscalpilot.agents.base import BaseAgent
 
-logger = logging.getLogger("fiscalpilot.agents.waste")
+logger = logging.getLogger("fiscalpilot.agents.cost_optimizer")
 
-WASTE_ANALYSIS_PROMPT = """Analyze the following financial data and identify ALL instances of waste.
+COST_OPTIMIZATION_PROMPT = """Analyze the following financial data and identify ALL cost optimization opportunities.
 
 Company: {company_name} ({company_size}, {industry})
 Total Expenses: ${total_expenses:,.2f}
@@ -50,10 +50,10 @@ Return a JSON array of findings. Be aggressive — find everything.
 Return ONLY valid JSON, no markdown formatting."""
 
 
-class WasteDetectorAgent(BaseAgent):
+class CostOptimizerAgent(BaseAgent):
     """Specialist agent for detecting cost optimization opportunities."""
 
-    name = "waste_detector"
+    name = "cost_optimizer"
     description = "Detects cost optimization opportunities: unused subscriptions, duplicates, over-provisioning"
 
     @property
@@ -75,7 +75,7 @@ Always return your findings as a valid JSON array."""
 
     def _build_prompt(self, context: dict[str, Any]) -> str:
         transactions_json = json.dumps(context.get("transactions_sample", [])[:200], indent=2, default=str)
-        return WASTE_ANALYSIS_PROMPT.format(
+        return COST_OPTIMIZATION_PROMPT.format(
             company_name=context["company"]["name"],
             company_size=context["company"].get("size", "unknown"),
             industry=context["company"].get("industry", "unknown"),
@@ -99,5 +99,5 @@ Always return your findings as a valid JSON array."""
                 findings = findings.get("findings", [findings])
             return {"findings": findings}
         except json.JSONDecodeError:
-            logger.warning("Failed to parse waste detector response as JSON")
+            logger.warning("Failed to parse cost optimizer response as JSON")
             return {"findings": [], "raw_response": response}

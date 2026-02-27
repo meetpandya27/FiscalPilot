@@ -18,9 +18,9 @@ from typing import Any
 
 from fiscalpilot.agents.base import BaseAgent
 
-logger = logging.getLogger("fiscalpilot.agents.fraud")
+logger = logging.getLogger("fiscalpilot.agents.risk_detector")
 
-FRAUD_ANALYSIS_PROMPT = """Analyze the following financial data for potential risks, irregularities, and policy deviations.
+RISK_ANALYSIS_PROMPT = """Analyze the following financial data for potential risks, irregularities, and policy deviations.
 
 Company: {company_name} ({company_size}, {industry})
 Total Expenses: ${total_expenses:,.2f}
@@ -33,7 +33,7 @@ Transaction Data (sample):
 Invoice Data (sample):
 {invoices_json}
 
-Investigate these fraud patterns:
+Investigate these risk patterns:
 1. **Duplicate Payments**: Same vendor, same amount, close dates.
 2. **Ghost Vendors**: Payments to vendors with no clear business purpose.
 3. **Round-Number Anomalies**: Suspiciously round amounts (e.g., $5,000 exactly).
@@ -57,10 +57,10 @@ Return a JSON array. Flag everything suspicious — err on the side of caution.
 Return ONLY valid JSON, no markdown formatting."""
 
 
-class FraudDetectorAgent(BaseAgent):
+class RiskDetectorAgent(BaseAgent):
     """Specialist agent for detecting financial risks and irregularities."""
 
-    name = "fraud_detector"
+    name = "risk_detector"
     description = "Detects risk patterns: duplicate payments, ghost vendors, expense anomalies"
 
     @property
@@ -88,7 +88,7 @@ Always return your findings as a valid JSON array."""
         invoices_json = json.dumps(
             context.get("invoices_sample", [])[:50], indent=2, default=str
         )
-        return FRAUD_ANALYSIS_PROMPT.format(
+        return RISK_ANALYSIS_PROMPT.format(
             company_name=context["company"]["name"],
             company_size=context["company"].get("size", "unknown"),
             industry=context["company"].get("industry", "unknown"),
@@ -112,5 +112,5 @@ Always return your findings as a valid JSON array."""
                 findings = findings.get("findings", [findings])
             return {"findings": findings}
         except json.JSONDecodeError:
-            logger.warning("Failed to parse fraud detector response as JSON")
+            logger.warning("Failed to parse risk detector response as JSON")
             return {"findings": [], "raw_response": response}
