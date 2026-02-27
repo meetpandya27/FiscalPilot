@@ -230,6 +230,445 @@ def connectors() -> None:
     console.print(table)
 
 
+@app.command()
+def connect(
+    provider: str = typer.Argument(
+        ...,
+        help="Provider to connect: quickbooks, xero, plaid",
+    ),
+    sandbox: bool = typer.Option(
+        False,
+        "--sandbox",
+        help="Use sandbox/development environment",
+    ),
+) -> None:
+    """Interactive setup wizard for accounting integrations."""
+    if provider.lower() == "quickbooks":
+        _connect_quickbooks(sandbox=sandbox)
+    elif provider.lower() == "xero":
+        console.print("[yellow]Xero connection wizard coming soon![/yellow]")
+    elif provider.lower() == "plaid":
+        console.print("[yellow]Plaid connection wizard coming soon![/yellow]")
+    else:
+        console.print(f"[red]Unknown provider: {provider}[/red]")
+        console.print("Supported: quickbooks, xero, plaid")
+        raise typer.Exit(1)
+
+
+def _connect_quickbooks(sandbox: bool = False) -> None:
+    """Interactive QuickBooks connection wizard."""
+    import json
+    import secrets
+    import webbrowser
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from urllib.parse import parse_qs, urlparse
+
+    console.print(Panel.fit(
+        "[bold blue]🔗 QuickBooks Connection Wizard[/bold blue]",
+        subtitle="OAuth2 Setup",
+    ))
+
+    console.print()
+    console.print("[bold]Step 1: Developer App Credentials[/bold]")
+    console.print("You'll need a QuickBooks Developer account and app.")
+    console.print("If you don't have one, visit: [link]https://developer.intuit.com[/link]")
+    console.print()
+
+    client_id = typer.prompt("Enter your Client ID")
+    client_secret = typer.prompt("Enter your Client Secret", hide_input=True)
+
+    # Generate CSRF token
+    state = secrets.token_urlsafe(16)
+
+    # Set up local callback server
+    redirect_uri = "http://localhost:8765/callback"
+    auth_code: list[str] = []
+    realm_id: list[str] = []
+
+    class CallbackHandler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            parsed = urlparse(self.path)
+            if parsed.path == "/callback":
+                params = parse_qs(parsed.query)
+                if "code" in params:
+                    auth_code.append(params["code"][0])
+                if "realmId" in params:
+                    realm_id.append(params["realmId"][0])
+                if params.get("state", [""])[0] != state:
+                    self.send_response(400)
+                    self.end_headers()
+                    self.wfile.write(b"Invalid state - possible CSRF attack")
+                    return
+
+                self.send_response(200)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+                self.wfile.write(
+                    b"<html><body><h1>Success!</h1>"
+                    b"<p>You can close this window and return to the terminal.</p>"
+                    b"</body></html>"
+                )
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def log_message(self, format: str, *args) -> None:  # noqa: A002
+            pass  # Suppress logging
+
+    # Build auth URL
+    base_url = "https://appcenter.intuit.com/connect/oauth2"
+    scope = "com.intuit.quickbooks.accounting"
+    auth_url = (
+        f"{base_url}?"
+        f"client_id={client_id}&"
+        f"response_type=code&"
+        f"scope={scope}&"
+        f"redirect_uri={redirect_uri}&"
+        f"state={state}"
+    )
+
+    console.print()
+    console.print("[bold]Step 2: Authorize in Browser[/bold]")
+    console.print("Opening your browser to authorize FiscalPilot...")
+    console.print()
+
+    # Start callback server
+    server = HTTPServer(("localhost", 8765), CallbackHandler)
+    server.timeout = 120  # 2 minute timeout
+
+    # Open browser
+    webbrowser.open(auth_url)
+
+    console.print("[dim]Waiting for authorization... (2 minute timeout)[/dim]")
+    console.print("[dim]If browser didn't open, visit:[/dim]")
+    console.print(f"[dim]{auth_url}[/dim]")
+    console.print()
+
+    # Wait for callback
+    while not auth_code:
+        server.handle_request()
+        if not auth_code:
+            break
+
+    server.server_close()
+
+    if not auth_code:
+        console.print("[red]Authorization timed out or was cancelled.[/red]")
+        raise typer.Exit(1)
+
+    console.print("[green]✓ Authorization received![/green]")
+    console.print()
+    console.print("[bold]Step 3: Exchanging code for tokens...[/bold]")
+
+    # Exchange auth code for tokens
+    async def exchange_tokens() -> dict:
+        from fiscalpilot.auth.oauth2 import OAuth2TokenManager
+
+        mgr = OAuth2TokenManager(
+            provider="quickbooks",
+            client_id=client_id,
+            client_secret=client_secret,
+            token_url="https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
+            scopes=[scope],
+        )
+
+        await mgr.exchange_code(code=auth_code[0], redirect_uri=redirect_uri)
+        await mgr.close()
+
+        return {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "refresh_token": mgr._token.refresh_token if mgr._token else "",
+            "realm_id": realm_id[0] if realm_id else "",
+            "sandbox": sandbox,
+        }
+
+    try:
+        credentials = asyncio.run(exchange_tokens())
+    except Exception as e:
+        console.print(f"[red]Token exchange failed: {e}[/red]")
+        raise typer.Exit(1)
+
+    console.print("[green]✓ Tokens acquired and saved![/green]")
+    console.print()
+
+    # Save to config file suggestion
+    config_snippet = {
+        "connectors": [{
+            "type": "quickbooks",
+            "credentials": {
+                "client_id": client_id,
+                "client_secret": "YOUR_CLIENT_SECRET",  # Don't log actual secret
+                "realm_id": credentials["realm_id"],
+            },
+            "sandbox": sandbox,
+        }]
+    }
+
+    console.print("[bold]Step 4: Configuration[/bold]")
+    console.print()
+    console.print("Add this to your [bold]fiscalpilot.yaml[/bold]:")
+    console.print()
+
+    import yaml
+    console.print(f"[dim]{yaml.dump(config_snippet, default_flow_style=False)}[/dim]")
+
+    console.print()
+    console.print("[green]✓ QuickBooks connection complete![/green]")
+    console.print()
+    console.print(f"Tokens are stored in: [bold]~/.fiscalpilot/tokens/quickbooks.json[/bold]")
+    console.print(f"Company ID (realm_id): [bold]{credentials['realm_id']}[/bold]")
+    console.print()
+    console.print("Run an audit with:")
+    console.print("[bold]  fiscalpilot audit --config fiscalpilot.yaml[/bold]")
+
+
+@app.command()
+def restaurant(
+    csv: str = typer.Option(
+        None,
+        "--csv",
+        help="Path to CSV with transactions",
+    ),
+    quickbooks: bool = typer.Option(
+        False,
+        "--quickbooks",
+        "--qb",
+        help="Use QuickBooks connector (requires setup via 'fiscalpilot connect quickbooks')",
+    ),
+    company: str = typer.Option(
+        "My Restaurant",
+        "--company",
+        help="Restaurant name",
+    ),
+    revenue: float = typer.Option(
+        None,
+        "--revenue",
+        "-r",
+        help="Annual revenue estimate (for ratio calculations)",
+    ),
+    output: str = typer.Option(
+        "restaurant_analysis.md",
+        "--output",
+        "-o",
+        help="Output file path",
+    ),
+) -> None:
+    """Restaurant-specific financial analysis with industry KPIs.
+    
+    Analyzes your restaurant's financials against industry benchmarks:
+    - Food Cost % (target: 28-32%)
+    - Labor Cost % (target: 28-32%)
+    - Prime Cost (Food + Labor, target: 55-65%)
+    - Occupancy Cost % (rent + utilities)
+    - Net Operating Margin
+    """
+    from fiscalpilot.analyzers.restaurant import RestaurantAnalyzer
+    from fiscalpilot.connectors.csv_connector import CSVConnector
+    from fiscalpilot.models.company import CompanyProfile, Industry
+
+    console.print(Panel.fit(
+        "[bold blue]🍽️ FiscalPilot Restaurant Analysis[/bold blue]",
+        subtitle=f"v{__version__}",
+    ))
+
+    if not csv and not quickbooks:
+        console.print("[red]Error: Provide --csv file or --quickbooks flag[/red]")
+        raise typer.Exit(1)
+
+    profile = CompanyProfile(name=company, industry=Industry.RESTAURANT)
+
+    # Load data
+    if csv:
+        console.print(f"[dim]Loading transactions from {csv}...[/dim]")
+        connector = CSVConnector(credentials={"file_path": csv})
+        dataset = asyncio.run(connector.pull(profile))
+        asyncio.run(connector.close())
+    else:
+        # QuickBooks
+        console.print("[dim]Loading transactions from QuickBooks...[/dim]")
+        from fiscalpilot.connectors.quickbooks_connector import QuickBooksConnector
+        from pathlib import Path
+        import json
+
+        # Load saved tokens
+        token_file = Path.home() / ".fiscalpilot" / "tokens" / "quickbooks.json"
+        if not token_file.exists():
+            console.print("[red]QuickBooks not connected. Run 'fiscalpilot connect quickbooks' first.[/red]")
+            raise typer.Exit(1)
+
+        tokens = json.loads(token_file.read_text())
+        connector = QuickBooksConnector(credentials={
+            "refresh_token": tokens.get("refresh_token", ""),
+            # Other credentials need to come from config
+        })
+        dataset = asyncio.run(connector.pull(profile))
+        asyncio.run(connector.close())
+
+    # Run restaurant analysis
+    console.print("[dim]Running restaurant KPI analysis...[/dim]")
+    result = RestaurantAnalyzer.analyze(dataset, annual_revenue=revenue)
+
+    # Display results
+    _display_restaurant_analysis(result)
+
+    # Save detailed report
+    _save_restaurant_report(result, company, output)
+
+
+def _display_restaurant_analysis(result) -> None:
+    """Display restaurant analysis summary in terminal."""
+    from fiscalpilot.analyzers.restaurant import RestaurantKPISeverity
+
+    console.print()
+
+    # Health grade banner
+    grade_colors = {"A": "green", "B": "cyan", "C": "yellow", "D": "orange1", "F": "red"}
+    color = grade_colors.get(result.health_grade, "white")
+    console.print(Panel(
+        f"[bold {color}]{result.health_grade}[/bold {color}]",
+        title="Health Grade",
+        subtitle=f"Score: {result.health_score}/100",
+    ))
+
+    # KPI Table
+    table = Table(title="Restaurant KPIs", show_lines=True)
+    table.add_column("Metric", style="bold")
+    table.add_column("Actual", justify="right")
+    table.add_column("Target", justify="right")
+    table.add_column("Status")
+
+    severity_icons = {
+        RestaurantKPISeverity.CRITICAL: "🚨",
+        RestaurantKPISeverity.WARNING: "⚠️",
+        RestaurantKPISeverity.HEALTHY: "✅",
+        RestaurantKPISeverity.EXCELLENT: "🌟",
+    }
+
+    for kpi in result.kpis:
+        icon = severity_icons.get(kpi.severity, "")
+        actual_str = f"{kpi.actual:.1f}%"
+        target_str = f"{kpi.benchmark_low:.0f}-{kpi.benchmark_high:.0f}%"
+        table.add_row(kpi.display_name, actual_str, target_str, f"{icon} {kpi.severity.value}")
+
+    console.print(table)
+    console.print()
+
+    # Financial summary
+    table2 = Table(title="Financial Summary")
+    table2.add_column("Metric", style="bold")
+    table2.add_column("Value", justify="right")
+
+    table2.add_row("Annual Revenue (Est)", f"${result.total_revenue:,.2f}")
+    table2.add_row("Total Expenses (Est)", f"${result.total_expenses:,.2f}")
+    table2.add_row("Net Operating Income", f"${result.net_operating_income:,.2f}")
+
+    console.print(table2)
+    console.print()
+
+    # Critical alerts
+    if result.critical_alerts:
+        console.print("[bold red]Critical Alerts:[/bold red]")
+        for alert in result.critical_alerts:
+            console.print(f"  {alert}")
+        console.print()
+
+    # Opportunities
+    if result.opportunities:
+        console.print("[bold]Insights & Opportunities:[/bold]")
+        for opp in result.opportunities[:5]:
+            console.print(f"  {opp}")
+        console.print()
+
+
+def _save_restaurant_report(result, company_name: str, output: str) -> None:
+    """Save detailed restaurant report to markdown."""
+    from fiscalpilot.analyzers.restaurant import RestaurantKPISeverity
+
+    lines = [
+        f"# Restaurant Financial Analysis: {company_name}",
+        "",
+        f"**Analysis Period:** {result.analysis_period}",
+        f"**Health Grade:** {result.health_grade} ({result.health_score}/100)",
+        "",
+        "## Executive Summary",
+        "",
+        f"| Metric | Value |",
+        f"|--------|-------|",
+        f"| Annual Revenue (Est) | ${result.total_revenue:,.2f} |",
+        f"| Total Expenses (Est) | ${result.total_expenses:,.2f} |",
+        f"| Net Operating Income | ${result.net_operating_income:,.2f} |",
+        "",
+        "## Key Performance Indicators",
+        "",
+        "| KPI | Actual | Target Range | Status |",
+        "|-----|--------|--------------|--------|",
+    ]
+
+    for kpi in result.kpis:
+        status = kpi.severity.value.upper()
+        lines.append(
+            f"| {kpi.display_name} | {kpi.actual:.1f}% | "
+            f"{kpi.benchmark_low:.0f}-{kpi.benchmark_high:.0f}% | {status} |"
+        )
+
+    lines.extend([
+        "",
+        "## KPI Analysis",
+        "",
+    ])
+
+    for kpi in result.kpis:
+        lines.append(f"### {kpi.display_name}")
+        lines.append("")
+        lines.append(f"**Actual:** {kpi.actual:.1f}%  ")
+        lines.append(f"**Industry Benchmark:** {kpi.benchmark_typical:.1f}% (range: {kpi.benchmark_low:.0f}-{kpi.benchmark_high:.0f}%)")
+        lines.append("")
+        lines.append(f"**Insight:** {kpi.insight}")
+        if kpi.action:
+            lines.append(f"  ")
+            lines.append(f"**Action:** {kpi.action}")
+        lines.append("")
+
+    if result.critical_alerts:
+        lines.extend([
+            "## Critical Alerts",
+            "",
+        ])
+        for alert in result.critical_alerts:
+            lines.append(f"- {alert}")
+        lines.append("")
+
+    if result.opportunities:
+        lines.extend([
+            "## Optimization Opportunities",
+            "",
+        ])
+        for opp in result.opportunities:
+            lines.append(f"- {opp}")
+        lines.append("")
+
+    # Expense breakdown
+    lines.extend([
+        "## Expense Breakdown",
+        "",
+        "| Category | % of Revenue |",
+        "|----------|-------------|",
+    ])
+    for cat, pct in sorted(result.expense_ratios.items(), key=lambda x: -x[1]):
+        if pct > 0.1:
+            lines.append(f"| {cat.replace('_', ' ').title()} | {pct:.1f}% |")
+
+    lines.extend([
+        "",
+        "---",
+        "*Generated by [FiscalPilot](https://github.com/meetpandya27/FiscalPilot) — The Open-Source AI CFO*",
+    ])
+
+    Path(output).write_text("\n".join(lines))
+    console.print(f"[green]✓[/green] Report saved to [bold]{output}[/bold]")
+
+
 def _display_report(report) -> None:  # noqa: ANN001
     """Display report summary in the terminal."""
     from fiscalpilot.models.report import Severity

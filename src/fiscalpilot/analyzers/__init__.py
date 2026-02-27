@@ -10,6 +10,7 @@ from fiscalpilot.analyzers.anomaly import AnomalyDetector
 from fiscalpilot.analyzers.benchmarks import BenchmarkAnalyzer
 from fiscalpilot.analyzers.cashflow import CashFlowForecaster
 from fiscalpilot.analyzers.tax_optimizer import TaxOptimizer
+from fiscalpilot.analyzers.restaurant import RestaurantAnalyzer, analyze_restaurant
 
 __all__ = [
     "BenfordsAnalyzer",
@@ -17,4 +18,7 @@ __all__ = [
     "BenchmarkAnalyzer",
     "CashFlowForecaster",
     "TaxOptimizer",
+    "RestaurantAnalyzer",
+    "analyze_restaurant",
 ]
+

@@ -56,7 +56,13 @@ class CSVConnector(BaseConnector):
         **options: Any,
     ) -> None:
         super().__init__(credentials, **options)
-        self.file_path = file_path or options.get("file_path", "")
+        # file_path can come from: direct param, options, or credentials
+        creds = credentials or {}
+        self.file_path = (
+            file_path
+            or options.get("file_path")
+            or creds.get("file_path", "")
+        )
         self.encoding = options.get("encoding", "utf-8")
         self.delimiter = options.get("delimiter", ",")
 

@@ -13,7 +13,9 @@ QuickBooks API docs:
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import time
 from datetime import date, datetime
 from typing import Any
 
@@ -70,6 +72,99 @@ _QBO_CATEGORY_MAP: dict[str, ExpenseCategory] = {
     "Travel Meals": ExpenseCategory.MEALS,
     "Utilities": ExpenseCategory.UTILITIES,
 }
+
+# Restaurant-specific QBO account mappings
+# These are common QuickBooks account names used by restaurants
+_RESTAURANT_QBO_MAP: dict[str, ExpenseCategory] = {
+    # Food & Beverage costs (map to INVENTORY for benchmark comparison)
+    "Food Cost": ExpenseCategory.INVENTORY,
+    "Food Costs": ExpenseCategory.INVENTORY,
+    "Food Purchases": ExpenseCategory.INVENTORY,
+    "Food and Beverage": ExpenseCategory.INVENTORY,
+    "Food & Beverage": ExpenseCategory.INVENTORY,
+    "Beverage Cost": ExpenseCategory.INVENTORY,
+    "Beverage Costs": ExpenseCategory.INVENTORY,
+    "Bar Costs": ExpenseCategory.INVENTORY,
+    "Liquor Cost": ExpenseCategory.INVENTORY,
+    "Wine Cost": ExpenseCategory.INVENTORY,
+    "Beer Cost": ExpenseCategory.INVENTORY,
+    "Alcohol Cost": ExpenseCategory.INVENTORY,
+    "COGS - Food": ExpenseCategory.INVENTORY,
+    "COGS - Beverage": ExpenseCategory.INVENTORY,
+    "COGS - Bar": ExpenseCategory.INVENTORY,
+    "Cost of Food Sold": ExpenseCategory.INVENTORY,
+    "Cost of Beverage Sold": ExpenseCategory.INVENTORY,
+    "Food Inventory": ExpenseCategory.INVENTORY,
+    "Produce": ExpenseCategory.INVENTORY,
+    "Meat & Seafood": ExpenseCategory.INVENTORY,
+    "Dairy": ExpenseCategory.INVENTORY,
+    "Dry Goods": ExpenseCategory.INVENTORY,
+    "Frozen Foods": ExpenseCategory.INVENTORY,
+    
+    # Labor costs (map to PAYROLL)
+    "Kitchen Labor": ExpenseCategory.PAYROLL,
+    "FOH Labor": ExpenseCategory.PAYROLL,
+    "BOH Labor": ExpenseCategory.PAYROLL,
+    "Front of House Labor": ExpenseCategory.PAYROLL,
+    "Back of House Labor": ExpenseCategory.PAYROLL,
+    "Server Wages": ExpenseCategory.PAYROLL,
+    "Cook Wages": ExpenseCategory.PAYROLL,
+    "Chef Salary": ExpenseCategory.PAYROLL,
+    "Manager Salary": ExpenseCategory.PAYROLL,
+    "Hourly Wages": ExpenseCategory.PAYROLL,
+    "Tips Paid": ExpenseCategory.PAYROLL,
+    "Tip Share": ExpenseCategory.PAYROLL,
+    "Employer Taxes": ExpenseCategory.PAYROLL,
+    "FICA Tax": ExpenseCategory.PAYROLL,
+    "Workers Comp": ExpenseCategory.PAYROLL,
+    "Workers Compensation": ExpenseCategory.PAYROLL,
+    "Health Benefits": ExpenseCategory.PAYROLL,
+    "Employee Benefits": ExpenseCategory.PAYROLL,
+    "Uniforms": ExpenseCategory.SUPPLIES,
+    "Staff Meals": ExpenseCategory.MEALS,
+    
+    # Operating expenses
+    "Smallwares": ExpenseCategory.SUPPLIES,
+    "Kitchen Supplies": ExpenseCategory.SUPPLIES,
+    "Paper Goods": ExpenseCategory.SUPPLIES,
+    "Cleaning Supplies": ExpenseCategory.SUPPLIES,
+    "Linens": ExpenseCategory.SUPPLIES,
+    "Glassware": ExpenseCategory.SUPPLIES,
+    "China & Silverware": ExpenseCategory.SUPPLIES,
+    "Disposables": ExpenseCategory.SUPPLIES,
+    "To-Go Containers": ExpenseCategory.SUPPLIES,
+    "POS Fees": ExpenseCategory.SOFTWARE,
+    "Credit Card Fees": ExpenseCategory.OTHER,
+    "Merchant Fees": ExpenseCategory.OTHER,
+    "Delivery Commissions": ExpenseCategory.MARKETING,
+    "DoorDash Fees": ExpenseCategory.MARKETING,
+    "UberEats Fees": ExpenseCategory.MARKETING,
+    "Grubhub Fees": ExpenseCategory.MARKETING,
+    "Third Party Delivery": ExpenseCategory.MARKETING,
+    "Online Ordering": ExpenseCategory.SOFTWARE,
+    "Reservation System": ExpenseCategory.SOFTWARE,
+    "OpenTable Fees": ExpenseCategory.SOFTWARE,
+    "Menu Printing": ExpenseCategory.MARKETING,
+    "Pest Control": ExpenseCategory.MAINTENANCE,
+    "Grease Trap Service": ExpenseCategory.MAINTENANCE,
+    "Hood Cleaning": ExpenseCategory.MAINTENANCE,
+    "HVAC Maintenance": ExpenseCategory.MAINTENANCE,
+    "Equipment Repair": ExpenseCategory.MAINTENANCE,
+    "Kitchen Equipment": ExpenseCategory.EQUIPMENT,
+    "Bar Equipment": ExpenseCategory.EQUIPMENT,
+    "Music & Entertainment": ExpenseCategory.MARKETING,
+    "Liquor License": ExpenseCategory.TAXES,
+    "Health Permit": ExpenseCategory.TAXES,
+    "Business License": ExpenseCategory.TAXES,
+}
+
+# Merge restaurant mappings into main map
+_QBO_CATEGORY_MAP.update(_RESTAURANT_QBO_MAP)
+
+# Rate limiting configuration (QuickBooks allows 500 requests/minute)
+_QBO_RATE_LIMIT_PER_MINUTE = 500
+_QBO_RATE_LIMIT_BUFFER = 50  # Leave headroom
+_QBO_RETRY_BACKOFF_SECONDS = [1, 2, 4, 8, 16]  # Exponential backoff
 
 
 class QuickBooksConnector(BaseConnector):
@@ -131,6 +226,10 @@ class QuickBooksConnector(BaseConnector):
         self._base_url = _QBO_SANDBOX_URL if self.sandbox else _QBO_BASE_URL
         self._token_manager: OAuth2TokenManager | None = None
         self._http: httpx.AsyncClient | None = None
+        
+        # Rate limiting state
+        self._request_timestamps: list[float] = []
+        self._rate_limit_lock = asyncio.Lock()
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -169,8 +268,38 @@ class QuickBooksConnector(BaseConnector):
     # API helpers
     # ------------------------------------------------------------------
 
+    async def _rate_limit_wait(self) -> None:
+        """Enforce rate limiting — wait if we're approaching the limit."""
+        async with self._rate_limit_lock:
+            now = time.time()
+            # Remove timestamps older than 60 seconds
+            self._request_timestamps = [
+                ts for ts in self._request_timestamps if now - ts < 60
+            ]
+            
+            # If we're at the limit, wait
+            max_requests = _QBO_RATE_LIMIT_PER_MINUTE - _QBO_RATE_LIMIT_BUFFER
+            if len(self._request_timestamps) >= max_requests:
+                oldest = self._request_timestamps[0]
+                wait_time = 60 - (now - oldest) + 0.1
+                if wait_time > 0:
+                    logger.warning(
+                        "Rate limit approaching (%d requests), waiting %.1fs",
+                        len(self._request_timestamps), wait_time
+                    )
+                    await asyncio.sleep(wait_time)
+                    # Clear old timestamps after waiting
+                    now = time.time()
+                    self._request_timestamps = [
+                        ts for ts in self._request_timestamps if now - ts < 60
+                    ]
+            
+            self._request_timestamps.append(time.time())
+
     async def _api_get(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Make an authenticated GET request to the QBO API."""
+        """Make an authenticated GET request to the QBO API with retry logic."""
+        await self._rate_limit_wait()
+        
         mgr = self._ensure_token_manager()
         token = await mgr.get_access_token()
         client = await self._get_client()
@@ -181,18 +310,58 @@ class QuickBooksConnector(BaseConnector):
             "Accept": "application/json",
         }
 
-        resp = await client.get(url, headers=headers, params=params)
+        last_error: Exception | None = None
+        for attempt, backoff in enumerate(_QBO_RETRY_BACKOFF_SECONDS):
+            try:
+                resp = await client.get(url, headers=headers, params=params)
 
-        # Handle 401 → force refresh and retry once
-        if resp.status_code == 401:
-            logger.info("QBO token expired, refreshing...")
-            await mgr.refresh()
-            token = await mgr.get_access_token()
-            headers["Authorization"] = f"Bearer {token}"
-            resp = await client.get(url, headers=headers, params=params)
+                # Handle 401 → force refresh and retry once
+                if resp.status_code == 401:
+                    logger.info("QBO token expired, refreshing...")
+                    await mgr.refresh()
+                    token = await mgr.get_access_token()
+                    headers["Authorization"] = f"Bearer {token}"
+                    resp = await client.get(url, headers=headers, params=params)
 
-        resp.raise_for_status()
-        return resp.json()
+                # Handle rate limiting (429)
+                if resp.status_code == 429:
+                    retry_after = int(resp.headers.get("Retry-After", backoff))
+                    logger.warning(
+                        "QBO rate limited (429), waiting %ds (attempt %d/%d)",
+                        retry_after, attempt + 1, len(_QBO_RETRY_BACKOFF_SECONDS)
+                    )
+                    await asyncio.sleep(retry_after)
+                    continue
+                
+                # Handle server errors (5xx) with retry
+                if resp.status_code >= 500:
+                    logger.warning(
+                        "QBO server error (%d), retrying in %ds (attempt %d/%d)",
+                        resp.status_code, backoff, attempt + 1, len(_QBO_RETRY_BACKOFF_SECONDS)
+                    )
+                    await asyncio.sleep(backoff)
+                    continue
+
+                resp.raise_for_status()
+                return resp.json()
+                
+            except httpx.TimeoutException as e:
+                logger.warning(
+                    "QBO request timeout, retrying in %ds (attempt %d/%d)",
+                    backoff, attempt + 1, len(_QBO_RETRY_BACKOFF_SECONDS)
+                )
+                last_error = e
+                await asyncio.sleep(backoff)
+            except httpx.ConnectError as e:
+                logger.warning(
+                    "QBO connection error, retrying in %ds (attempt %d/%d): %s",
+                    backoff, attempt + 1, len(_QBO_RETRY_BACKOFF_SECONDS), e
+                )
+                last_error = e
+                await asyncio.sleep(backoff)
+        
+        # All retries exhausted
+        raise last_error or Exception("QBO API request failed after all retries")
 
     async def _query(self, query: str) -> list[dict[str, Any]]:
         """Execute a QBO query (SQL-like) and handle pagination.
