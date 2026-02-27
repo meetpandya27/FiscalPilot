@@ -9,7 +9,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
-[![GitHub Stars](https://img.shields.io/github/stars/fiscalpilot/fiscalpilot?style=social)](https://github.com/fiscalpilot/fiscalpilot)
+[![GitHub Stars](https://img.shields.io/github/stars/meetpandya27/FiscalPilot?style=social)](https://github.com/meetpandya27/FiscalPilot)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289DA?logo=discord&logoColor=white)](https://discord.gg/fiscalpilot)
 
@@ -208,9 +208,9 @@ llm:
 | **CSV** | ✅ Ready | Built-in |
 | **Excel** | ✅ Ready | Built-in |
 | **SQL** (PostgreSQL, MySQL, SQLite) | ✅ Ready | Built-in |
-| **QuickBooks Online** | 🔧 Scaffold | `pip install fiscalpilot[quickbooks]` |
-| **Xero** | 🔧 Scaffold | `pip install fiscalpilot[xero]` |
-| **Plaid** (bank data) | 🔧 Scaffold | `pip install fiscalpilot[plaid]` |
+| **QuickBooks Online** | ✅ Ready | Built-in |
+| **Xero** | ✅ Ready | Built-in |
+| **Plaid** (bank data) | ✅ Ready | Built-in |
 | **SAP** | 🗓️ Planned | — |
 | **NetSuite** | 🗓️ Planned | — |
 | **FreshBooks** | 🗓️ Planned | — |
@@ -312,7 +312,7 @@ report = await pilot.audit(company)
 
 ## 🗺️ Roadmap
 
-### v0.1 — Foundation (Current)
+### v0.1 — Foundation
 - [x] Core agent architecture
 - [x] CSV/Excel/SQL connectors
 - [x] 6 specialist agents
@@ -320,10 +320,10 @@ report = await pilot.audit(company)
 - [x] CLI interface
 - [x] Multi-LLM support
 
-### v0.2 — Integrations
-- [ ] QuickBooks Online full integration
-- [ ] Xero full integration
-- [ ] Plaid bank sync
+### v0.2 — Integrations (Current)
+- [x] QuickBooks Online full integration
+- [x] Xero full integration
+- [x] Plaid bank sync
 - [ ] Stripe payment data
 - [ ] PDF/receipt OCR scanning
 - [ ] HTML report with charts
@@ -360,10 +360,9 @@ report = await pilot.audit(company)
 
 | Area | Task | Difficulty |
 |------|------|-----------|
-| 🔌 Connectors | Implement QuickBooks full integration | Medium |
-| 🔌 Connectors | Implement Xero full integration | Medium |
 | 🔌 Connectors | Add Stripe connector | Easy |
 | 🔌 Connectors | Add FreshBooks connector | Easy |
+| 🔌 Connectors | Add NetSuite connector | Medium |
 | 🧠 Agents | Add Benford's Law analysis to fraud detector | Medium |
 | 🧠 Agents | Add subscription audit agent | Easy |
 | 🧠 Agents | Add payroll analysis agent | Medium |
@@ -403,7 +402,7 @@ Apache 2.0 — Use it freely in your business, modify it, contribute back.
 
 **⭐ Star us on GitHub — it helps more businesses discover FiscalPilot!**
 
-[GitHub](https://github.com/fiscalpilot/fiscalpilot) · [Discord](https://discord.gg/fiscalpilot) · [Documentation](https://fiscalpilot.dev) · [Twitter](https://twitter.com/fiscalpilot)
+[GitHub](https://github.com/meetpandya27/FiscalPilot) · [Discord](https://discord.gg/fiscalpilot) · [Documentation](https://fiscalpilot.dev) · [Twitter](https://twitter.com/fiscalpilot)
 
 *Built with ❤️ by the FiscalPilot community*
 
