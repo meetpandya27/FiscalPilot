@@ -12,6 +12,12 @@ from fiscalpilot.analyzers.cashflow import CashFlowForecaster
 from fiscalpilot.analyzers.tax_optimizer import TaxOptimizer
 from fiscalpilot.analyzers.restaurant import RestaurantAnalyzer, analyze_restaurant
 
+# Restaurant vertical analyzers
+from fiscalpilot.analyzers.menu_engineering import MenuEngineeringAnalyzer
+from fiscalpilot.analyzers.breakeven import BreakevenCalculator, calculate_breakeven
+from fiscalpilot.analyzers.tip_credit import TipCreditCalculator, calculate_tip_credit
+from fiscalpilot.analyzers.delivery_roi import DeliveryROIAnalyzer, analyze_delivery_roi
+
 __all__ = [
     "BenfordsAnalyzer",
     "AnomalyDetector",
@@ -20,5 +26,13 @@ __all__ = [
     "TaxOptimizer",
     "RestaurantAnalyzer",
     "analyze_restaurant",
+    # Restaurant vertical
+    "MenuEngineeringAnalyzer",
+    "BreakevenCalculator",
+    "calculate_breakeven",
+    "TipCreditCalculator",
+    "calculate_tip_credit",
+    "DeliveryROIAnalyzer",
+    "analyze_delivery_roi",
 ]
 

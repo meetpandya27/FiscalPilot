@@ -7,7 +7,10 @@ Designed for restaurants, cafes, bars, food trucks, and catering businesses.
 Key Features:
 - Industry-standard KPI calculations (Food Cost %, Labor Cost %, Prime Cost)
 - QuickBooks/POS data integration with 80+ account mappings
-- Menu engineering recommendations
+- Menu engineering recommendations (BCG matrix: Stars/Plowhorses/Puzzles/Dogs)
+- Break-even analysis (covers needed to break even)
+- Tip tax credit calculator (FICA/45B credit estimation)
+- Delivery platform ROI analysis (DoorDash/UberEats profitability)
 - Vendor negotiation insights
 - Labor optimization suggestions
 - Seasonal pattern detection
@@ -22,6 +25,26 @@ from typing import Any
 
 from fiscalpilot.agents.base import BaseAgent
 from fiscalpilot.analyzers.restaurant import RestaurantAnalyzer, RestaurantAnalysisResult
+from fiscalpilot.analyzers.menu_engineering import (
+    MenuEngineeringAnalyzer,
+    MenuEngineeringResult,
+    MenuItemData,
+)
+from fiscalpilot.analyzers.breakeven import (
+    BreakevenCalculator,
+    BreakevenResult,
+)
+from fiscalpilot.analyzers.tip_credit import (
+    TipCreditCalculator,
+    TipCreditResult,
+    TippedEmployee,
+)
+from fiscalpilot.analyzers.delivery_roi import (
+    DeliveryROIAnalyzer,
+    DeliveryROIResult,
+    DeliveryOrderData,
+    DeliveryPlatform,
+)
 from fiscalpilot.models.actions import ActionStep, ActionType, ProposedAction, ApprovalLevel
 from fiscalpilot.models.financial import FinancialDataset
 
@@ -386,6 +409,294 @@ Always return your recommendations as a valid JSON array."""
             ))
         
         return actions
+    
+    # =========================================================================
+    # NEW: Menu Engineering Analysis
+    # =========================================================================
+    
+    def analyze_menu(
+        self,
+        menu_items: list[dict[str, Any]],
+    ) -> MenuEngineeringResult:
+        """
+        Analyze menu items using BCG matrix (Stars/Plowhorses/Puzzles/Dogs).
+        
+        Args:
+            menu_items: List of dicts with keys:
+                - name: str
+                - menu_price: float
+                - food_cost: float
+                - quantity_sold: int
+                - category: str (optional)
+        
+        Returns:
+            MenuEngineeringResult with classifications and recommendations.
+        
+        Example:
+            result = agent.analyze_menu([
+                {"name": "Burger", "menu_price": 16, "food_cost": 4.50, "quantity_sold": 500},
+                {"name": "Lobster", "menu_price": 45, "food_cost": 22, "quantity_sold": 50},
+            ])
+        """
+        items = [
+            MenuItemData(
+                name=item["name"],
+                menu_price=item["menu_price"],
+                food_cost=item["food_cost"],
+                quantity_sold=item["quantity_sold"],
+                category=item.get("category", "Main"),
+            )
+            for item in menu_items
+        ]
+        return MenuEngineeringAnalyzer.analyze(items)
+    
+    # =========================================================================
+    # NEW: Break-even Calculator
+    # =========================================================================
+    
+    def calculate_breakeven(
+        self,
+        *,
+        # Fixed costs (monthly)
+        rent: float = 0.0,
+        insurance: float = 0.0,
+        management_salaries: float = 0.0,
+        loan_payments: float = 0.0,
+        equipment_leases: float = 0.0,
+        software_subscriptions: float = 0.0,
+        base_utilities: float = 0.0,
+        other_fixed: float = 0.0,
+        # Variable costs (% of revenue)
+        food_cost_pct: float = 30.0,
+        hourly_labor_pct: float = 20.0,
+        supplies_pct: float = 2.0,
+        credit_card_fees_pct: float = 2.5,
+        delivery_commissions_pct: float = 0.0,
+        other_variable_pct: float = 1.0,
+        # Operating parameters
+        average_check: float = 25.0,
+        days_operating_per_week: int = 7,
+        # Current performance (for comparison)
+        current_monthly_revenue: float | None = None,
+    ) -> BreakevenResult:
+        """
+        Calculate break-even point: how many covers/revenue needed to cover costs.
+        
+        Answers the critical question: "How many customers do I need to make money?"
+        
+        Example:
+            result = agent.calculate_breakeven(
+                rent=5000,
+                management_salaries=8000,
+                food_cost_pct=30,
+                hourly_labor_pct=22,
+                average_check=28,
+                current_monthly_revenue=85000,
+            )
+            print(f"Break-even: {result.breakeven_covers_daily:.0f} covers/day")
+        """
+        return BreakevenCalculator.calculate(
+            rent=rent,
+            insurance=insurance,
+            management_salaries=management_salaries,
+            loan_payments=loan_payments,
+            equipment_leases=equipment_leases,
+            software_subscriptions=software_subscriptions,
+            base_utilities=base_utilities,
+            other_fixed=other_fixed,
+            food_cost_pct=food_cost_pct,
+            hourly_labor_pct=hourly_labor_pct,
+            supplies_pct=supplies_pct,
+            credit_card_fees_pct=credit_card_fees_pct,
+            delivery_commissions_pct=delivery_commissions_pct,
+            other_variable_pct=other_variable_pct,
+            average_check=average_check,
+            days_operating_per_week=days_operating_per_week,
+            current_monthly_revenue=current_monthly_revenue,
+        )
+    
+    # =========================================================================
+    # NEW: Tip Tax Credit Calculator
+    # =========================================================================
+    
+    def estimate_tip_credit(
+        self,
+        *,
+        # Quick estimate parameters
+        num_tipped_employees: int,
+        avg_hours_per_employee: float = 30.0,  # Per week
+        avg_tips_per_hour: float = 15.0,
+        avg_cash_wage: float = 2.13,
+        state: str | None = None,
+    ) -> TipCreditResult:
+        """
+        Estimate annual FICA tip credit (Section 45B) — "free money" most owners miss.
+        
+        The IRS allows restaurants to claim a tax credit for employer FICA taxes
+        paid on tips that exceed minimum wage requirements.
+        
+        Example:
+            result = agent.estimate_tip_credit(
+                num_tipped_employees=15,
+                avg_hours_per_employee=32,
+                avg_tips_per_hour=18,
+                avg_cash_wage=2.13,
+                state="TX",
+            )
+            print(f"Annual tip credit: ${result.annual_credit_projection:,.0f}")
+        """
+        return TipCreditCalculator.quick_estimate(
+            num_tipped_employees=num_tipped_employees,
+            avg_hours_per_employee=avg_hours_per_employee,
+            avg_tips_per_hour=avg_tips_per_hour,
+            avg_cash_wage=avg_cash_wage,
+            state=state,
+        )
+    
+    def calculate_tip_credit_detailed(
+        self,
+        employees: list[dict[str, Any]],
+        *,
+        state: str | None = None,
+        period_type: str = "month",
+    ) -> TipCreditResult:
+        """
+        Calculate tip credit with detailed employee data.
+        
+        Args:
+            employees: List of dicts with keys:
+                - name: str
+                - hourly_wage: float (cash wage before tips)
+                - hours_worked: float (in period)
+                - tips_received: float (in period)
+            state: Two-letter state code for state minimum wage.
+            period_type: "month", "quarter", or "year"
+        
+        Returns:
+            TipCreditResult with per-employee breakdown.
+        """
+        tipped_employees = [
+            TippedEmployee(
+                name=emp.get("name", f"Employee {i+1}"),
+                hourly_wage=emp["hourly_wage"],
+                hours_worked=emp["hours_worked"],
+                tips_received=emp["tips_received"],
+            )
+            for i, emp in enumerate(employees)
+        ]
+        return TipCreditCalculator.calculate(
+            tipped_employees,
+            state=state,
+            period_type=period_type,
+        )
+    
+    # =========================================================================
+    # NEW: Delivery Platform ROI Analyzer
+    # =========================================================================
+    
+    def analyze_delivery_roi(
+        self,
+        platform_data: list[dict[str, Any]],
+        *,
+        dine_in_food_cost_pct: float = 30.0,
+        dine_in_labor_pct: float = 28.0,
+    ) -> DeliveryROIResult:
+        """
+        Analyze true profitability of delivery platforms (DoorDash, UberEats, etc.).
+        
+        Most owners see delivery revenue as "extra" but don't account for:
+        - Platform commissions (15-30%)
+        - Packaging costs ($0.50-2.00/order)
+        - Refunds/adjustments
+        - Additional labor
+        
+        Args:
+            platform_data: List of dicts with keys:
+                - platform: str ("doordash", "uber_eats", "grubhub", "direct")
+                - total_orders: int
+                - total_gross_revenue: float
+                - food_cost_pct: float (optional, default 30)
+                - packaging_cost_per_order: float (optional, default 0.75)
+                - commission_pct: float (optional, uses platform default)
+                - marketing_spend: float (optional)
+                - total_refunds: float (optional)
+            dine_in_food_cost_pct: For comparison
+            dine_in_labor_pct: For comparison
+        
+        Example:
+            result = agent.analyze_delivery_roi([
+                {"platform": "doordash", "total_orders": 800, "total_gross_revenue": 24000, "commission_pct": 20},
+                {"platform": "uber_eats", "total_orders": 400, "total_gross_revenue": 14000, "commission_pct": 25},
+            ])
+            print(f"Most profitable: {result.most_profitable_platform}")
+            print(f"Direct ordering would save: ${result.direct_ordering_savings:,.0f}")
+        """
+        platform_map = {
+            "doordash": DeliveryPlatform.DOORDASH,
+            "uber_eats": DeliveryPlatform.UBER_EATS,
+            "grubhub": DeliveryPlatform.GRUBHUB,
+            "postmates": DeliveryPlatform.POSTMATES,
+            "caviar": DeliveryPlatform.CAVIAR,
+            "direct": DeliveryPlatform.DIRECT,
+            "phone": DeliveryPlatform.PHONE,
+        }
+        
+        delivery_data = []
+        for data in platform_data:
+            platform_str = data.get("platform", "doordash").lower().replace(" ", "_")
+            platform = platform_map.get(platform_str, DeliveryPlatform.DOORDASH)
+            
+            delivery_data.append(DeliveryOrderData(
+                platform=platform,
+                total_orders=data.get("total_orders", 0),
+                total_gross_revenue=data.get("total_gross_revenue", 0),
+                food_cost_pct=data.get("food_cost_pct", 32),  # Often higher for delivery
+                packaging_cost_per_order=data.get("packaging_cost_per_order", 0.75),
+                labor_cost_per_order=data.get("labor_cost_per_order", 0.50),
+                commission_pct=data.get("commission_pct"),
+                marketing_spend=data.get("marketing_spend", 0),
+                total_refunds=data.get("total_refunds", 0),
+                total_adjustments=data.get("total_adjustments", 0),
+            ))
+        
+        from fiscalpilot.analyzers.delivery_roi import DineInComparison
+        
+        dine_in = DineInComparison(
+            food_cost_pct=dine_in_food_cost_pct,
+            labor_cost_pct=dine_in_labor_pct,
+        )
+        
+        return DeliveryROIAnalyzer.analyze(delivery_data, dine_in_comparison=dine_in)
+    
+    def quick_delivery_check(
+        self,
+        *,
+        platform: str = "doordash",
+        monthly_orders: int = 500,
+        average_order_value: float = 35.0,
+        commission_pct: float = 20.0,
+        food_cost_pct: float = 32.0,
+    ) -> DeliveryROIResult:
+        """
+        Quick delivery ROI check with minimal inputs.
+        
+        Example:
+            result = agent.quick_delivery_check(
+                platform="doordash",
+                monthly_orders=600,
+                average_order_value=32,
+                commission_pct=18,
+            )
+            for insight in result.insights:
+                print(insight)
+        """
+        return DeliveryROIAnalyzer.quick_analysis(
+            platform=DeliveryPlatform(platform.lower()),
+            monthly_orders=monthly_orders,
+            average_order_value=average_order_value,
+            commission_pct=commission_pct,
+            food_cost_pct=food_cost_pct,
+        )
 
 
 def create_restaurant_agent(config) -> RestaurantAgent:

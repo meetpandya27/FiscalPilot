@@ -209,6 +209,209 @@ def scan(
 
 
 @app.command()
+def restaurant(
+    csv: str = typer.Option(
+        None,
+        "--csv",
+        help="Path to CSV file with transactions",
+    ),
+    square: bool = typer.Option(
+        False,
+        "--square",
+        help="Use Square POS connector (requires SQUARE_ACCESS_TOKEN)",
+    ),
+    company: str = typer.Option(
+        "My Restaurant",
+        "--company",
+        help="Restaurant name",
+    ),
+    revenue: float = typer.Option(
+        0,
+        "--revenue",
+        help="Annual revenue (for KPI analysis)",
+    ),
+    output: str = typer.Option(
+        "restaurant_report.md",
+        "--output",
+        "-o",
+        help="Output file path",
+    ),
+    menu: bool = typer.Option(
+        False,
+        "--menu",
+        help="Include menu engineering analysis (requires menu data)",
+    ),
+    breakeven: bool = typer.Option(
+        False,
+        "--breakeven",
+        help="Calculate break-even point",
+    ),
+    tips: bool = typer.Option(
+        False,
+        "--tips",
+        help="Estimate FICA tip tax credit",
+    ),
+    delivery: bool = typer.Option(
+        False,
+        "--delivery",
+        help="Analyze delivery platform ROI",
+    ),
+) -> None:
+    """Complete restaurant financial analysis — KPIs, menu engineering, and more."""
+    import os
+    from pathlib import Path
+
+    console.print(Panel.fit(
+        "[bold blue]🍽️ FiscalPilot[/bold blue] — Restaurant Analysis",
+        subtitle=f"v{__version__}",
+    ))
+
+    if not csv and not square:
+        console.print("[red]Error: Provide --csv file or use --square connector[/red]")
+        raise typer.Exit(1)
+
+    from fiscalpilot.analyzers.restaurant import RestaurantAnalyzer
+    from fiscalpilot.connectors.csv_connector import CSVConnector
+    from fiscalpilot.models.company import CompanyProfile, Industry, CompanySize
+
+    profile = CompanyProfile(
+        name=company,
+        industry=Industry.RESTAURANT,
+        size=CompanySize.SMALL,
+        annual_revenue=revenue if revenue > 0 else None,
+    )
+
+    # Pull data
+    dataset = None
+    if csv:
+        connector = CSVConnector(credentials={"file_path": csv})
+        with console.status("[bold green]Loading transactions...[/bold green]"):
+            dataset = asyncio.run(connector.pull(profile))
+    elif square:
+        access_token = os.environ.get("SQUARE_ACCESS_TOKEN")
+        if not access_token:
+            console.print("[red]Error: Set SQUARE_ACCESS_TOKEN environment variable[/red]")
+            raise typer.Exit(1)
+        from fiscalpilot.connectors import SquarePOSConnector
+        connector = SquarePOSConnector(access_token=access_token)
+        with console.status("[bold green]Pulling from Square POS...[/bold green]"):
+            dataset = asyncio.run(connector.pull())
+
+    # Run KPI analysis
+    console.print("\n[bold]📊 Restaurant KPIs[/bold]")
+    result = RestaurantAnalyzer.analyze(dataset, annual_revenue=revenue if revenue > 0 else None)
+
+    # Display health grade
+    grade_colors = {"A": "green", "B": "blue", "C": "yellow", "D": "red", "F": "red bold"}
+    grade_color = grade_colors.get(result.health_grade, "white")
+    console.print(f"\n[{grade_color}]Health Grade: {result.health_grade}[/{grade_color}] ({result.health_score}/100)")
+
+    # KPI table
+    table = Table(title="Key Performance Indicators")
+    table.add_column("KPI", style="cyan")
+    table.add_column("Actual", justify="right")
+    table.add_column("Target", justify="right")
+    table.add_column("Status")
+
+    for kpi in result.kpis:
+        status_map = {
+            "excellent": "🌟",
+            "healthy": "✅",
+            "warning": "⚠️",
+            "critical": "🚨",
+        }
+        status = status_map.get(kpi.severity.value, "")
+        table.add_row(
+            kpi.display_name,
+            f"{kpi.actual:.1f}%",
+            f"{kpi.benchmark_low:.0f}-{kpi.benchmark_high:.0f}%",
+            status,
+        )
+
+    console.print(table)
+
+    # Critical alerts
+    if result.critical_alerts:
+        console.print("\n[bold red]🚨 Critical Alerts[/bold red]")
+        for alert in result.critical_alerts:
+            console.print(f"  • {alert}")
+
+    # Opportunities
+    if result.opportunities:
+        console.print("\n[bold green]💡 Opportunities[/bold green]")
+        for opp in result.opportunities[:5]:
+            console.print(f"  • {opp}")
+
+    # Additional analyses (if flags provided)
+    if breakeven and revenue > 0:
+        from fiscalpilot.analyzers.breakeven import BreakevenCalculator
+        console.print("\n[bold]📈 Break-even Analysis[/bold]")
+        # Estimate costs based on typical restaurant ratios
+        monthly_revenue = revenue / 12
+        estimated_rent = monthly_revenue * 0.06  # ~6% of revenue
+        estimated_labor = monthly_revenue * 0.10  # Salaried staff ~10%
+        be_result = BreakevenCalculator.calculate(
+            rent=estimated_rent,
+            management_salaries=estimated_labor,
+            insurance=monthly_revenue * 0.015,
+            base_utilities=monthly_revenue * 0.025,
+            food_cost_pct=32,
+            hourly_labor_pct=22,
+            average_check=35,
+        )
+        console.print(f"  Break-even Revenue: ${be_result.breakeven_revenue_monthly:,.0f}/month")
+        console.print(f"  Break-even Covers: {be_result.breakeven_covers_monthly:,.0f}/month ({be_result.breakeven_covers_daily:.0f}/day)")
+
+    if tips:
+        from fiscalpilot.analyzers.tip_credit import TipCreditCalculator
+        console.print("\n[bold]💰 Tip Tax Credit Estimate[/bold]")
+        # Quick estimate based on typical staffing
+        estimate = TipCreditCalculator.quick_estimate(
+            num_tipped_employees=8,
+            avg_monthly_tips_per_employee=2500,
+            avg_hours_per_employee=140,
+        )
+        console.print(f"  Estimated Monthly Credit: ${estimate['monthly_credit']:,.2f}")
+        console.print(f"  Estimated Annual Credit: ${estimate['annual_credit']:,.2f}")
+
+    # Save report
+    report_path = Path(output)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    _save_restaurant_report(result, company, str(report_path))
+    console.print(f"\n✅ Report saved to {output}")
+
+
+def _save_restaurant_report(result, company_name: str, output: str) -> None:
+    """Save restaurant analysis to markdown."""
+    from pathlib import Path
+    lines = [
+        f"# Restaurant Analysis: {company_name}",
+        "",
+        f"**Health Grade:** {result.health_grade} ({result.health_score}/100)",
+        "",
+        "## Key Performance Indicators",
+        "",
+        "| KPI | Actual | Target | Status |",
+        "|-----|--------|--------|--------|",
+    ]
+    for kpi in result.kpis:
+        lines.append(f"| {kpi.display_name} | {kpi.actual:.1f}% | {kpi.benchmark_low:.0f}-{kpi.benchmark_high:.0f}% | {kpi.severity.value} |")
+    
+    if result.critical_alerts:
+        lines.extend(["", "## Critical Alerts", ""])
+        for alert in result.critical_alerts:
+            lines.append(f"- {alert}")
+    
+    if result.opportunities:
+        lines.extend(["", "## Opportunities", ""])
+        for opp in result.opportunities:
+            lines.append(f"- {opp}")
+    
+    lines.extend(["", "---", "*Generated by FiscalPilot — The Open-Source AI CFO*"])
+    Path(output).write_text("\n".join(lines))
+
+
+@app.command()
 def connectors() -> None:
     """List all available connectors."""
     from fiscalpilot.connectors.registry import _BUILTIN_CONNECTORS

@@ -5,6 +5,43 @@ All notable changes to FiscalPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-02-27
+
+### Added
+- **Menu Engineering Analyzer** — BCG matrix classification for menu items:
+  - Star/Plowhorse/Puzzle/Dog classification based on popularity + profitability
+  - Per-item recommendations (feature, reprice, promote, remove)
+  - Category-level summaries with food cost percentages
+  - Potential profit increase estimation
+  - 16 new tests
+- **Break-even Calculator** — Know exactly when you stop losing money:
+  - Revenue and covers needed to break even
+  - Scenario modeling (best/worst/seasonal cases)
+  - What-if analysis (price changes, cost reductions)
+  - Actionable insights based on margin proximity
+  - 15 new tests
+- **FICA Tip Tax Credit Calculator** — Claim Section 45B credits:
+  - Per-employee tip credit calculation
+  - State minimum wage support (all 50 states)
+  - Annualized projections
+  - Compliance notes and Form 8846 guidance
+  - 17 new tests
+- **Delivery Platform ROI Analyzer** — Is DoorDash worth it?
+  - Multi-platform comparison (DoorDash, UberEats, Grubhub, Direct)
+  - True margin calculation after commissions + packaging
+  - Dine-in vs delivery margin gap analysis
+  - Direct ordering savings projection
+  - Platform-specific recommendations
+  - 27 new tests
+- **CLI `fp restaurant` subcommand** — One-command restaurant analysis
+- **RestaurantAgent new methods**: `analyze_menu()`, `calculate_breakeven()`, `estimate_tip_credit()`, `calculate_tip_credit_detailed()`, `analyze_delivery_roi()`, `quick_delivery_check()`
+- **375 total passing tests** (was 300)
+
+### Changed
+- RestaurantAgent now integrates all 4 new analyzers
+- Restaurant example (`examples/restaurant/run_scan.py`) updated with new feature demos
+- README updated with restaurant-specific quickstart
+
 ## [0.4.1] - 2026-02-27
 
 ### Added

@@ -203,6 +203,104 @@ security:
 
 ---
 
+## 🍕 Restaurant Vertical (Production Ready)
+
+FiscalPilot includes a **complete solution for restaurant operators** — the first industry vertical to reach production status.
+
+### One-Command Restaurant Analysis
+
+```bash
+# Full restaurant analysis from CLI
+fp restaurant --csv transactions.csv --company "Joe's Diner" --revenue 850000
+
+# Or with Square POS integration
+fp restaurant --square --company "Joe's Diner"
+```
+
+### What's Included
+
+| Feature | What It Does | CFO Question Answered |
+|---------|-------------|----------------------|
+| **15+ KPIs** | Food cost %, labor %, prime cost, RevPASH, covers/day | "How healthy is my restaurant?" |
+| **Menu Engineering** | BCG matrix (Stars/Plowhorses/Puzzles/Dogs) | "Which menu items are actually profitable?" |
+| **Break-even Calculator** | Revenue & covers needed to not lose money | "Can I make payroll this month?" |
+| **Tip Tax Credit** | FICA Section 45B credit estimation | "Am I leaving money on the table?" |
+| **Delivery ROI** | DoorDash/UberEats vs dine-in margin analysis | "Is DoorDash actually worth it?" |
+| **Square POS Integration** | Pull payments, menu items, daily summaries | "What happened at my registers today?" |
+
+### Python Usage
+
+```python
+from fiscalpilot.agents.restaurant import create_restaurant_agent
+from fiscalpilot.analyzers.menu_engineering import MenuEngineeringAnalyzer, MenuItemData
+from fiscalpilot.analyzers.breakeven import BreakevenCalculator
+from fiscalpilot.analyzers.tip_credit import TipCreditCalculator
+from fiscalpilot.analyzers.delivery_roi import DeliveryROIAnalyzer, DeliveryOrderData
+
+# Menu Engineering — find your Stars and Dogs
+menu_items = [
+    MenuItemData(name="Margherita Pizza", menu_price=16, food_cost=4, quantity_sold=450),
+    MenuItemData(name="Truffle Pasta", menu_price=28, food_cost=12, quantity_sold=80),
+    MenuItemData(name="House Salad", menu_price=8, food_cost=2.50, quantity_sold=300),
+    MenuItemData(name="Lobster Tail", menu_price=55, food_cost=28, quantity_sold=25),
+]
+result = MenuEngineeringAnalyzer.analyze(menu_items)
+print(f"Stars: {[i.name for i in result.stars]}")  # High profit, high sales
+print(f"Dogs: {[i.name for i in result.dogs]}")    # Consider removing
+
+# Break-even — how many covers do you need?
+breakeven = BreakevenCalculator.calculate(
+    fixed_costs=45000,      # Monthly rent, insurance, etc.
+    variable_cost_pct=35,   # Food + labor as % of revenue
+    avg_check=42,
+)
+print(f"Break-even: ${breakeven.breakeven_revenue:,.0f}/month ({breakeven.breakeven_covers} covers)")
+
+# Tip Credit — are you claiming FICA credits?
+from fiscalpilot.analyzers.tip_credit import TippedEmployee
+employees = [
+    TippedEmployee(name="Maria", hours_worked=160, tips_received=2800, cash_wage=2.13),
+    TippedEmployee(name="Jake", hours_worked=140, tips_received=2100, cash_wage=2.13),
+]
+credit = TipCreditCalculator.calculate(employees, state="TX")
+print(f"Monthly tip credit: ${credit.total_credit:,.2f}")
+print(f"Annual projection: ${credit.annual_projection:,.2f}")
+
+# Delivery ROI — is DoorDash worth it?
+orders = [
+    DeliveryOrderData(platform="doordash", gross_revenue=45, food_cost=12, order_count=150),
+    DeliveryOrderData(platform="ubereats", gross_revenue=42, food_cost=11, order_count=80),
+]
+roi = DeliveryROIAnalyzer.analyze(orders, dine_in_margin=65)
+for platform in roi.platforms:
+    print(f"{platform.platform}: {platform.effective_margin:.1f}% margin (gap: {platform.margin_gap:+.1f}%)")
+```
+
+### Square POS Connection
+
+```python
+from fiscalpilot.connectors import SquarePOSConnector
+
+connector = SquarePOSConnector(
+    access_token="sq0atp-xxxxx",  # From Square Developer Dashboard
+    sandbox=False,
+)
+
+# Pull all financial data
+dataset = await connector.pull()
+
+# Get daily summary
+summary = await connector.get_daily_summary("2026-02-27")
+print(f"Today: ${summary['gross_sales']:,.2f} gross, {summary['transaction_count']} txns")
+
+# Get menu item sales
+item_sales = await connector.get_item_sales(days_back=30)
+for item in item_sales[:5]:
+    print(f"  {item['name']}: {item['quantity_sold']} sold, ${item['total_revenue']:,.2f}")
+```
+
+---
+
 ## 🧠 How It Works
 
 FiscalPilot uses a **multi-agent architecture** with an **execution pipeline**. Agents don't just find opportunities — they propose specific actions, route them through approval, and execute them.
