@@ -11,6 +11,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![GitHub Stars](https://img.shields.io/github/stars/meetpandya27/FiscalPilot?style=social)](https://github.com/meetpandya27/FiscalPilot)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289DA?logo=discord&logoColor=white)](https://discord.com/invite/kj3q9S2E5)
 
 <br />
 
