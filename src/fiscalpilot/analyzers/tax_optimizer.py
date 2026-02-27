@@ -22,6 +22,11 @@ from typing import Any
 logger = logging.getLogger("fiscalpilot.analyzers.tax_optimizer")
 
 
+def _enum_str(val: Any) -> str:
+    """Extract string from enum or return str(val). Handles Pydantic model_dump() enum instances."""
+    return val.value if hasattr(val, "value") else str(val)
+
+
 # Common deductible categories and typical deduction rates
 DEDUCTIBLE_CATEGORIES = {
     "meals": 0.50,  # 50% deductible for business meals
@@ -206,12 +211,12 @@ class TaxOptimizer:
         miscat_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
 
         for t in transactions:
-            cat = str(t.get("category", "")).lower()
+            cat = _enum_str(t.get("category", "")).lower()
             if cat not in ("other", "miscellaneous", ""):
                 continue
 
-            desc = str(t.get("description", "")).lower()
-            vendor = str(t.get("vendor", "")).lower()
+            desc = _enum_str(t.get("description", "")).lower()
+            vendor = _enum_str(t.get("vendor", "")).lower()
             combined = f"{desc} {vendor}"
 
             for keyword, proper_cat in DEDUCTION_KEYWORDS.items():
@@ -301,7 +306,7 @@ class TaxOptimizer:
         """Identify equipment purchases eligible for Section 179 or bonus depreciation."""
         equipment_txns = [
             t for t in transactions
-            if str(t.get("category", "")).lower() == "equipment"
+            if _enum_str(t.get("category", "")).lower() == "equipment"
             and abs(float(t.get("amount", 0))) >= 500
         ]
 
@@ -410,7 +415,7 @@ class TaxOptimizer:
         """Check if business meals are being properly deducted at 50%."""
         meal_txns = [
             t for t in transactions
-            if str(t.get("category", "")).lower() == "meals"
+            if _enum_str(t.get("category", "")).lower() == "meals"
         ]
         if not meal_txns:
             return None
@@ -453,12 +458,12 @@ class TaxOptimizer:
         total = 0.0
 
         for t in transactions:
-            txn_type = str(t.get("type", "expense"))
+            txn_type = _enum_str(t.get("type", "expense"))
             if txn_type not in ("expense", "payroll", "tax"):
                 continue
             amount = abs(float(t.get("amount", 0)))
             total += amount
-            cat = str(t.get("category", "")).lower()
+            cat = _enum_str(t.get("category", "")).lower()
             if cat in ("", "other", "miscellaneous"):
                 uncategorized += amount
             else:

@@ -195,6 +195,63 @@ Never be vague. Every recommendation should have a clear next step."""
             metadata={"scan_type": "quick"},
         )
 
+    async def run_local_audit(self, company: CompanyProfile) -> AuditReport:
+        """Run a full analysis using ONLY intelligence engines — no LLM required.
+
+        This mode runs all five computation-based analyzers (Benford's Law,
+        anomaly detection, industry benchmarks, cash flow forecasting, and
+        tax optimization) and produces findings, action items, proposed actions,
+        and a heuristic executive summary — all without calling any LLM.
+
+        Perfect for:
+        - First-time users who don't have an API key yet
+        - Local/offline usage
+        - CI/CD pipelines
+        - Demo and evaluation
+        """
+        # Step 1: Pull data from all connectors
+        dataset = await self._pull_data(company)
+
+        # Step 2: Run intelligence engines (pure computation, no LLM)
+        intelligence, intel_findings, intel_context = self._run_intelligence(company, dataset)
+
+        # Step 3: Deduplicate and rank
+        all_findings = self._deduplicate_findings(intel_findings)
+        all_findings.sort(key=lambda f: f.potential_savings * f.confidence, reverse=True)
+
+        # Step 4: Generate action items
+        action_items = self._generate_action_items(all_findings)
+
+        # Step 5: Generate proposed actions
+        proposed_actions = self._generate_proposed_actions(all_findings, company)
+
+        # Step 6: Generate executive summary heuristically (no LLM)
+        executive_summary = self._generate_local_executive_summary(
+            company, all_findings, dataset, intelligence
+        )
+
+        report = AuditReport(
+            id=str(uuid.uuid4()),
+            company_name=company.name,
+            findings=all_findings,
+            action_items=action_items,
+            proposed_actions=proposed_actions,
+            executive_summary=executive_summary,
+            intelligence=intelligence,
+            period_start=str(dataset.period_start) if dataset.period_start else None,
+            period_end=str(dataset.period_end) if dataset.period_end else None,
+            metadata={
+                "scan_type": "local",
+                "agents_used": [],
+                "connectors_used": [c.name for c in self.connectors.active_connectors],
+                "total_transactions_analyzed": len(dataset.transactions),
+                "intelligence_engines": self._active_intelligence_engines(),
+                "llm_required": False,
+            },
+        )
+
+        return report
+
     async def _pull_data(self, company: CompanyProfile) -> FinancialDataset:
         """Pull and merge data from all active connectors."""
         datasets: list[FinancialDataset] = []
@@ -681,6 +738,100 @@ Be specific, use dollar amounts, and be direct. No fluff."""
         # Calculate health score (simple heuristic)
         savings_pct = (total_savings / max(dataset.total_expenses, 1)) * 100
         health_score = max(0, min(100, 100 - savings_pct * 2 - critical_count * 10))
+
+        return ExecutiveSummary(
+            total_potential_savings=total_savings,
+            total_findings=len(findings),
+            critical_findings=critical_count,
+            top_opportunities=top_opps,
+            health_score=round(health_score, 1),
+            narrative=narrative,
+        )
+
+    def _generate_local_executive_summary(
+        self,
+        company: CompanyProfile,
+        findings: list[Finding],
+        dataset: FinancialDataset,
+        intelligence: IntelligenceData,
+    ) -> ExecutiveSummary:
+        """Generate an executive summary heuristically, without calling an LLM.
+
+        Uses the intelligence engine results and finding data to compose
+        a structured narrative.
+        """
+        total_savings = sum(f.potential_savings for f in findings)
+        critical_count = sum(1 for f in findings if f.severity == Severity.CRITICAL)
+        high_count = sum(1 for f in findings if f.severity == Severity.HIGH)
+        top_opps = [f.title for f in findings[:5]]
+
+        # Calculate health score
+        expense_total = max(dataset.total_expenses, 1)
+        savings_pct = (total_savings / expense_total) * 100
+        health_score = max(0, min(100, 100 - savings_pct * 2 - critical_count * 10 - high_count * 3))
+
+        # Build narrative paragraphs
+        paragraphs: list[str] = []
+
+        # Opening — most impactful finding
+        if findings:
+            top = findings[0]
+            paragraphs.append(
+                f"FiscalPilot analyzed {len(dataset.transactions):,} transactions for "
+                f"{company.name} and identified **{len(findings)} findings** with a total "
+                f"potential savings of **${total_savings:,.2f}**. "
+                f"The most significant finding is **{top.title}**, which alone represents "
+                f"${top.potential_savings:,.2f} in potential annual savings."
+            )
+        else:
+            paragraphs.append(
+                f"FiscalPilot analyzed {len(dataset.transactions):,} transactions for "
+                f"{company.name}. No significant issues were detected — your finances look healthy."
+            )
+
+        # Intelligence highlights
+        highlights: list[str] = []
+        if intelligence.benchmark_grade:
+            highlights.append(
+                f"Industry benchmark grade: **{intelligence.benchmark_grade}**"
+                + (f" with ${intelligence.benchmark_excess_spend:,.2f} excess spending" if intelligence.benchmark_excess_spend > 0 else "")
+            )
+        if intelligence.anomaly_flagged_count > 0:
+            highlights.append(f"{intelligence.anomaly_flagged_count} anomalous transactions flagged for review")
+        if intelligence.benfords_conformity_score is not None:
+            label = "healthy" if intelligence.benfords_conformity_score >= 0.7 else "concerning"
+            highlights.append(f"Benford's Law conformity: {intelligence.benfords_conformity_score:.0%} ({label})")
+        if intelligence.cashflow_runway_months > 0:
+            highlights.append(f"Cash runway: {intelligence.cashflow_runway_months:.1f} months")
+        if intelligence.tax_savings_estimate > 0:
+            highlights.append(f"Tax optimization potential: ${intelligence.tax_savings_estimate:,.2f}")
+
+        if highlights:
+            paragraphs.append(
+                "**Key intelligence highlights:** " + ". ".join(highlights) + "."
+            )
+
+        # Top action items
+        if len(findings) >= 3:
+            top3 = findings[:3]
+            items = "; ".join(
+                f"({i+1}) {f.title} — ${f.potential_savings:,.2f}" for i, f in enumerate(top3)
+            )
+            paragraphs.append(f"**Top 3 recommended actions:** {items}.")
+
+        # Closing
+        if critical_count > 0:
+            paragraphs.append(
+                f"⚠️ There are **{critical_count} critical issue(s)** requiring immediate attention. "
+                f"Review the findings below and take action on the critical items first."
+            )
+        else:
+            paragraphs.append(
+                "No critical issues were found. Review the findings below and prioritize "
+                "the high-impact opportunities to maximize savings."
+            )
+
+        narrative = "\n\n".join(paragraphs)
 
         return ExecutiveSummary(
             total_potential_savings=total_savings,

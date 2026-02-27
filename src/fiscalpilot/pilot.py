@@ -32,7 +32,7 @@ class FiscalPilot:
 
         pilot = FiscalPilot.from_config("fiscalpilot.yaml")
         report = await pilot.audit(company_profile)
-        report.to_pdf("audit.pdf")
+        print(report.to_markdown())
 
     The FiscalPilot coordinates:
     - **Connectors**: Pull data from accounting systems, banks, ERPs.
@@ -103,3 +103,28 @@ class FiscalPilot:
             self._setup()
         assert self._coordinator is not None
         return await self._coordinator.run_quick_scan(company)
+
+    async def local_audit(self, company: CompanyProfile) -> AuditReport:
+        """Run a full analysis using ONLY intelligence engines — no LLM required.
+
+        Uses Benford's Law, anomaly detection, industry benchmarks, cash flow
+        forecasting, and tax optimization to produce findings, action items,
+        and an executive summary — all without calling any LLM.
+
+        Perfect for demos, offline usage, or when no API key is configured.
+        """
+        if self._coordinator is None:
+            self._setup()
+        assert self._coordinator is not None
+        logger.info("Starting local audit (no LLM) for %s", company.name)
+        report = await self._coordinator.run_local_audit(company)
+        logger.info(
+            "Local audit complete: %d findings, $%.2f potential savings",
+            len(report.findings),
+            report.total_potential_savings,
+        )
+        return report
+
+    def local_audit_sync(self, company: CompanyProfile) -> AuditReport:
+        """Synchronous wrapper around :meth:`local_audit`."""
+        return asyncio.run(self.local_audit(company))

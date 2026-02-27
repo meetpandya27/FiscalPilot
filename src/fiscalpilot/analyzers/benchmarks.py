@@ -186,11 +186,15 @@ class BenchmarkAnalyzer:
         spend: dict[str, float] = {}
         for t in transactions:
             txn_type = t.get("type", "")
-            if txn_type not in ("expense", "payroll", "tax"):
+            # Handle both enum instances and plain strings
+            txn_type_str = txn_type.value if hasattr(txn_type, "value") else str(txn_type)
+            if txn_type_str not in ("expense", "payroll", "tax"):
                 continue
             category = t.get("category") or "other"
+            # Handle both enum instances and plain strings
+            cat_str = category.value if hasattr(category, "value") else str(category)
             amount = abs(float(t.get("amount", 0)))
-            spend[str(category)] = spend.get(str(category), 0) + amount
+            spend[cat_str] = spend.get(cat_str, 0) + amount
         return spend
 
     @staticmethod

@@ -182,10 +182,18 @@ class CSVConnector(BaseConnector):
             "food": ExpenseCategory.MEALS,
             "supplies": ExpenseCategory.SUPPLIES,
             "office": ExpenseCategory.SUPPLIES,
+            "inventory": ExpenseCategory.INVENTORY,
+            "cogs": ExpenseCategory.INVENTORY,
+            "cost of goods": ExpenseCategory.INVENTORY,
+            "food": ExpenseCategory.INVENTORY,
+            "beverage": ExpenseCategory.INVENTORY,
             "shipping": ExpenseCategory.SHIPPING,
             "freight": ExpenseCategory.SHIPPING,
             "tax": ExpenseCategory.TAXES,
             "equipment": ExpenseCategory.EQUIPMENT,
+            "maintenance": ExpenseCategory.MAINTENANCE,
+            "repair": ExpenseCategory.MAINTENANCE,
+            "miscellaneous": ExpenseCategory.MISCELLANEOUS,
         }
 
         for keyword, category in mapping.items():

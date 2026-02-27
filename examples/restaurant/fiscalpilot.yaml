@@ -10,12 +10,18 @@ connectors:
       file_path: "./examples/restaurant/transactions.csv"
 
 analyzers:
-  waste_detection: true
-  fraud_detection: true
+  cost_optimization: true
+  risk_detection: true
   margin_optimization: true
   cost_reduction: true
   revenue_leakage: true
   vendor_analysis: true
+  # Intelligence engines (pure computation, no LLM required)
+  benfords_analysis: true
+  anomaly_detection: true
+  benchmark_comparison: true
+  cashflow_forecast: true
+  tax_optimization: true
 
 security:
   local_only: false

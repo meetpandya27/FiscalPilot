@@ -74,6 +74,11 @@ def audit(
         "-o",
         help="Output file path (.md, .json)",
     ),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Run using only intelligence engines (no LLM/API key required)",
+    ),
 ) -> None:
     """Run a full financial audit."""
     from fiscalpilot.config import FiscalPilotConfig
@@ -95,8 +100,13 @@ def audit(
     config_path = config if Path(config).exists() else None
     pilot = FiscalPilot.from_config(config_path)
 
-    with console.status("[bold green]Running audit...[/bold green]"):
-        report = asyncio.run(pilot.audit(profile))
+    if local:
+        console.print("[dim]Running in local mode (no LLM) — using intelligence engines only[/dim]")
+        with console.status("[bold green]Running local audit...[/bold green]"):
+            report = asyncio.run(pilot.local_audit(profile))
+    else:
+        with console.status("[bold green]Running audit...[/bold green]"):
+            report = asyncio.run(pilot.audit(profile))
 
     _display_report(report)
     _save_report(report, output)
@@ -131,8 +141,15 @@ def scan(
         "-o",
         help="Output file path",
     ),
+    local: bool = typer.Option(
+        False,
+        "--local",
+        help="Force local mode (no LLM). Auto-detected when no API key is set.",
+    ),
 ) -> None:
     """Quick scan from a CSV or Excel file — easiest way to get started."""
+    import os
+
     from fiscalpilot.config import ConnectorConfig, FiscalPilotConfig
     from fiscalpilot.models.company import CompanyProfile, Industry
     from fiscalpilot.pilot import FiscalPilot
@@ -164,8 +181,28 @@ def scan(
     pilot = FiscalPilot(config=config)
     pilot._setup()
 
-    with console.status("[bold green]Scanning...[/bold green]"):
-        report = asyncio.run(pilot.quick_scan(profile))
+    # Auto-detect local mode: if no API key is set and --local not explicitly given
+    has_api_key = bool(
+        config.llm.api_key
+        or os.environ.get("OPENAI_API_KEY")
+        or os.environ.get("FISCALPILOT_API_KEY")
+        or os.environ.get("ANTHROPIC_API_KEY")
+    )
+    use_local = local or not has_api_key
+
+    if use_local:
+        if not local:
+            console.print(
+                "[dim]No API key detected — running in local mode "
+                "(intelligence engines only, no LLM). Set OPENAI_API_KEY for full analysis.[/dim]"
+            )
+        else:
+            console.print("[dim]Running in local mode (no LLM) — using intelligence engines only[/dim]")
+        with console.status("[bold green]Scanning...[/bold green]"):
+            report = asyncio.run(pilot.local_audit(profile))
+    else:
+        with console.status("[bold green]Scanning...[/bold green]"):
+            report = asyncio.run(pilot.quick_scan(profile))
 
     _display_report(report)
     _save_report(report, output)
@@ -214,6 +251,12 @@ def _display_report(report) -> None:  # noqa: ANN001
         "Health Score",
         f"{report.executive_summary.health_score}/100",
     )
+    if report.proposed_actions:
+        table.add_row("Proposed Actions", str(len(report.proposed_actions)))
+    if report.intelligence.benchmark_grade:
+        table.add_row("Benchmark Grade", report.intelligence.benchmark_grade)
+    if report.intelligence.cashflow_runway_months:
+        table.add_row("Cash Runway", f"{report.intelligence.cashflow_runway_months:.1f} months")
 
     console.print(table)
     console.print()

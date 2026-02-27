@@ -1,66 +1,301 @@
 date,amount,description,category,vendor
-2025-01-02,-1200.00,Monthly rent payment,Rent,Landlord LLC
-2025-01-02,-450.00,Food supplies - produce,Inventory,Fresh Farms
-2025-01-02,-280.00,Food supplies - meat,Inventory,Valley Meats
-2025-01-03,2340.00,Daily sales revenue,Income,POS System
-2025-01-03,-85.00,Cleaning supplies,Supplies,CleanCo
-2025-01-04,1890.00,Daily sales revenue,Income,POS System
-2025-01-04,-120.00,Uber Eats commission,Marketing,Uber Eats
-2025-01-05,2100.00,Daily sales revenue,Income,POS System
-2025-01-05,-450.00,Food supplies - produce,Inventory,Fresh Farms
-2025-01-05,-45.00,Spotify Business subscription,Software,Spotify
-2025-01-06,-3200.00,Payroll - week 1,Payroll,ADP Payroll
-2025-01-06,1560.00,Daily sales revenue,Income,POS System
-2025-01-07,2450.00,Daily sales revenue,Income,POS System
-2025-01-07,-380.00,Gas & electric bill,Utilities,Pacific Gas
-2025-01-08,-89.99,Toast POS subscription,Software,Toast Inc
-2025-01-08,-49.99,Square POS subscription,Software,Square Inc
-2025-01-08,2670.00,Daily sales revenue,Income,POS System
-2025-01-09,-450.00,Food supplies - produce,Inventory,Fresh Farms
-2025-01-09,-310.00,Food supplies - dairy,Inventory,Dairy Direct
-2025-01-09,1920.00,Daily sales revenue,Income,POS System
-2025-01-10,2890.00,Daily sales revenue (Friday),Income,POS System
-2025-01-10,-65.00,Yelp advertising,Marketing,Yelp
-2025-01-11,3450.00,Daily sales revenue (Saturday),Income,POS System
-2025-01-11,-180.00,Linen service,Supplies,Fresh Linens
-2025-01-12,2100.00,Daily sales revenue (Sunday),Income,POS System
-2025-01-12,-450.00,Food supplies - produce,Inventory,Fresh Farms
-2025-01-13,-3200.00,Payroll - week 2,Payroll,ADP Payroll
-2025-01-13,1680.00,Daily sales revenue,Income,POS System
-2025-01-14,-520.00,Insurance premium,Insurance,State Farm
-2025-01-14,2230.00,Daily sales revenue,Income,POS System
-2025-01-15,-450.00,Food supplies - produce,Inventory,Fresh Farms
-2025-01-15,-280.00,Food supplies - meat,Inventory,Valley Meats
-2025-01-15,2100.00,Daily sales revenue,Income,POS System
-2025-01-15,-29.99,Canva Pro subscription,Software,Canva
-2025-01-15,-19.99,Mailchimp subscription,Software,Mailchimp
-2025-01-16,-450.00,Food supplies - produce,Inventory,Green Valley Farms
-2025-01-16,1890.00,Daily sales revenue,Income,POS System
-2025-01-17,2560.00,Daily sales revenue,Income,POS System
-2025-01-17,-75.00,Pest control service,Maintenance,Bug Away
-2025-01-18,3200.00,Daily sales revenue (Saturday),Income,POS System
-2025-01-19,1950.00,Daily sales revenue (Sunday),Income,POS System
-2025-01-20,-3200.00,Payroll - week 3,Payroll,ADP Payroll
-2025-01-20,1540.00,Daily sales revenue,Income,POS System
-2025-01-20,-450.00,Food supplies - produce,Inventory,Fresh Farms
-2025-01-20,-450.00,Food supplies - produce (DUPLICATE),Inventory,Fresh Farms
-2025-01-21,-1200.00,Catering equipment lease,Equipment,Kitchen Pro
-2025-01-21,2340.00,Daily sales revenue,Income,POS System
-2025-01-22,-380.00,Gas & electric bill,Utilities,Pacific Gas
-2025-01-22,2100.00,Daily sales revenue,Income,POS System
-2025-01-23,-89.99,Toast POS subscription,Software,Toast Inc
-2025-01-23,2670.00,Daily sales revenue,Income,POS System
-2025-01-24,2890.00,Daily sales revenue,Income,POS System
-2025-01-25,3560.00,Daily sales revenue (Saturday),Income,POS System
-2025-01-25,-250.00,DoorDash commission,Marketing,DoorDash
-2025-01-26,2200.00,Daily sales revenue (Sunday),Income,POS System
-2025-01-27,-3200.00,Payroll - week 4,Payroll,ADP Payroll
-2025-01-27,1450.00,Daily sales revenue,Income,POS System
-2025-01-28,-5000.00,Suspicious round payment,Miscellaneous,Unknown Vendor
-2025-01-28,2100.00,Daily sales revenue,Income,POS System
-2025-01-29,-450.00,Food supplies - produce,Inventory,Fresh Farms
-2025-01-29,2340.00,Daily sales revenue,Income,POS System
-2025-01-30,-155.00,Water bill,Utilities,City Water
-2025-01-30,2560.00,Daily sales revenue,Income,POS System
-2025-01-31,2890.00,Daily sales revenue,Income,POS System
-2025-01-31,-12.99,Netflix subscription,Software,Netflix
+2024-07-01,-4200.00,Monthly rent payment,Rent,Landlord LLC
+2024-07-01,-9800.00,Semi-monthly payroll,Payroll,ADP Payroll
+2024-07-02,-620.00,Produce order,Inventory,Fresh Farms
+2024-07-02,-380.00,Meat and poultry order,Inventory,Valley Meats
+2024-07-02,-210.00,Dairy delivery,Inventory,Dairy Direct
+2024-07-03,3240.00,Daily sales - dine in,Income,POS System
+2024-07-03,1180.00,Daily sales - takeout,Income,POS System
+2024-07-03,-155.00,Kitchen cleaning supplies,Supplies,CleanPro
+2024-07-04,4520.00,Daily sales - holiday weekend,Income,POS System
+2024-07-04,-85.00,Paper goods and napkins,Supplies,Restaurant Depot
+2024-07-05,2860.00,Daily sales - dine in,Income,POS System
+2024-07-05,-340.00,Weekly pest control,Maintenance,BugFree Inc
+2024-07-06,3180.00,Daily sales - dine in,Income,POS System
+2024-07-06,980.00,Daily sales - takeout,Income,POS System
+2024-07-07,2640.00,Daily sales - Sunday brunch,Income,POS System
+2024-07-07,-175.00,Table linens laundry,Supplies,City Laundry
+2024-07-08,-580.00,Produce order,Inventory,Fresh Farms
+2024-07-08,-420.00,Seafood delivery,Inventory,Ocean Fresh
+2024-07-08,-890.00,Electric bill,Utilities,City Power Co
+2024-07-09,2980.00,Daily sales - dine in,Income,POS System
+2024-07-09,-250.00,Marketing - social media ads,Marketing,Meta Ads
+2024-07-10,2720.00,Daily sales - dine in,Income,POS System
+2024-07-10,-135.00,POS software subscription,Subscriptions,Toast POS
+2024-07-11,3100.00,Daily sales - dine in,Income,POS System
+2024-07-11,1420.00,Daily sales - takeout,Income,POS System
+2024-07-12,3640.00,Daily sales - Friday dinner,Income,POS System
+2024-07-12,-95.00,Accounting software,Subscriptions,QuickBooks
+2024-07-13,4120.00,Daily sales - Saturday,Income,POS System
+2024-07-13,-1200.00,Wine and spirits order,Inventory,Wine Warehouse
+2024-07-14,2350.00,Daily sales - Sunday,Income,POS System
+2024-07-15,-9800.00,Semi-monthly payroll,Payroll,ADP Payroll
+2024-07-15,-650.00,Produce order,Inventory,Fresh Farms
+2024-07-15,-395.00,Meat and poultry order,Inventory,Valley Meats
+2024-07-16,2890.00,Daily sales - dine in,Income,POS System
+2024-07-16,-320.00,Gas bill,Utilities,SoCalGas
+2024-07-17,2650.00,Daily sales - dine in,Income,POS System
+2024-07-17,-750.00,Equipment repair - walk-in cooler,Equipment,HVAC Experts
+2024-07-18,3200.00,Daily sales - dine in,Income,POS System
+2024-07-18,-180.00,Staff uniforms,Supplies,Uniform World
+2024-07-19,3580.00,Daily sales - Friday dinner,Income,POS System
+2024-07-20,4280.00,Daily sales - Saturday,Income,POS System
+2024-07-20,-280.00,Catering delivery supplies,Inventory,Restaurant Depot
+2024-07-21,2100.00,Daily sales - Sunday,Income,POS System
+2024-07-22,-560.00,Produce order,Inventory,Fresh Farms
+2024-07-22,-350.00,Meat order,Inventory,Valley Meats
+2024-07-23,2750.00,Daily sales - dine in,Income,POS System
+2024-07-23,-1850.00,Liability insurance premium,Insurance,State Farm
+2024-07-24,2680.00,Daily sales - dine in,Income,POS System
+2024-07-24,-220.00,Menu redesign and printing,Marketing,PrintShop Pro
+2024-07-25,3050.00,Daily sales - dine in,Income,POS System
+2024-07-26,3520.00,Daily sales - Friday dinner,Income,POS System
+2024-07-27,4350.00,Daily sales - Saturday,Income,POS System
+2024-07-28,2200.00,Daily sales - Sunday brunch,Income,POS System
+2024-07-29,-590.00,Produce order,Inventory,Fresh Farms
+2024-07-29,-410.00,Meat order,Inventory,Valley Meats
+2024-07-30,2850.00,Daily sales - dine in,Income,POS System
+2024-07-30,-125.00,Water and sewer bill,Utilities,City Water
+2024-07-31,2920.00,Daily sales - dine in,Income,POS System
+2024-08-01,-4200.00,Monthly rent payment,Rent,Landlord LLC
+2024-08-01,-10100.00,Semi-monthly payroll,Payroll,ADP Payroll
+2024-08-02,-680.00,Produce order,Inventory,Fresh Farms
+2024-08-02,-410.00,Meat and poultry order,Inventory,Valley Meats
+2024-08-02,-195.00,Dairy delivery,Inventory,Dairy Direct
+2024-08-03,3380.00,Daily sales - dine in,Income,POS System
+2024-08-03,1250.00,Daily sales - takeout,Income,POS System
+2024-08-04,3050.00,Daily sales - Sunday,Income,POS System
+2024-08-05,-540.00,Grease trap cleaning,Maintenance,CleanPro
+2024-08-05,2680.00,Daily sales - dine in,Income,POS System
+2024-08-06,2950.00,Daily sales - dine in,Income,POS System
+2024-08-06,-300.00,Google ads - local,Marketing,Google Ads
+2024-08-07,2780.00,Daily sales - dine in,Income,POS System
+2024-08-07,-480.00,Seafood delivery,Inventory,Ocean Fresh
+2024-08-08,3150.00,Daily sales - dine in,Income,POS System
+2024-08-08,-135.00,POS software subscription,Subscriptions,Toast POS
+2024-08-09,3720.00,Daily sales - Friday dinner,Income,POS System
+2024-08-10,4480.00,Daily sales - Saturday,Income,POS System
+2024-08-10,-1350.00,Wine and spirits order,Inventory,Wine Warehouse
+2024-08-11,2450.00,Daily sales - Sunday brunch,Income,POS System
+2024-08-12,-610.00,Produce order,Inventory,Fresh Farms
+2024-08-12,-380.00,Meat order,Inventory,Valley Meats
+2024-08-13,2790.00,Daily sales - dine in,Income,POS System
+2024-08-14,2650.00,Daily sales - dine in,Income,POS System
+2024-08-14,-920.00,Electric bill,Utilities,City Power Co
+2024-08-15,-10100.00,Semi-monthly payroll,Payroll,ADP Payroll
+2024-08-15,-160.00,Table linens laundry,Supplies,City Laundry
+2024-08-16,3250.00,Daily sales - Friday,Income,POS System
+2024-08-17,4150.00,Daily sales - Saturday,Income,POS System
+2024-08-18,2280.00,Daily sales - Sunday,Income,POS System
+2024-08-19,-640.00,Produce order,Inventory,Fresh Farms
+2024-08-19,-350.00,Meat order,Inventory,Valley Meats
+2024-08-20,2880.00,Daily sales - dine in,Income,POS System
+2024-08-20,-6500.00,New commercial dishwasher,Equipment,Restaurant Supply Co
+2024-08-21,2750.00,Daily sales - dine in,Income,POS System
+2024-08-22,3100.00,Daily sales - dine in,Income,POS System
+2024-08-23,3680.00,Daily sales - Friday dinner,Income,POS System
+2024-08-24,4520.00,Daily sales - Saturday,Income,POS System
+2024-08-25,2150.00,Daily sales - Sunday,Income,POS System
+2024-08-26,-575.00,Produce order,Inventory,Fresh Farms
+2024-08-26,-390.00,Meat order,Inventory,Valley Meats
+2024-08-27,2820.00,Daily sales - dine in,Income,POS System
+2024-08-27,-95.00,Accounting software,Subscriptions,QuickBooks
+2024-08-28,2680.00,Daily sales - dine in,Income,POS System
+2024-08-28,-340.00,Gas bill,Utilities,SoCalGas
+2024-08-29,3050.00,Daily sales - dine in,Income,POS System
+2024-08-30,3650.00,Daily sales - Friday,Income,POS System
+2024-08-31,4100.00,Daily sales - Saturday,Income,POS System
+2024-09-01,-4200.00,Monthly rent payment,Rent,Landlord LLC
+2024-09-01,-10100.00,Semi-monthly payroll,Payroll,ADP Payroll
+2024-09-01,2050.00,Daily sales - Sunday,Income,POS System
+2024-09-02,-650.00,Produce order,Inventory,Fresh Farms
+2024-09-02,-400.00,Meat and poultry order,Inventory,Valley Meats
+2024-09-03,2720.00,Daily sales - dine in,Income,POS System
+2024-09-03,-200.00,Dairy delivery,Inventory,Dairy Direct
+2024-09-04,2580.00,Daily sales - dine in,Income,POS System
+2024-09-04,-450.00,Staff training workshop,Miscellaneous,ServSafe
+2024-09-05,2850.00,Daily sales - dine in,Income,POS System
+2024-09-05,-175.00,Cleaning supplies,Supplies,CleanPro
+2024-09-06,3480.00,Daily sales - Friday dinner,Income,POS System
+2024-09-07,4250.00,Daily sales - Saturday,Income,POS System
+2024-09-08,2380.00,Daily sales - Sunday brunch,Income,POS System
+2024-09-09,-620.00,Produce order,Inventory,Fresh Farms
+2024-09-09,-365.00,Meat order,Inventory,Valley Meats
+2024-09-10,2650.00,Daily sales - dine in,Income,POS System
+2024-09-10,-135.00,POS software subscription,Subscriptions,Toast POS
+2024-09-11,2780.00,Daily sales - dine in,Income,POS System
+2024-09-11,-280.00,Social media advertising,Marketing,Meta Ads
+2024-09-12,3020.00,Daily sales - dine in,Income,POS System
+2024-09-12,-1100.00,Wine and spirits order,Inventory,Wine Warehouse
+2024-09-13,3580.00,Daily sales - Friday dinner,Income,POS System
+2024-09-14,4380.00,Daily sales - Saturday,Income,POS System
+2024-09-15,-10100.00,Semi-monthly payroll,Payroll,ADP Payroll
+2024-09-15,2200.00,Daily sales - Sunday,Income,POS System
+2024-09-16,-600.00,Produce order,Inventory,Fresh Farms
+2024-09-16,-370.00,Meat order,Inventory,Valley Meats
+2024-09-17,2690.00,Daily sales - dine in,Income,POS System
+2024-09-17,-880.00,Electric bill,Utilities,City Power Co
+2024-09-18,2550.00,Daily sales - dine in,Income,POS System
+2024-09-19,2820.00,Daily sales - dine in,Income,POS System
+2024-09-19,-320.00,Pest control - quarterly,Maintenance,BugFree Inc
+2024-09-20,3420.00,Daily sales - Friday dinner,Income,POS System
+2024-09-21,4100.00,Daily sales - Saturday,Income,POS System
+2024-09-22,2150.00,Daily sales - Sunday,Income,POS System
+2024-09-23,-580.00,Produce order,Inventory,Fresh Farms
+2024-09-23,-340.00,Meat order,Inventory,Valley Meats
+2024-09-24,2720.00,Daily sales - dine in,Income,POS System
+2024-09-24,-1850.00,Liability insurance premium,Insurance,State Farm
+2024-09-25,2640.00,Daily sales - dine in,Income,POS System
+2024-09-25,-95.00,Accounting software,Subscriptions,QuickBooks
+2024-09-26,2950.00,Daily sales - dine in,Income,POS System
+2024-09-27,3650.00,Daily sales - Friday dinner,Income,POS System
+2024-09-28,4200.00,Daily sales - Saturday,Income,POS System
+2024-09-28,-330.00,Gas bill,Utilities,SoCalGas
+2024-09-29,2100.00,Daily sales - Sunday,Income,POS System
+2024-09-30,2580.00,Daily sales - dine in,Income,POS System
+2024-09-30,-125.00,Water and sewer bill,Utilities,City Water
+2024-10-01,-4200.00,Monthly rent payment,Rent,Landlord LLC
+2024-10-01,-10400.00,Semi-monthly payroll,Payroll,ADP Payroll
+2024-10-02,-670.00,Produce order,Inventory,Fresh Farms
+2024-10-02,-420.00,Meat and poultry order,Inventory,Valley Meats
+2024-10-02,-205.00,Dairy delivery,Inventory,Dairy Direct
+2024-10-03,2580.00,Daily sales - dine in,Income,POS System
+2024-10-03,950.00,Daily sales - takeout,Income,POS System
+2024-10-04,3180.00,Daily sales - Friday dinner,Income,POS System
+2024-10-05,3950.00,Daily sales - Saturday,Income,POS System
+2024-10-06,2050.00,Daily sales - Sunday brunch,Income,POS System
+2024-10-07,-610.00,Produce order,Inventory,Fresh Farms
+2024-10-07,-355.00,Meat order,Inventory,Valley Meats
+2024-10-08,2620.00,Daily sales - dine in,Income,POS System
+2024-10-08,-135.00,POS software subscription,Subscriptions,Toast POS
+2024-10-09,2480.00,Daily sales - dine in,Income,POS System
+2024-10-09,-350.00,Google ads - local,Marketing,Google Ads
+2024-10-10,2750.00,Daily sales - dine in,Income,POS System
+2024-10-10,-1250.00,Wine and spirits order,Inventory,Wine Warehouse
+2024-10-11,3350.00,Daily sales - Friday dinner,Income,POS System
+2024-10-12,4050.00,Daily sales - Saturday,Income,POS System
+2024-10-13,2200.00,Daily sales - Sunday,Income,POS System
+2024-10-14,-640.00,Produce order,Inventory,Fresh Farms
+2024-10-14,-380.00,Meat order,Inventory,Valley Meats
+2024-10-14,-160.00,Table linens laundry,Supplies,City Laundry
+2024-10-15,-10400.00,Semi-monthly payroll,Payroll,ADP Payroll
+2024-10-15,2550.00,Daily sales - dine in,Income,POS System
+2024-10-16,2680.00,Daily sales - dine in,Income,POS System
+2024-10-16,-950.00,Electric bill,Utilities,City Power Co
+2024-10-17,2520.00,Daily sales - dine in,Income,POS System
+2024-10-18,3280.00,Daily sales - Friday dinner,Income,POS System
+2024-10-19,4150.00,Daily sales - Saturday,Income,POS System
+2024-10-20,2100.00,Daily sales - Sunday,Income,POS System
+2024-10-21,-600.00,Produce order,Inventory,Fresh Farms
+2024-10-21,-350.00,Meat order,Inventory,Valley Meats
+2024-10-21,-3200.00,Commercial oven repair,Equipment,Restaurant Supply Co
+2024-10-22,2650.00,Daily sales - dine in,Income,POS System
+2024-10-23,2580.00,Daily sales - dine in,Income,POS System
+2024-10-24,2780.00,Daily sales - dine in,Income,POS System
+2024-10-25,3480.00,Daily sales - Friday dinner,Income,POS System
+2024-10-26,4280.00,Daily sales - Saturday,Income,POS System
+2024-10-27,2250.00,Daily sales - Sunday brunch,Income,POS System
+2024-10-28,-630.00,Produce order,Inventory,Fresh Farms
+2024-10-28,-390.00,Meat order,Inventory,Valley Meats
+2024-10-28,-95.00,Accounting software,Subscriptions,QuickBooks
+2024-10-29,2720.00,Daily sales - dine in,Income,POS System
+2024-10-29,-350.00,Gas bill,Utilities,SoCalGas
+2024-10-30,2600.00,Daily sales - dine in,Income,POS System
+2024-10-31,2850.00,Daily sales - dine in,Income,POS System
+2024-10-31,-8500.00,Quarterly estimated tax payment,Taxes,IRS
+2024-11-01,-4200.00,Monthly rent payment,Rent,Landlord LLC
+2024-11-01,-10400.00,Semi-monthly payroll,Payroll,ADP Payroll
+2024-11-02,-700.00,Produce order - holiday prep,Inventory,Fresh Farms
+2024-11-02,-480.00,Meat and poultry order,Inventory,Valley Meats
+2024-11-02,-220.00,Dairy delivery,Inventory,Dairy Direct
+2024-11-03,2650.00,Daily sales - dine in,Income,POS System
+2024-11-03,1100.00,Daily sales - takeout,Income,POS System
+2024-11-04,2780.00,Daily sales - dine in,Income,POS System
+2024-11-05,2580.00,Daily sales - dine in,Income,POS System
+2024-11-05,-135.00,POS software subscription,Subscriptions,Toast POS
+2024-11-06,2720.00,Daily sales - dine in,Income,POS System
+2024-11-06,-250.00,Holiday advertising,Marketing,Meta Ads
+2024-11-07,2850.00,Daily sales - dine in,Income,POS System
+2024-11-08,3620.00,Daily sales - Friday dinner,Income,POS System
+2024-11-09,4350.00,Daily sales - Saturday,Income,POS System
+2024-11-10,2300.00,Daily sales - Sunday brunch,Income,POS System
+2024-11-11,-650.00,Produce order,Inventory,Fresh Farms
+2024-11-11,-400.00,Meat order,Inventory,Valley Meats
+2024-11-12,2680.00,Daily sales - dine in,Income,POS System
+2024-11-12,-175.00,Cleaning supplies,Supplies,CleanPro
+2024-11-13,2550.00,Daily sales - dine in,Income,POS System
+2024-11-14,2920.00,Daily sales - dine in,Income,POS System
+2024-11-14,-1300.00,Wine and spirits - holiday stock,Inventory,Wine Warehouse
+2024-11-15,-10400.00,Semi-monthly payroll,Payroll,ADP Payroll
+2024-11-15,3050.00,Daily sales - Friday dinner,Income,POS System
+2024-11-16,4480.00,Daily sales - Saturday,Income,POS System
+2024-11-17,2400.00,Daily sales - Sunday,Income,POS System
+2024-11-18,-680.00,Produce order,Inventory,Fresh Farms
+2024-11-18,-420.00,Meat order,Inventory,Valley Meats
+2024-11-19,2750.00,Daily sales - dine in,Income,POS System
+2024-11-19,-1850.00,Liability insurance premium,Insurance,State Farm
+2024-11-20,2600.00,Daily sales - dine in,Income,POS System
+2024-11-20,-870.00,Electric bill,Utilities,City Power Co
+2024-11-21,2880.00,Daily sales - dine in,Income,POS System
+2024-11-22,3550.00,Daily sales - Friday dinner,Income,POS System
+2024-11-23,4200.00,Daily sales - Saturday,Income,POS System
+2024-11-24,2350.00,Daily sales - Sunday,Income,POS System
+2024-11-25,-620.00,Produce order,Inventory,Fresh Farms
+2024-11-25,-360.00,Meat order,Inventory,Valley Meats
+2024-11-26,2700.00,Daily sales - dine in,Income,POS System
+2024-11-27,3200.00,Daily sales - pre-Thanksgiving,Income,POS System
+2024-11-28,6800.00,Daily sales - Thanksgiving dinner,Income,POS System
+2024-11-29,5200.00,Daily sales - Black Friday,Income,POS System
+2024-11-30,4650.00,Daily sales - Saturday,Income,POS System
+2024-11-30,-310.00,Gas bill,Utilities,SoCalGas
+2024-12-01,-4200.00,Monthly rent payment,Rent,Landlord LLC
+2024-12-01,-10800.00,Semi-monthly payroll (holiday overtime),Payroll,ADP Payroll
+2024-12-01,2100.00,Daily sales - Sunday,Income,POS System
+2024-12-02,-750.00,Produce order - holiday menu,Inventory,Fresh Farms
+2024-12-02,-520.00,Meat and poultry - holiday,Inventory,Valley Meats
+2024-12-02,-250.00,Dairy delivery,Inventory,Dairy Direct
+2024-12-03,2850.00,Daily sales - dine in,Income,POS System
+2024-12-03,-350.00,Holiday decorations,Miscellaneous,Party City
+2024-12-04,2720.00,Daily sales - dine in,Income,POS System
+2024-12-04,-135.00,POS software subscription,Subscriptions,Toast POS
+2024-12-05,2950.00,Daily sales - dine in,Income,POS System
+2024-12-05,-95.00,Accounting software,Subscriptions,QuickBooks
+2024-12-06,3680.00,Daily sales - Friday dinner,Income,POS System
+2024-12-07,4580.00,Daily sales - Saturday,Income,POS System
+2024-12-08,2450.00,Daily sales - Sunday brunch,Income,POS System
+2024-12-09,-700.00,Produce order,Inventory,Fresh Farms
+2024-12-09,-430.00,Meat order,Inventory,Valley Meats
+2024-12-10,2780.00,Daily sales - dine in,Income,POS System
+2024-12-10,-1500.00,Wine and spirits - December,Inventory,Wine Warehouse
+2024-12-10,-400.00,Holiday catering marketing,Marketing,Google Ads
+2024-12-11,2650.00,Daily sales - dine in,Income,POS System
+2024-12-12,3050.00,Daily sales - dine in,Income,POS System
+2024-12-13,3750.00,Daily sales - Friday dinner,Income,POS System
+2024-12-14,4820.00,Daily sales - Saturday holiday party,Income,POS System
+2024-12-14,2800.00,Catering - corporate holiday party,Income,Catering
+2024-12-15,-10800.00,Semi-monthly payroll (holiday overtime),Payroll,ADP Payroll
+2024-12-15,2500.00,Daily sales - Sunday,Income,POS System
+2024-12-16,-680.00,Produce order,Inventory,Fresh Farms
+2024-12-16,-410.00,Meat order,Inventory,Valley Meats
+2024-12-17,2780.00,Daily sales - dine in,Income,POS System
+2024-12-17,-980.00,Electric bill (holiday lighting),Utilities,City Power Co
+2024-12-18,2920.00,Daily sales - dine in,Income,POS System
+2024-12-19,3150.00,Daily sales - dine in,Income,POS System
+2024-12-20,3900.00,Daily sales - Friday dinner,Income,POS System
+2024-12-21,5100.00,Daily sales - Saturday holiday,Income,POS System
+2024-12-21,3500.00,Catering - office party,Income,Catering
+2024-12-22,2680.00,Daily sales - Sunday brunch,Income,POS System
+2024-12-23,3200.00,Daily sales - Christmas Eve eve,Income,POS System
+2024-12-24,4500.00,Daily sales - Christmas Eve dinner,Income,POS System
+2024-12-25,0.00,Closed - Christmas Day,Income,POS System
+2024-12-26,2350.00,Daily sales - dine in,Income,POS System
+2024-12-27,3580.00,Daily sales - Friday dinner,Income,POS System
+2024-12-28,4650.00,Daily sales - Saturday,Income,POS System
+2024-12-29,2200.00,Daily sales - Sunday,Income,POS System
+2024-12-30,2750.00,Daily sales - dine in,Income,POS System
+2024-12-30,-350.00,Gas bill,Utilities,SoCalGas
+2024-12-30,-125.00,Water and sewer bill,Utilities,City Water
+2024-12-31,5800.00,Daily sales - New Years Eve dinner,Income,POS System
+2024-12-31,-8500.00,Quarterly estimated tax payment,Taxes,IRS
+2024-12-31,-1850.00,Liability insurance premium,Insurance,State Farm
+2024-12-31,-160.00,Table linens laundry,Supplies,City Laundry
