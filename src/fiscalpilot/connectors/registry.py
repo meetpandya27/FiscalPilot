@@ -22,6 +22,7 @@ _BUILTIN_CONNECTORS: dict[str, str] = {
     "quickbooks": "fiscalpilot.connectors.quickbooks_connector.QuickBooksConnector",
     "xero": "fiscalpilot.connectors.xero_connector.XeroConnector",
     "plaid": "fiscalpilot.connectors.plaid_connector.PlaidConnector",
+    "square": "fiscalpilot.connectors.square_connector.SquarePOSConnector",
 }
 
 

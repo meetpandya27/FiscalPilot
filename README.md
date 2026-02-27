@@ -401,6 +401,179 @@ class MyERPConnector(BaseConnector):
 
 ---
 
+## 🍽️ Restaurant Industry — Complete Solution
+
+FiscalPilot's first **fully production-ready industry package**. Built specifically for food service businesses with industry-standard KPIs, QuickBooks integration, and actionable insights.
+
+### Restaurant KPI Dashboard
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     🍽️  JOE'S DINER — FINANCIAL HEALTH                        ║
+║                          Health Grade: A (87/100)                             ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  ┌─────────────────────────────────────────────────────────────────────┐     ║
+║  │ KEY PERFORMANCE INDICATORS                                          │     ║
+║  ├─────────────────────────────────────────────────────────────────────┤     ║
+║  │                                                                     │     ║
+║  │ Food Cost %      [████████░░░░░░░░░░░░]  29.1%   ✅ HEALTHY         │     ║
+║  │                  Target: 28-32%  │  Industry: 30%                   │     ║
+║  │                                                                     │     ║
+║  │ Labor Cost %     [███████████░░░░░░░░░]  33.2%   ⚠️  WARNING        │     ║
+║  │                  Target: 28-32%  │  Industry: 30%                   │     ║
+║  │                                                                     │     ║
+║  │ Prime Cost %     [████████████████░░░░]  62.3%   ✅ HEALTHY         │     ║
+║  │                  Target: 55-65%  │  Industry: 62%                   │     ║
+║  │                                                                     │     ║
+║  │ Occupancy %      [████░░░░░░░░░░░░░░░░]   7.8%   ✅ HEALTHY         │     ║
+║  │                  Target: 6-10%   │  Industry: 8%                    │     ║
+║  │                                                                     │     ║
+║  │ Net Margin       [██████░░░░░░░░░░░░░░]   6.2%   ✅ HEALTHY         │     ║
+║  │                  Target: 3-6%    │  Industry: 5%                    │     ║
+║  └─────────────────────────────────────────────────────────────────────┘     ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+### Restaurant Architecture
+
+```
+                    ┌────────────────────────────────────┐
+                    │      🍽️ Restaurant Analysis        │
+                    │         fiscalpilot restaurant     │
+                    └─────────────────┬──────────────────┘
+                                      │
+            ┌─────────────────────────┼─────────────────────────┐
+            │                         │                         │
+            ▼                         ▼                         ▼
+    ┌───────────────┐        ┌───────────────┐        ┌───────────────┐
+    │   Data Input  │        │   KPI Engine  │        │  Intelligence │
+    └───────┬───────┘        └───────┬───────┘        └───────┬───────┘
+            │                        │                        │
+    ┌───────┴───────┐        ┌───────┴───────┐        ┌───────┴───────┐
+    │ • QuickBooks  │        │ • Food Cost % │        │ • Anomaly     │
+    │ • Square POS  │        │ • Labor Cost  │        │ • Benford's   │
+    │ • Toast POS   │        │ • Prime Cost  │        │ • Benchmarks  │
+    │ • CSV Export  │        │ • Occupancy   │        │ • Cash Flow   │
+    │ • Bank (Plaid)│        │ • Net Margin  │        │ • Tax Savings │
+    └───────────────┘        └───────────────┘        └───────────────┘
+                                      │
+                    ┌─────────────────┼─────────────────┐
+                    │                 │                 │
+                    ▼                 ▼                 ▼
+            ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
+            │  Critical   │   │   Warnings  │   │ Opportuni-  │
+            │   Alerts    │   │  & Actions  │   │    ties     │
+            │   🚨        │   │   ⚠️         │   │   💡        │
+            └─────────────┘   └─────────────┘   └─────────────┘
+```
+
+### QuickBooks Integration — 80+ Restaurant Mappings
+
+FiscalPilot automatically maps QuickBooks accounts to restaurant cost categories:
+
+| QuickBooks Account | → FiscalPilot Category | Industry Benchmark |
+|:-------------------|:-----------------------|:-------------------|
+| Cost of Goods Sold | `INVENTORY` (Food Cost) | 28-32% |
+| Food Purchases | `INVENTORY` | — |
+| Kitchen Wages | `PAYROLL` (Labor Cost) | 28-32% |
+| Server Wages | `PAYROLL` | — |
+| Bar Wages | `PAYROLL` | — |
+| Beverage Costs | `INVENTORY` | 18-24% |
+| Liquor Purchases | `INVENTORY` | — |
+| Rent - Restaurant | `RENT` (Occupancy) | 6-10% |
+| Utility Expense | `UTILITIES` | — |
+| **+ 70 more...** | | |
+
+### Get Started in 60 Seconds
+
+**Option 1: Quick CSV scan**
+```bash
+# Install
+pip install fiscalpilot
+
+# Run restaurant analysis
+fiscalpilot restaurant --csv transactions.csv --company "Joe's Diner" --revenue 850000
+```
+
+**Option 2: Connect QuickBooks**
+```bash
+# Interactive OAuth wizard
+fiscalpilot connect quickbooks
+
+# Then run industry-specific analysis
+fiscalpilot restaurant --quickbooks
+```
+
+**Option 3: Python API**
+```python
+from fiscalpilot.analyzers.restaurant import RestaurantAnalyzer
+from fiscalpilot.connectors.csv_connector import CSVConnector
+from fiscalpilot.models.company import CompanyProfile, Industry, CompanySize
+
+# Setup
+company = CompanyProfile(
+    name="Joe's Diner",
+    industry=Industry.RESTAURANT,
+    size=CompanySize.SMALL,
+    annual_revenue=850_000,
+)
+
+connector = CSVConnector(file_path="transactions.csv")
+dataset = await connector.pull(company)
+
+# Analyze
+result = RestaurantAnalyzer.analyze(dataset, annual_revenue=850_000)
+
+# View results
+print(f"Health Grade: {result.health_grade} ({result.health_score}/100)")
+for kpi in result.kpis:
+    print(f"  {kpi.display_name}: {kpi.actual:.1f}% — {kpi.severity.value}")
+```
+
+### Sample Output
+
+```
+🍽️  Restaurant Financial Health Report
+============================================================
+Health Grade: B (78/100)
+
+Financials:
+  Annual Revenue (Est):  $850,000.00
+  Total Expenses (Est):  $799,000.00
+  Net Operating Income:  $51,000.00
+
+Key Performance Indicators:
+────────────────────────────────────────────────────────────
+  Food Cost %           29.1%  ✅ healthy     Target: 28-32%
+  Labor Cost %          33.2%  ⚠️  warning     Target: 28-32%
+  Prime Cost %          62.3%  ✅ healthy     Target: 55-65%
+  Occupancy Cost %       7.8%  ✅ healthy     Target: 6-10%
+  Net Operating Margin   6.0%  ✅ healthy     Target: 3-6%
+
+🚨 Critical Alerts:
+  Labor Cost % at 33.2% — above target range. Review scheduling.
+
+💡 Opportunities:
+  ⚠️ Labor Cost %: 33.2% — Optimize shift scheduling. Cross-train staff.
+  💡 Marketing spend very low — consider customer acquisition investment.
+  ✅ Food Cost % and Occupancy % performing well!
+```
+
+### Restaurant Industry Benchmarks
+
+| KPI | Target | Warning | Critical | What It Means |
+|:----|:------:|:-------:|:--------:|:--------------|
+| **Food Cost %** | 28-32% | >35% | >38% | Cost of ingredients ÷ revenue |
+| **Labor Cost %** | 28-32% | >35% | >38% | All wages & benefits ÷ revenue |
+| **Prime Cost %** | 55-65% | >68% | >72% | Food + labor (most critical) |
+| **Beverage Cost %** | 18-24% | >26% | >28% | Bar/drink cost ÷ bar revenue |
+| **Occupancy Cost %** | 6-10% | >11% | >12% | Rent + utilities ÷ revenue |
+| **Net Margin** | 3-6% | <2% | <0% | Bottom line profitability |
+
+---
+
 ## 📋 Real Examples
 
 Real scenarios for real businesses. Not toy demos — these are the exact kinds of findings and actions FiscalPilot produces for each business type.
@@ -583,6 +756,7 @@ llm:
 - [x] Action proposal pipeline (findings → actions → approval → execution)
 - [x] Dry-run mode with preview and rollback
 - [x] Immutable audit trail for all actions
+- [x] **Restaurant Industry Package** — complete KPI analyzer, QuickBooks mappings, CLI commands
 - [ ] Email/Slack notification executors
 - [ ] QuickBooks/Xero write-back executors
 
