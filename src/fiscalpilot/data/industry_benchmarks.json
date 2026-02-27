@@ -1,0 +1,245 @@
+{
+  "_meta": {
+    "description": "Industry benchmark data for FiscalPilot expense ratio analysis.",
+    "sources": [
+      "U.S. Bureau of Labor Statistics",
+      "IBISWorld Industry Reports",
+      "RMA Annual Statement Studies",
+      "Sageworks/Abrigo Financial Data"
+    ],
+    "note": "Values are percentages of revenue unless otherwise noted. Ranges represent [low, typical, high] for healthy businesses in each industry.",
+    "last_updated": "2026-02"
+  },
+  "restaurant": {
+    "display_name": "Restaurant / Food Service",
+    "expense_ratios": {
+      "payroll": {"low": 25.0, "typical": 32.0, "high": 38.0},
+      "rent": {"low": 5.0, "typical": 8.0, "high": 12.0},
+      "inventory": {"low": 25.0, "typical": 32.0, "high": 38.0},
+      "utilities": {"low": 3.0, "typical": 5.0, "high": 7.0},
+      "marketing": {"low": 1.0, "typical": 3.0, "high": 6.0},
+      "insurance": {"low": 1.5, "typical": 3.0, "high": 5.0},
+      "supplies": {"low": 2.0, "typical": 4.0, "high": 6.0},
+      "equipment": {"low": 1.0, "typical": 3.0, "high": 5.0},
+      "maintenance": {"low": 1.0, "typical": 2.5, "high": 4.0},
+      "software": {"low": 0.5, "typical": 1.5, "high": 3.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 55.0, "typical": 65.0, "high": 72.0},
+      "net_margin": {"low": 2.0, "typical": 6.0, "high": 12.0},
+      "food_cost_pct": {"low": 25.0, "typical": 30.0, "high": 35.0},
+      "labor_cost_pct": {"low": 25.0, "typical": 30.0, "high": 35.0},
+      "prime_cost_pct": {"low": 55.0, "typical": 62.0, "high": 68.0}
+    }
+  },
+  "retail": {
+    "display_name": "Retail",
+    "expense_ratios": {
+      "payroll": {"low": 12.0, "typical": 18.0, "high": 25.0},
+      "rent": {"low": 4.0, "typical": 8.0, "high": 14.0},
+      "inventory": {"low": 40.0, "typical": 55.0, "high": 70.0},
+      "utilities": {"low": 1.5, "typical": 3.0, "high": 5.0},
+      "marketing": {"low": 2.0, "typical": 5.0, "high": 10.0},
+      "insurance": {"low": 1.0, "typical": 2.0, "high": 4.0},
+      "shipping": {"low": 2.0, "typical": 5.0, "high": 8.0},
+      "software": {"low": 0.5, "typical": 2.0, "high": 4.0},
+      "supplies": {"low": 0.5, "typical": 1.5, "high": 3.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 25.0, "typical": 40.0, "high": 55.0},
+      "net_margin": {"low": 1.0, "typical": 5.0, "high": 10.0},
+      "inventory_turnover": {"low": 4.0, "typical": 8.0, "high": 14.0},
+      "shrinkage_pct": {"low": 0.5, "typical": 1.5, "high": 3.0}
+    }
+  },
+  "saas": {
+    "display_name": "SaaS / Software",
+    "expense_ratios": {
+      "payroll": {"low": 40.0, "typical": 55.0, "high": 70.0},
+      "software": {"low": 5.0, "typical": 10.0, "high": 18.0},
+      "marketing": {"low": 15.0, "typical": 25.0, "high": 40.0},
+      "rent": {"low": 2.0, "typical": 5.0, "high": 10.0},
+      "professional_fees": {"low": 2.0, "typical": 4.0, "high": 8.0},
+      "insurance": {"low": 0.5, "typical": 1.5, "high": 3.0},
+      "travel": {"low": 1.0, "typical": 3.0, "high": 6.0},
+      "equipment": {"low": 1.0, "typical": 3.0, "high": 6.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 65.0, "typical": 75.0, "high": 85.0},
+      "net_margin": {"low": -20.0, "typical": 5.0, "high": 25.0},
+      "rule_of_40": {"low": 20.0, "typical": 40.0, "high": 60.0},
+      "cac_payback_months": {"low": 6.0, "typical": 12.0, "high": 24.0},
+      "nrr_pct": {"low": 100.0, "typical": 115.0, "high": 140.0}
+    }
+  },
+  "ecommerce": {
+    "display_name": "E-Commerce",
+    "expense_ratios": {
+      "inventory": {"low": 30.0, "typical": 45.0, "high": 60.0},
+      "payroll": {"low": 10.0, "typical": 18.0, "high": 28.0},
+      "marketing": {"low": 8.0, "typical": 15.0, "high": 25.0},
+      "shipping": {"low": 5.0, "typical": 10.0, "high": 18.0},
+      "software": {"low": 3.0, "typical": 6.0, "high": 10.0},
+      "rent": {"low": 1.0, "typical": 3.0, "high": 6.0},
+      "professional_fees": {"low": 1.0, "typical": 3.0, "high": 5.0},
+      "supplies": {"low": 1.0, "typical": 3.0, "high": 5.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 30.0, "typical": 45.0, "high": 65.0},
+      "net_margin": {"low": 2.0, "typical": 8.0, "high": 15.0},
+      "return_rate_pct": {"low": 5.0, "typical": 15.0, "high": 30.0}
+    }
+  },
+  "healthcare": {
+    "display_name": "Healthcare / Medical Practice",
+    "expense_ratios": {
+      "payroll": {"low": 35.0, "typical": 50.0, "high": 60.0},
+      "rent": {"low": 5.0, "typical": 8.0, "high": 12.0},
+      "supplies": {"low": 5.0, "typical": 10.0, "high": 18.0},
+      "insurance": {"low": 3.0, "typical": 6.0, "high": 10.0},
+      "equipment": {"low": 3.0, "typical": 6.0, "high": 10.0},
+      "software": {"low": 2.0, "typical": 4.0, "high": 7.0},
+      "professional_fees": {"low": 2.0, "typical": 4.0, "high": 8.0},
+      "utilities": {"low": 1.0, "typical": 2.5, "high": 4.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 50.0, "typical": 60.0, "high": 75.0},
+      "net_margin": {"low": 5.0, "typical": 12.0, "high": 20.0},
+      "collection_rate_pct": {"low": 85.0, "typical": 93.0, "high": 98.0}
+    }
+  },
+  "manufacturing": {
+    "display_name": "Manufacturing",
+    "expense_ratios": {
+      "inventory": {"low": 35.0, "typical": 50.0, "high": 65.0},
+      "payroll": {"low": 15.0, "typical": 25.0, "high": 35.0},
+      "rent": {"low": 3.0, "typical": 6.0, "high": 10.0},
+      "utilities": {"low": 3.0, "typical": 5.0, "high": 8.0},
+      "equipment": {"low": 3.0, "typical": 6.0, "high": 10.0},
+      "maintenance": {"low": 2.0, "typical": 4.0, "high": 7.0},
+      "shipping": {"low": 2.0, "typical": 5.0, "high": 8.0},
+      "insurance": {"low": 1.5, "typical": 3.0, "high": 5.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 20.0, "typical": 35.0, "high": 50.0},
+      "net_margin": {"low": 2.0, "typical": 7.0, "high": 12.0},
+      "inventory_turnover": {"low": 4.0, "typical": 8.0, "high": 15.0}
+    }
+  },
+  "professional_services": {
+    "display_name": "Professional Services / Consulting",
+    "expense_ratios": {
+      "payroll": {"low": 45.0, "typical": 55.0, "high": 65.0},
+      "rent": {"low": 3.0, "typical": 7.0, "high": 12.0},
+      "marketing": {"low": 2.0, "typical": 5.0, "high": 10.0},
+      "software": {"low": 2.0, "typical": 5.0, "high": 8.0},
+      "travel": {"low": 2.0, "typical": 5.0, "high": 10.0},
+      "insurance": {"low": 1.0, "typical": 3.0, "high": 5.0},
+      "professional_fees": {"low": 2.0, "typical": 5.0, "high": 8.0},
+      "supplies": {"low": 0.5, "typical": 1.5, "high": 3.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 55.0, "typical": 65.0, "high": 80.0},
+      "net_margin": {"low": 5.0, "typical": 15.0, "high": 25.0},
+      "utilization_rate_pct": {"low": 60.0, "typical": 75.0, "high": 85.0}
+    }
+  },
+  "construction": {
+    "display_name": "Construction",
+    "expense_ratios": {
+      "payroll": {"low": 20.0, "typical": 30.0, "high": 40.0},
+      "inventory": {"low": 30.0, "typical": 40.0, "high": 55.0},
+      "equipment": {"low": 5.0, "typical": 10.0, "high": 15.0},
+      "insurance": {"low": 3.0, "typical": 5.0, "high": 8.0},
+      "rent": {"low": 2.0, "typical": 4.0, "high": 7.0},
+      "utilities": {"low": 1.0, "typical": 2.0, "high": 4.0},
+      "professional_fees": {"low": 1.0, "typical": 3.0, "high": 5.0},
+      "shipping": {"low": 1.0, "typical": 3.0, "high": 5.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 15.0, "typical": 25.0, "high": 40.0},
+      "net_margin": {"low": 2.0, "typical": 6.0, "high": 12.0}
+    }
+  },
+  "real_estate": {
+    "display_name": "Real Estate",
+    "expense_ratios": {
+      "payroll": {"low": 10.0, "typical": 18.0, "high": 28.0},
+      "marketing": {"low": 3.0, "typical": 8.0, "high": 15.0},
+      "insurance": {"low": 3.0, "typical": 5.0, "high": 8.0},
+      "maintenance": {"low": 5.0, "typical": 10.0, "high": 18.0},
+      "utilities": {"low": 3.0, "typical": 6.0, "high": 10.0},
+      "professional_fees": {"low": 2.0, "typical": 5.0, "high": 8.0},
+      "taxes": {"low": 5.0, "typical": 10.0, "high": 18.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 30.0, "typical": 50.0, "high": 70.0},
+      "net_margin": {"low": 10.0, "typical": 25.0, "high": 40.0},
+      "occupancy_rate_pct": {"low": 85.0, "typical": 93.0, "high": 98.0}
+    }
+  },
+  "logistics": {
+    "display_name": "Logistics / Transportation",
+    "expense_ratios": {
+      "payroll": {"low": 25.0, "typical": 35.0, "high": 45.0},
+      "equipment": {"low": 10.0, "typical": 18.0, "high": 25.0},
+      "insurance": {"low": 5.0, "typical": 8.0, "high": 12.0},
+      "maintenance": {"low": 5.0, "typical": 8.0, "high": 12.0},
+      "utilities": {"low": 5.0, "typical": 10.0, "high": 15.0},
+      "rent": {"low": 2.0, "typical": 5.0, "high": 8.0},
+      "software": {"low": 1.0, "typical": 3.0, "high": 5.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 15.0, "typical": 25.0, "high": 40.0},
+      "net_margin": {"low": 1.0, "typical": 5.0, "high": 10.0}
+    }
+  },
+  "education": {
+    "display_name": "Education / Training",
+    "expense_ratios": {
+      "payroll": {"low": 45.0, "typical": 55.0, "high": 70.0},
+      "rent": {"low": 8.0, "typical": 12.0, "high": 18.0},
+      "software": {"low": 3.0, "typical": 6.0, "high": 10.0},
+      "marketing": {"low": 3.0, "typical": 7.0, "high": 12.0},
+      "supplies": {"low": 2.0, "typical": 4.0, "high": 7.0},
+      "insurance": {"low": 1.0, "typical": 2.5, "high": 4.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 40.0, "typical": 55.0, "high": 70.0},
+      "net_margin": {"low": 3.0, "typical": 10.0, "high": 18.0}
+    }
+  },
+  "nonprofit": {
+    "display_name": "Nonprofit / NGO",
+    "expense_ratios": {
+      "payroll": {"low": 40.0, "typical": 55.0, "high": 70.0},
+      "rent": {"low": 5.0, "typical": 10.0, "high": 15.0},
+      "marketing": {"low": 2.0, "typical": 5.0, "high": 10.0},
+      "professional_fees": {"low": 2.0, "typical": 5.0, "high": 8.0},
+      "supplies": {"low": 2.0, "typical": 4.0, "high": 7.0},
+      "travel": {"low": 2.0, "typical": 5.0, "high": 8.0},
+      "insurance": {"low": 1.0, "typical": 2.5, "high": 4.0}
+    },
+    "kpis": {
+      "program_expense_ratio": {"low": 65.0, "typical": 78.0, "high": 90.0},
+      "fundraising_efficiency": {"low": 10.0, "typical": 20.0, "high": 35.0}
+    }
+  },
+  "other": {
+    "display_name": "General / Other",
+    "expense_ratios": {
+      "payroll": {"low": 20.0, "typical": 35.0, "high": 50.0},
+      "rent": {"low": 3.0, "typical": 7.0, "high": 12.0},
+      "marketing": {"low": 2.0, "typical": 5.0, "high": 10.0},
+      "insurance": {"low": 1.0, "typical": 3.0, "high": 5.0},
+      "utilities": {"low": 1.0, "typical": 3.0, "high": 5.0},
+      "software": {"low": 1.0, "typical": 3.0, "high": 6.0},
+      "professional_fees": {"low": 1.0, "typical": 3.0, "high": 6.0},
+      "supplies": {"low": 1.0, "typical": 3.0, "high": 5.0}
+    },
+    "kpis": {
+      "gross_margin": {"low": 30.0, "typical": 50.0, "high": 70.0},
+      "net_margin": {"low": 3.0, "typical": 10.0, "high": 20.0}
+    }
+  }
+}

@@ -5,6 +5,24 @@ All notable changes to FiscalPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-02-27
+
+### Added
+- **Benford's Law analyzer** — First/second digit distribution, chi-squared goodness-of-fit, MAD-based conformity scoring (Nigrini 2012 thresholds), per-vendor and per-category digit breakdown, suspicious digit detection
+- **Anomaly detection engine** — Z-score, IQR (Interquartile Range), time-series monthly/weekly deviation tracking, vendor-level anomaly detection, automatic deduplication across methods
+- **Industry benchmark database** — 13 industry profiles (restaurant, retail, SaaS, ecommerce, healthcare, manufacturing, professional services, construction, real estate, logistics, education, nonprofit, other) with expense ratios and KPIs, health grading A–F, excess spend quantification
+- **Cash flow forecasting** — Exponential smoothing projections, seasonal index computation, runway calculation, risk alerts (negative balance, tight months, short runway)
+- **Tax optimization engine** — Miscategorized expense detection (30+ keyword mappings), missing deduction identification, Section 179 depreciation opportunities, S-Corp entity structure evaluation, SEP IRA retirement suggestions, meal documentation (50% rule)
+- **Intelligence pipeline** in coordinator — 5 pure-computation engines run before LLM agents, results injected into agent context for enhanced analysis
+- `IntelligenceData` model in audit reports with summaries from all 5 engines
+- 5 new config flags: `benfords_analysis`, `anomaly_detection`, `benchmark_comparison`, `cashflow_forecast`, `tax_optimization`
+- 56 new tests for intelligence engines (142 total tests)
+
+### Changed
+- Coordinator `run_audit()` now runs intelligence engines as pre-computation step before agent dispatch
+- Audit reports now include `intelligence` field with statistical summaries
+- Intelligence findings (benchmark deviations, tax opportunities, cash flow warnings, anomalies, Benford violations) are merged with agent findings and ranked by impact
+
 ## [0.2.0] - 2026-02-27
 
 ### Added

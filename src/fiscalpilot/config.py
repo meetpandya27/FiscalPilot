@@ -46,6 +46,13 @@ class AnalyzerConfig(BaseModel):
     vendor_analysis: bool = True
     subscription_audit: bool = True
 
+    # v0.3 Intelligence engines (pure computation, no LLM)
+    benfords_analysis: bool = True
+    anomaly_detection: bool = True
+    benchmark_comparison: bool = True
+    cashflow_forecast: bool = True
+    tax_optimization: bool = True
+
 
 class SecurityConfig(BaseModel):
     """Security and privacy settings."""

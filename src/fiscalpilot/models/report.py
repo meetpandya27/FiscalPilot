@@ -81,6 +81,22 @@ class ExecutiveSummary(BaseModel):
     narrative: str = Field(default="", description="AI-generated executive narrative")
 
 
+class IntelligenceData(BaseModel):
+    """Structured results from v0.3 intelligence engines (non-LLM)."""
+
+    benfords_summary: str = ""
+    benfords_conformity_score: float | None = None
+    anomaly_summary: str = ""
+    anomaly_flagged_count: int = 0
+    benchmark_summary: str = ""
+    benchmark_grade: str = ""
+    benchmark_excess_spend: float = 0.0
+    cashflow_summary: str = ""
+    cashflow_runway_months: float = 0.0
+    tax_summary: str = ""
+    tax_savings_estimate: float = 0.0
+
+
 class AuditReport(BaseModel):
     """Complete audit report — the main output of FiscalPilot.
 
@@ -96,6 +112,7 @@ class AuditReport(BaseModel):
     findings: list[Finding] = Field(default_factory=list)
     action_items: list[ActionItem] = Field(default_factory=list)
     executive_summary: ExecutiveSummary = Field(default_factory=ExecutiveSummary)
+    intelligence: IntelligenceData = Field(default_factory=IntelligenceData)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @property

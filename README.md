@@ -30,11 +30,13 @@
 FiscalPilot is an **open-source AI agent** that acts as your company's automated Chief Financial Officer. It connects to your financial systems, analyzes every transaction, and finds:
 
 - 💸 **Waste** — Unused subscriptions, duplicate services, over-provisioned resources
-- 🚨 **Fraud** — Duplicate payments, ghost vendors, expense anomalies
+- 🚨 **Fraud** — Duplicate payments, ghost vendors, Benford's Law violations
 - 📉 **Revenue Leakage** — Unbilled work, missed invoices, pricing gaps
 - 📈 **Margin Improvements** — Pricing optimization, COGS reduction, revenue mix
 - ✂️ **Cost Reductions** — Vendor renegotiation, consolidation, tax optimization
 - 🔍 **Vendor Issues** — Overcharges, lock-in risk, market rate deviations
+- 📊 **Intelligence** — Anomaly detection, industry benchmarks, cash flow forecasting
+- 💰 **Tax Savings** — Miscategorized deductions, Section 179, entity structure
 
 ### Works for ANY business size
 
@@ -128,6 +130,12 @@ analyzers:
   cost_reduction: true
   revenue_leakage: true
   vendor_analysis: true
+  # v0.3 Intelligence engines (all enabled by default)
+  benfords_analysis: true
+  anomaly_detection: true
+  benchmark_comparison: true
+  cashflow_forecast: true
+  tax_optimization: true
 
 security:
   local_only: false        # Set true to never send data externally
@@ -165,15 +173,20 @@ FiscalPilot uses a **multi-agent architecture** where specialized AI agents work
 ### Agent Pipeline
 
 1. **Connectors** pull data from your financial systems (CSV, QuickBooks, Xero, SQL, Plaid, etc.)
-2. **Coordinator Agent** distributes the data to specialist agents
-3. **Specialist Agents** run in parallel:
+2. **Intelligence Engines** run pure-computation analysis (no LLM needed):
+   - 📐 **Benford's Law** — Chi-squared test, MAD scoring, per-vendor digit analysis
+   - 📈 **Anomaly Detection** — Z-score, IQR, time-series deviation tracking
+   - 🏭 **Industry Benchmarks** — Compare spend ratios against 13 industry profiles
+   - 💰 **Cash Flow Forecast** — Exponential smoothing, runway, seasonal patterns
+   - 🧾 **Tax Optimizer** — Miscategorized deductions, Section 179, entity structure
+3. **Specialist Agents** run in parallel (LLM-powered):
    - 🗑️ **Waste Detector** — Finds unused subscriptions, duplicate services
    - 🔍 **Fraud Detector** — Identifies duplicate payments, suspicious patterns
    - 📈 **Margin Optimizer** — Finds pricing and revenue mix improvements
    - ✂️ **Cost Cutter** — Identifies vendor and operational savings
    - 💰 **Revenue Analyzer** — Detects leakage and growth opportunities
    - 🏪 **Vendor Auditor** — Audits vendor relationships and contracts
-4. **Coordinator** deduplicates, ranks by impact, and generates the final report
+4. **Coordinator** merges intelligence findings + agent findings, deduplicates, ranks by impact, and generates the report
 
 ### Multi-LLM Support
 
@@ -320,7 +333,7 @@ report = await pilot.audit(company)
 - [x] CLI interface
 - [x] Multi-LLM support
 
-### v0.2 — Integrations (Current)
+### v0.2 — Integrations
 - [x] QuickBooks Online full integration
 - [x] Xero full integration
 - [x] Plaid bank sync
@@ -328,12 +341,12 @@ report = await pilot.audit(company)
 - [ ] PDF/receipt OCR scanning
 - [ ] HTML report with charts
 
-### v0.3 — Intelligence
-- [ ] Benford's Law statistical analysis
-- [ ] Time-series anomaly detection
-- [ ] Industry benchmark database
-- [ ] Cash flow forecasting
-- [ ] Tax optimization engine
+### v0.3 — Intelligence (Current)
+- [x] Benford's Law statistical analysis (chi-squared, MAD, per-vendor/category)
+- [x] Time-series anomaly detection (Z-score, IQR, monthly/weekly)
+- [x] Industry benchmark database (13 industries, grading A–F)
+- [x] Cash flow forecasting (exponential smoothing, runway, seasonal)
+- [x] Tax optimization engine (Section 179, S-Corp, SEP IRA, meals)
 
 ### v0.4 — Enterprise
 - [ ] Multi-tenant support
@@ -363,7 +376,7 @@ report = await pilot.audit(company)
 | 🔌 Connectors | Add Stripe connector | Easy |
 | 🔌 Connectors | Add FreshBooks connector | Easy |
 | 🔌 Connectors | Add NetSuite connector | Medium |
-| 🧠 Agents | Add Benford's Law analysis to fraud detector | Medium |
+| 🧠 Intelligence | Extend benchmark database with more industries | Easy |
 | 🧠 Agents | Add subscription audit agent | Easy |
 | 🧠 Agents | Add payroll analysis agent | Medium |
 | 📊 Reports | HTML report with charts | Medium |
