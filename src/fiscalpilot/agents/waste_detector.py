@@ -1,5 +1,5 @@
 """
-Waste Detector Agent — identifies wasteful spending patterns.
+Cost Optimizer Agent — identifies spending optimization opportunities.
 
 Detects:
 - Unused subscriptions and SaaS tools
@@ -38,7 +38,7 @@ Look for these specific patterns:
 
 For EACH finding, return a JSON object with:
 - title: Short descriptive title
-- category: "waste" or "unused_subscription"
+- category: "cost_optimization" or "unused_subscription"
 - severity: "critical" | "high" | "medium" | "low"
 - description: Detailed explanation
 - evidence: List of specific data points
@@ -51,15 +51,15 @@ Return ONLY valid JSON, no markdown formatting."""
 
 
 class WasteDetectorAgent(BaseAgent):
-    """Specialist agent for detecting wasteful spending."""
+    """Specialist agent for detecting cost optimization opportunities."""
 
     name = "waste_detector"
-    description = "Detects wasteful spending: unused subscriptions, duplicates, over-provisioning"
+    description = "Detects cost optimization opportunities: unused subscriptions, duplicates, over-provisioning"
 
     @property
     def system_prompt(self) -> str:
-        return """You are an elite financial waste detection specialist. Your job is to find 
-every dollar of wasteful spending in a company's finances. You have deep expertise in:
+        return """You are an elite financial cost optimization specialist. Your job is to find 
+every dollar of avoidable spending in a company's finances. You have deep expertise in:
 
 - SaaS subscription auditing
 - Vendor consolidation analysis
@@ -67,7 +67,7 @@ every dollar of wasteful spending in a company's finances. You have deep experti
 - Recurring charge optimization
 - Spending pattern analysis
 
-You are ruthlessly thorough. If there's waste, you find it. You always provide 
+You are ruthlessly thorough. If there's avoidable spending, you find it. You always provide 
 specific dollar amounts and actionable recommendations. You serve businesses from 
 restaurants to Fortune 500 companies, adapting your analysis to their scale.
 

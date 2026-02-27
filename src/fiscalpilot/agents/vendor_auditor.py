@@ -39,7 +39,7 @@ Perform a thorough vendor audit:
 
 For EACH finding, return a JSON object with:
 - title: Short descriptive title
-- category: "vendor_overcharge" | "cost_reduction" | "waste"
+- category: "vendor_overcharge" | "cost_reduction" | "cost_optimization"
 - severity: "critical" | "high" | "medium" | "low"
 - description: Detailed explanation
 - evidence: List of specific data points (vendor names, amounts)

@@ -10,12 +10,14 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from fiscalpilot.models.actions import ProposedAction
+
 
 class Severity(str, Enum):
     """Finding severity levels."""
 
-    CRITICAL = "critical"  # Fraud, major compliance violation
-    HIGH = "high"  # Significant waste (>5% of category spend)
+    CRITICAL = "critical"  # Major compliance violation, urgent risk
+    HIGH = "high"  # Significant opportunity (>5% of category spend)
     MEDIUM = "medium"  # Moderate savings opportunity
     LOW = "low"  # Minor optimization
     INFO = "info"  # Informational insight
@@ -24,9 +26,9 @@ class Severity(str, Enum):
 class FindingCategory(str, Enum):
     """What kind of issue was found."""
 
-    WASTE = "waste"
-    FRAUD = "fraud"
-    ABUSE = "abuse"
+    COST_OPTIMIZATION = "cost_optimization"
+    RISK_DETECTION = "risk_detection"
+    POLICY_VIOLATION = "policy_violation"
     REVENUE_LEAKAGE = "revenue_leakage"
     MARGIN_IMPROVEMENT = "margin_improvement"
     COST_REDUCTION = "cost_reduction"
@@ -111,6 +113,7 @@ class AuditReport(BaseModel):
     period_end: str | None = None
     findings: list[Finding] = Field(default_factory=list)
     action_items: list[ActionItem] = Field(default_factory=list)
+    proposed_actions: list[ProposedAction] = Field(default_factory=list)
     executive_summary: ExecutiveSummary = Field(default_factory=ExecutiveSummary)
     intelligence: IntelligenceData = Field(default_factory=IntelligenceData)
     metadata: dict[str, Any] = Field(default_factory=dict)

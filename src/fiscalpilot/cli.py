@@ -46,7 +46,7 @@ def main(
         is_eager=True,
     ),
 ) -> None:
-    """🛫 FiscalPilot — Find waste, fraud & abuse. Maximize margins. Cut costs."""
+    """🛩 FiscalPilot — Your AI CFO. Analyze. Recommend. Execute."""
 
 
 @app.command()

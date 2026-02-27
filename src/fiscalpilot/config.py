@@ -37,8 +37,8 @@ class ConnectorConfig(BaseModel):
 class AnalyzerConfig(BaseModel):
     """Configuration for analyzer modules."""
 
-    waste_detection: bool = True
-    fraud_detection: bool = True
+    cost_optimization: bool = True
+    risk_detection: bool = True
     margin_optimization: bool = True
     cost_reduction: bool = True
     revenue_leakage: bool = True
@@ -54,12 +54,27 @@ class AnalyzerConfig(BaseModel):
     tax_optimization: bool = True
 
 
+class ExecutionConfig(BaseModel):
+    """Configuration for the v0.4 execution & action engine."""
+
+    enabled: bool = Field(default=True, description="Enable execution engine")
+    dry_run: bool = Field(default=True, description="Preview actions without executing by default")
+    require_approval: bool = Field(default=True, description="Require human approval before execution")
+
+    # Rate limiting
+    max_actions_per_run: int = Field(default=50, ge=1, description="Max actions per execution batch")
+
+    # Approval settings
+    approval_timeout_hours: float = Field(default=48.0, description="Auto-reject after this many hours")
+
+
 class SecurityConfig(BaseModel):
     """Security and privacy settings."""
 
     encrypt_at_rest: bool = Field(default=True, description="Encrypt stored data")
     redact_pii: bool = Field(default=True, description="Redact personally identifiable info")
     audit_log: bool = Field(default=True, description="Log all operations")
+    audit_trail: bool = Field(default=True, description="Log every action for compliance")
     local_only: bool = Field(
         default=False,
         description="Never send data to external APIs (use local LLM only)",
@@ -72,6 +87,7 @@ class FiscalPilotConfig(BaseModel):
     llm: LLMConfig = Field(default_factory=LLMConfig)
     connectors: list[ConnectorConfig] = Field(default_factory=list)
     analyzers: AnalyzerConfig = Field(default_factory=AnalyzerConfig)
+    execution: ExecutionConfig = Field(default_factory=ExecutionConfig)
     security: SecurityConfig = Field(default_factory=SecurityConfig)
 
     # Output settings

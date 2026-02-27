@@ -5,6 +5,31 @@ All notable changes to FiscalPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-02-27
+
+### Added
+- **Execution engine** — Actions pipeline that moves FiscalPilot from analysis-only to analysis + execution. Proposed actions are generated from audit findings, routed through approval, and executed by pluggable executors
+- **Human-in-the-loop approval gate** — Tiered autonomy system with four levels: GREEN (auto-execute), YELLOW (auto-execute + notify), RED (require explicit approval), CRITICAL (require multi-party approval). Full immutable audit trail of all decisions
+- **Action models** (`models/actions.py`) — `ActionStatus` (7 lifecycle states), `ApprovalLevel`, `ActionType` (13 built-in + CUSTOM), `ProposedAction`, `ExecutionResult`, `ApprovalRule`, `ApprovalDecision` with `DEFAULT_APPROVAL_MAP`
+- **Executor plugin system** (`execution/executors/`) — `BaseExecutor` ABC with validate/execute/rollback interface, `LogOnlyExecutor` (testing/fallback), `CategorizationExecutor` (GREEN-level transaction tagging), `NotificationExecutor` (YELLOW-level reminders)
+- **Execution orchestrator** (`execution/engine.py`) — Executor registration, dry-run mode (default), rate limiting, rollback support, immutable execution log, summary reporting
+- `ExecutionConfig` in config — `enabled`, `dry_run`, `require_approval`, `max_actions_per_run`, `approval_timeout_hours`
+- `proposed_actions` field on `AuditReport` — actions generated per finding with concrete steps
+- Coordinator action generation — `_generate_proposed_actions()`, `_action_title_for_finding()`, `_build_action_steps()` methods mapping findings → action types → approval levels
+- 48 new tests for execution framework (190 total tests)
+
+### Changed
+- **Complete rebrand** from "waste, fraud, abuse" to AI CFO positioning:
+  - `FindingCategory.WASTE` → `COST_OPTIMIZATION`
+  - `FindingCategory.FRAUD` → `RISK_DETECTION`
+  - `FindingCategory.ABUSE` → `POLICY_VIOLATION`
+  - Waste Detector agent → "Cost Optimizer Agent"
+  - Fraud Detector agent → "Risk Detector Agent"
+  - CLI tagline → "Your AI CFO. Analyze. Recommend. Execute."
+- Config fields renamed: `waste_detection` → `cost_optimization`, `fraud_detection` → `risk_detection`
+- README fully rewritten — new "Open-Source AI CFO" positioning, 6 real-world business examples (Freelancer → Enterprise), execution engine docs, human-in-the-loop section, competitive comparison table, expanded roadmap
+- `SecurityConfig` now includes `audit_trail` flag
+
 ## [0.3.0] - 2026-02-27
 
 ### Added

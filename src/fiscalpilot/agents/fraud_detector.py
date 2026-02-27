@@ -1,5 +1,5 @@
 """
-Fraud Detector Agent — identifies potential fraud and abuse patterns.
+Risk Detector Agent — identifies potential financial risks and irregularities.
 
 Detects:
 - Duplicate payments to the same vendor
@@ -20,7 +20,7 @@ from fiscalpilot.agents.base import BaseAgent
 
 logger = logging.getLogger("fiscalpilot.agents.fraud")
 
-FRAUD_ANALYSIS_PROMPT = """Analyze the following financial data for potential fraud, abuse, and irregularities.
+FRAUD_ANALYSIS_PROMPT = """Analyze the following financial data for potential risks, irregularities, and policy deviations.
 
 Company: {company_name} ({company_size}, {industry})
 Total Expenses: ${total_expenses:,.2f}
@@ -45,7 +45,7 @@ Investigate these fraud patterns:
 
 For EACH finding, return a JSON object with:
 - title: Short descriptive title
-- category: "fraud" | "abuse" | "duplicate_payment" | "compliance"
+- category: "risk_detection" | "policy_violation" | "duplicate_payment" | "compliance"
 - severity: "critical" | "high" | "medium" | "low"
 - description: Detailed explanation
 - evidence: List of specific data points
@@ -58,19 +58,19 @@ Return ONLY valid JSON, no markdown formatting."""
 
 
 class FraudDetectorAgent(BaseAgent):
-    """Specialist agent for detecting fraud, abuse, and financial irregularities."""
+    """Specialist agent for detecting financial risks and irregularities."""
 
     name = "fraud_detector"
-    description = "Detects fraud patterns: duplicate payments, ghost vendors, expense anomalies"
+    description = "Detects risk patterns: duplicate payments, ghost vendors, expense anomalies"
 
     @property
     def system_prompt(self) -> str:
-        return """You are a forensic financial analyst specializing in fraud detection and abuse 
+        return """You are a forensic financial analyst specializing in risk detection and anomaly 
 prevention. You have deep expertise in:
 
 - Benford's Law analysis for detecting fabricated numbers
 - Duplicate payment detection
-- Vendor fraud patterns
+- Vendor risk patterns
 - Expense report manipulation
 - Internal control weaknesses
 - Financial statement irregularities

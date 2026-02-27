@@ -16,8 +16,8 @@ class TestConfig:
         assert config.llm.model == "gpt-4o"
         assert config.llm.temperature == 0.1
         assert config.security.encrypt_at_rest is True
-        assert config.analyzers.waste_detection is True
-        assert config.analyzers.fraud_detection is True
+        assert config.analyzers.cost_optimization is True
+        assert config.analyzers.risk_detection is True
 
     def test_load_from_yaml(self, tmp_path: Path) -> None:
         yaml_content = {

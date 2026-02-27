@@ -101,9 +101,9 @@ class TestAuditReport:
                 Finding(
                     id="f1",
                     title="Issue 1",
-                    category=FindingCategory.WASTE,
+                    category=FindingCategory.COST_OPTIMIZATION,
                     severity=Severity.HIGH,
-                    description="Wasteful spending detected",
+                    description="Avoidable spending detected",
                     potential_savings=5000,
                 ),
                 Finding(
@@ -125,17 +125,17 @@ class TestAuditReport:
                 Finding(
                     id="f1",
                     title="Critical",
-                    category=FindingCategory.FRAUD,
+                    category=FindingCategory.RISK_DETECTION,
                     severity=Severity.CRITICAL,
-                    description="Potential fraud detected",
+                    description="Potential risk detected",
                     potential_savings=10000,
                 ),
                 Finding(
                     id="f2",
                     title="Low",
-                    category=FindingCategory.WASTE,
+                    category=FindingCategory.COST_OPTIMIZATION,
                     severity=Severity.LOW,
-                    description="Minor waste",
+                    description="Minor optimization",
                     potential_savings=100,
                 ),
             ],
@@ -154,10 +154,10 @@ class TestAuditReport:
             findings=[
                 Finding(
                     id="f1",
-                    title="Waste Found",
-                    category=FindingCategory.WASTE,
+                    title="Optimization Found",
+                    category=FindingCategory.COST_OPTIMIZATION,
                     severity=Severity.HIGH,
-                    description="Too much waste",
+                    description="Avoidable cost detected",
                     potential_savings=5000,
                     recommendation="Fix it",
                 ),
@@ -170,5 +170,5 @@ class TestAuditReport:
         )
         md = report.to_markdown()
         assert "Test Co" in md
-        assert "Waste Found" in md
+        assert "Optimization Found" in md
         assert "5,000" in md

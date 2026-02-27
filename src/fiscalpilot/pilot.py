@@ -36,7 +36,7 @@ class FiscalPilot:
 
     The FiscalPilot coordinates:
     - **Connectors**: Pull data from accounting systems, banks, ERPs.
-    - **Analyzers**: Detect waste, fraud, abuse, and savings opportunities.
+    - **Analyzers**: Detect cost optimization, risk, and savings opportunities.
     - **Agents**: LLM-powered agents that reason about financial data.
     - **Reports**: Generate actionable executive-ready reports.
     """
@@ -71,9 +71,9 @@ class FiscalPilot:
 
         This is the main entry point. It will:
         1. Pull data from all configured connectors.
-        2. Run waste/fraud/abuse detection analyzers.
+        2. Run cost optimization and risk detection analyzers.
         3. Identify cost-cutting and margin-improvement opportunities.
-        4. Generate an actionable report with recommendations.
+        4. Generate an actionable report with recommendations and proposed actions.
 
         Args:
             company: Company profile with metadata about the business.

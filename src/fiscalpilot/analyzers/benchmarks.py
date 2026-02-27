@@ -225,7 +225,7 @@ class BenchmarkAnalyzer:
             return (
                 f"CRITICAL: {cat_label} at {actual_pct:.1f}% of revenue is far above the industry "
                 f"ceiling of {high:.1f}%. This represents ~${excess:,.0f}/yr in excess spending. "
-                f"Immediately audit this category for waste, duplicate charges, or vendor overpricing."
+                f"Immediately audit this category for duplicate charges, overpricing, or optimization opportunities."
             )
         if actual_pct > high:
             excess = (actual_pct - high) / 100 * revenue

@@ -3,9 +3,10 @@ Coordinator Agent — the "brain" that orchestrates all specialist agents.
 
 This is the main agent that:
 1. Ingests financial data from connectors.
-2. Dispatches work to specialist agents (waste, fraud, margin, etc.).
+2. Dispatches work to specialist agents (optimization, risk, margin, etc.).
 3. Aggregates findings into a unified audit report.
 4. Generates executive summaries and action items.
+5. Proposes executable actions with approval routing.
 """
 
 from __future__ import annotations
@@ -36,6 +37,13 @@ from fiscalpilot.models.report import (
     IntelligenceData,
     Severity,
 )
+from fiscalpilot.models.actions import (
+    ActionStep,
+    ActionType,
+    ApprovalLevel,
+    DEFAULT_APPROVAL_MAP,
+    ProposedAction,
+)
 
 logger = logging.getLogger("fiscalpilot.agents.coordinator")
 
@@ -58,9 +66,9 @@ class CoordinatorAgent(BaseAgent):
         self._agents: list[BaseAgent] = []
         analyzers = config.analyzers
 
-        if analyzers.waste_detection:
+        if analyzers.cost_optimization:
             self._agents.append(WasteDetectorAgent(config))
-        if analyzers.fraud_detection:
+        if analyzers.risk_detection:
             self._agents.append(FraudDetectorAgent(config))
         if analyzers.margin_optimization:
             self._agents.append(MarginOptimizerAgent(config))
@@ -78,7 +86,7 @@ class CoordinatorAgent(BaseAgent):
         return """You are FiscalPilot's Coordinator — an expert AI CFO that orchestrates 
 financial analysis. Your role is to:
 
-1. Review all findings from specialist agents (waste, fraud, margin, cost, revenue, vendor).
+1. Review all findings from specialist agents (optimization, risk, margin, cost, revenue, vendor).
 2. Eliminate duplicates and resolve conflicts between agents.
 3. Prioritize findings by impact (potential savings × confidence).
 4. Generate a clear, actionable executive summary.
@@ -131,7 +139,10 @@ Never be vague. Every recommendation should have a clear next step."""
         # Step 7: Generate action items
         action_items = self._generate_action_items(all_findings)
 
-        # Step 8: Generate executive summary
+        # Step 8: Generate proposed actions (v0.4 execution pipeline)
+        proposed_actions = self._generate_proposed_actions(all_findings, company)
+
+        # Step 9: Generate executive summary
         executive_summary = await self._generate_executive_summary(
             company, all_findings, dataset
         )
@@ -142,6 +153,7 @@ Never be vague. Every recommendation should have a clear next step."""
             company_name=company.name,
             findings=all_findings,
             action_items=action_items,
+            proposed_actions=proposed_actions,
             executive_summary=executive_summary,
             intelligence=intelligence,
             period_start=str(dataset.period_start) if dataset.period_start else None,
@@ -161,7 +173,7 @@ Never be vague. Every recommendation should have a clear next step."""
         dataset = await self._pull_data(company)
         context = self._build_context(company, dataset)
 
-        # Only run waste and cost agents for quick scan
+        # Only run cost optimization and cost cutter agents for quick scan
         quick_agents = [a for a in self._agents if a.name in ("waste_detector", "cost_cutter")]
         if not quick_agents:
             quick_agents = self._agents[:2]
@@ -227,7 +239,7 @@ Never be vague. Every recommendation should have a clear next step."""
                     findings.append(Finding(
                         id=f"benfords_{uuid.uuid4().hex[:8]}",
                         title="Significant Benford's Law Deviation Detected",
-                        category=FindingCategory.FRAUD,
+                        category=FindingCategory.RISK_DETECTION,
                         severity=Severity.HIGH,
                         description=(
                             f"Transaction amounts deviate significantly from Benford's Law "
@@ -285,7 +297,7 @@ Never be vague. Every recommendation should have a clear next step."""
                         findings.append(Finding(
                             id=f"anomaly_ts_{uuid.uuid4().hex[:8]}",
                             title=f"Anomalous spending in {ts.period}",
-                            category=FindingCategory.WASTE,
+                            category=FindingCategory.COST_OPTIMIZATION,
                             severity=Severity.MEDIUM if ts.score < 0.8 else Severity.HIGH,
                             description=(
                                 f"Spending of ${ts.total_spend:,.2f} in {ts.period} deviates "
@@ -481,7 +493,7 @@ Never be vague. Every recommendation should have a clear next step."""
                 finding = Finding(
                     id=f"{agent_name}_{uuid.uuid4().hex[:8]}",
                     title=raw.get("title", "Untitled Finding"),
-                    category=FindingCategory(raw.get("category", "waste")),
+                    category=FindingCategory(raw.get("category", "cost_optimization")),
                     severity=Severity(raw.get("severity", "medium")),
                     description=raw.get("description", ""),
                     evidence=raw.get("evidence", []),
@@ -520,6 +532,120 @@ Never be vague. Every recommendation should have a clear next step."""
                 )
             )
         return action_items
+
+    def _generate_proposed_actions(
+        self, findings: list[Finding], company: CompanyProfile
+    ) -> list[ProposedAction]:
+        """Generate executable ProposedAction objects from findings.
+
+        Maps each finding to an appropriate action type, assigns an
+        approval level, and builds execution steps.
+        """
+        actions: list[ProposedAction] = []
+
+        # Category → action type mapping
+        category_action_map: dict[FindingCategory, ActionType] = {
+            FindingCategory.COST_OPTIMIZATION: ActionType.FLAG_FOR_REVIEW,
+            FindingCategory.RISK_DETECTION: ActionType.FLAG_FOR_REVIEW,
+            FindingCategory.POLICY_VIOLATION: ActionType.FLAG_FOR_REVIEW,
+            FindingCategory.UNUSED_SUBSCRIPTION: ActionType.CANCEL_SUBSCRIPTION,
+            FindingCategory.DUPLICATE_PAYMENT: ActionType.FLAG_FOR_REVIEW,
+            FindingCategory.VENDOR_OVERCHARGE: ActionType.RENEGOTIATE_VENDOR,
+            FindingCategory.TAX_OPPORTUNITY: ActionType.GENERATE_REPORT,
+            FindingCategory.REVENUE_LEAKAGE: ActionType.SEND_REMINDER,
+            FindingCategory.CASH_FLOW: ActionType.CREATE_BUDGET_ALERT,
+            FindingCategory.BENCHMARK_DEVIATION: ActionType.GENERATE_REPORT,
+            FindingCategory.COMPLIANCE: ActionType.FLAG_FOR_REVIEW,
+            FindingCategory.MARGIN_IMPROVEMENT: ActionType.GENERATE_REPORT,
+            FindingCategory.COST_REDUCTION: ActionType.RENEGOTIATE_VENDOR,
+        }
+
+        for finding in findings[:30]:  # Top 30 findings
+            action_type = category_action_map.get(finding.category, ActionType.CUSTOM)
+            approval_level = DEFAULT_APPROVAL_MAP.get(action_type, ApprovalLevel.RED)
+
+            # Build steps based on category
+            steps = self._build_action_steps(finding, action_type)
+
+            action = ProposedAction(
+                id=f"act_{uuid.uuid4().hex[:8]}",
+                title=self._action_title_for_finding(finding),
+                description=finding.recommendation or finding.description,
+                action_type=action_type,
+                approval_level=approval_level,
+                estimated_savings=finding.potential_savings,
+                confidence=finding.confidence,
+                steps=steps,
+                finding_ids=[finding.id],
+            )
+            actions.append(action)
+
+        return actions
+
+    def _action_title_for_finding(self, finding: Finding) -> str:
+        """Generate an action-oriented title for a finding."""
+        category_verbs: dict[FindingCategory, str] = {
+            FindingCategory.UNUSED_SUBSCRIPTION: "Cancel",
+            FindingCategory.DUPLICATE_PAYMENT: "Recover",
+            FindingCategory.VENDOR_OVERCHARGE: "Renegotiate",
+            FindingCategory.TAX_OPPORTUNITY: "Claim",
+            FindingCategory.REVENUE_LEAKAGE: "Collect",
+            FindingCategory.CASH_FLOW: "Address",
+            FindingCategory.COST_OPTIMIZATION: "Optimize",
+            FindingCategory.RISK_DETECTION: "Investigate",
+            FindingCategory.POLICY_VIOLATION: "Remediate",
+            FindingCategory.BENCHMARK_DEVIATION: "Review",
+            FindingCategory.COMPLIANCE: "Fix",
+            FindingCategory.MARGIN_IMPROVEMENT: "Improve",
+            FindingCategory.COST_REDUCTION: "Reduce",
+        }
+        verb = category_verbs.get(finding.category, "Address")
+        return f"{verb}: {finding.title}"
+
+    def _build_action_steps(self, finding: Finding, action_type: ActionType) -> list[ActionStep]:
+        """Build concrete execution steps for an action."""
+        if action_type == ActionType.CANCEL_SUBSCRIPTION:
+            return [
+                ActionStep(order=1, description="Review subscription usage data", reversible=False),
+                ActionStep(order=2, description="Confirm cancellation with stakeholders", reversible=False),
+                ActionStep(order=3, description=f"Cancel subscription: {finding.title}", reversible=True),
+                ActionStep(order=4, description="Update recurring expense forecast", reversible=True),
+            ]
+        elif action_type == ActionType.RENEGOTIATE_VENDOR:
+            return [
+                ActionStep(order=1, description="Pull current vendor pricing and contract terms", reversible=False),
+                ActionStep(order=2, description="Research market rates for comparable services", reversible=False),
+                ActionStep(order=3, description="Draft renegotiation request with target pricing", reversible=False),
+                ActionStep(order=4, description="Send renegotiation request to vendor", reversible=False),
+            ]
+        elif action_type == ActionType.SEND_REMINDER:
+            return [
+                ActionStep(order=1, description="Identify overdue invoices/items", reversible=False),
+                ActionStep(order=2, description="Generate reminder message from template", reversible=False),
+                ActionStep(order=3, description="Send reminder to recipient(s)", reversible=False),
+            ]
+        elif action_type == ActionType.GENERATE_REPORT:
+            return [
+                ActionStep(order=1, description="Compile relevant data and analysis", reversible=False),
+                ActionStep(order=2, description="Generate detailed report", reversible=False),
+                ActionStep(order=3, description="Deliver report to stakeholders", reversible=False),
+            ]
+        elif action_type == ActionType.FLAG_FOR_REVIEW:
+            return [
+                ActionStep(order=1, description=f"Flag for review: {finding.title}", reversible=True),
+                ActionStep(order=2, description="Assign to responsible party", reversible=True),
+            ]
+        elif action_type == ActionType.CREATE_BUDGET_ALERT:
+            return [
+                ActionStep(order=1, description="Analyze current spending trends", reversible=False),
+                ActionStep(order=2, description="Set threshold-based budget alert", reversible=True),
+                ActionStep(order=3, description="Configure notification recipients", reversible=True),
+            ]
+        else:
+            return [
+                ActionStep(order=1, description=f"Review: {finding.title}", reversible=False),
+                ActionStep(order=2, description=finding.recommendation or "Take appropriate action", reversible=False),
+            ]
 
     async def _generate_executive_summary(
         self,
