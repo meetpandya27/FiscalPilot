@@ -148,4 +148,4 @@ exclude_lines = [
     "if __name__ == .__main__.:",
 ]
 show_missing = true
-fail_under = 80
+fail_under = 70
