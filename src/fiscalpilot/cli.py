@@ -287,11 +287,10 @@ def restaurant(
 
     # Pull data
     dataset = None
-    connector = None
     if csv:
-        connector = CSVConnector(credentials={"file_path": csv})
+        csv_connector = CSVConnector(credentials={"file_path": csv})
         with console.status("[bold green]Loading transactions...[/bold green]"):
-            dataset = asyncio.run(connector.pull(profile))
+            dataset = asyncio.run(csv_connector.pull(profile))
     elif square:
         access_token = os.environ.get("SQUARE_ACCESS_TOKEN")
         if not access_token:
@@ -299,9 +298,9 @@ def restaurant(
             raise typer.Exit(1)
         from fiscalpilot.connectors import SquarePOSConnector
 
-        connector = SquarePOSConnector(access_token=access_token)
+        square_connector = SquarePOSConnector(access_token=access_token)
         with console.status("[bold green]Pulling from Square POS...[/bold green]"):
-            dataset = asyncio.run(connector.pull(profile))
+            dataset = asyncio.run(square_connector.pull(profile))
 
     if not dataset:
         console.print("[red]Error: No data source provided. Use --csv or --square[/red]")
