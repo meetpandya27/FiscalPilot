@@ -141,9 +141,16 @@ class XeroConnector(BaseConnector):
                 client_id=self.client_id,
                 client_secret=self.client_secret,
                 token_url=_XERO_TOKEN_URL,
-                scopes=["openid", "profile", "email", "accounting.transactions",
-                        "accounting.reports.read", "accounting.contacts",
-                        "accounting.settings", "offline_access"],
+                scopes=[
+                    "openid",
+                    "profile",
+                    "email",
+                    "accounting.transactions",
+                    "accounting.reports.read",
+                    "accounting.contacts",
+                    "accounting.settings",
+                    "offline_access",
+                ],
             )
             self._token_manager.load_or_set(refresh_token=self.refresh_token)
         return self._token_manager
@@ -203,8 +210,7 @@ class XeroConnector(BaseConnector):
         """
         if not self.client_id or not self.client_secret:
             raise ValueError(
-                "client_id and client_secret are required for OAuth. "
-                "Get them from https://developer.xero.com/myapps/"
+                "client_id and client_secret are required for OAuth. Get them from https://developer.xero.com/myapps/"
             )
 
         mgr = self._ensure_token_manager()
@@ -222,8 +228,7 @@ class XeroConnector(BaseConnector):
 
         if not tenants:
             raise ValueError(
-                "No Xero organizations found. Make sure you've authorized access "
-                "to at least one organization."
+                "No Xero organizations found. Make sure you've authorized access to at least one organization."
             )
 
         # Use the first tenant (could enhance to let user pick)
@@ -286,9 +291,7 @@ class XeroConnector(BaseConnector):
     # API helpers
     # ------------------------------------------------------------------
 
-    async def _api_get(
-        self, endpoint: str, params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    async def _api_get(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Make an authenticated GET request to the Xero API."""
         mgr = self._ensure_token_manager()
         token = await mgr.get_access_token()
@@ -314,6 +317,7 @@ class XeroConnector(BaseConnector):
         # Handle 429 rate limiting
         if resp.status_code == 429:
             import asyncio
+
             retry_after = int(resp.headers.get("Retry-After", "5"))
             logger.warning("Xero rate limited, waiting %ds", retry_after)
             await asyncio.sleep(retry_after)
@@ -361,8 +365,8 @@ class XeroConnector(BaseConnector):
         if self.start_date:
             # Xero date filter using "where" parameter
             params["where"] = (
-                f'Date >= DateTime({self.start_date.year},{self.start_date.month},{self.start_date.day}) '
-                f'AND Date <= DateTime({self.end_date.year},{self.end_date.month},{self.end_date.day})'
+                f"Date >= DateTime({self.start_date.year},{self.start_date.month},{self.start_date.day}) "
+                f"AND Date <= DateTime({self.end_date.year},{self.end_date.month},{self.end_date.day})"
             )
 
         raw = await self._paginated_get("BankTransactions", "BankTransactions", params)
@@ -402,7 +406,11 @@ class XeroConnector(BaseConnector):
                     if acct_code and not category:
                         category = self._map_xero_category(acct_code)
 
-                description = "; ".join(desc_parts[:3]) if desc_parts else bt.get("Reference", f"Bank Txn #{bt.get('BankTransactionID', '')[:8]}")
+                description = (
+                    "; ".join(desc_parts[:3])
+                    if desc_parts
+                    else bt.get("Reference", f"Bank Txn #{bt.get('BankTransactionID', '')[:8]}")
+                )
 
                 # Bank account
                 bank_account = bt.get("BankAccount", {})
@@ -432,8 +440,8 @@ class XeroConnector(BaseConnector):
         params: dict[str, Any] = {}
         if self.start_date:
             params["where"] = (
-                f'Date >= DateTime({self.start_date.year},{self.start_date.month},{self.start_date.day}) '
-                f'AND Date <= DateTime({self.end_date.year},{self.end_date.month},{self.end_date.day})'
+                f"Date >= DateTime({self.start_date.year},{self.start_date.month},{self.start_date.day}) "
+                f"AND Date <= DateTime({self.end_date.year},{self.end_date.month},{self.end_date.day})"
             )
 
         raw = await self._paginated_get("Invoices", "Invoices", params)
@@ -588,7 +596,8 @@ class XeroConnector(BaseConnector):
 
         logger.info(
             "Pulling Xero data for %s (tenant: %s)",
-            company.name, self.tenant_id,
+            company.name,
+            self.tenant_id,
         )
 
         # Auto-detect tenant if not provided
@@ -601,7 +610,9 @@ class XeroConnector(BaseConnector):
         balances_task = asyncio.create_task(self._fetch_account_balances())
 
         transactions, invoices, balances = await asyncio.gather(
-            txns_task, invoices_task, balances_task,
+            txns_task,
+            invoices_task,
+            balances_task,
         )
 
         # Separate AR and AP invoices
@@ -625,7 +636,9 @@ class XeroConnector(BaseConnector):
 
         logger.info(
             "Xero pull complete: %d transactions, %d invoices, %d balances",
-            len(transactions), len(invoices), len(balances),
+            len(transactions),
+            len(invoices),
+            len(balances),
         )
         return dataset
 
@@ -739,6 +752,7 @@ class XeroConnector(BaseConnector):
         # Handle .NET JSON date format
         if raw.startswith("/Date("):
             import re
+
             match = re.search(r"/Date\((\d+)", raw)
             if match:
                 timestamp_ms = int(match.group(1))

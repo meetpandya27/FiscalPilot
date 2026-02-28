@@ -36,6 +36,7 @@ FEDERAL_TIPPED_MINIMUM = 2.13  # Federal minimum for tipped employees
 @dataclass
 class TippedEmployee:
     """Data for a single tipped employee."""
+
     name: str = ""
     hourly_wage: float = 0.0  # Cash wage paid (before tips)
     hours_worked: float = 0.0  # Hours in the period (month/year)
@@ -57,6 +58,7 @@ class TippedEmployee:
 @dataclass
 class EmployeeTipCreditResult:
     """Tip credit calculation for a single employee."""
+
     employee_name: str = ""
     hours_worked: float = 0.0
     hourly_wage: float = 0.0
@@ -107,6 +109,7 @@ class TipCreditResult:
 @dataclass
 class StateMinimumWage:
     """State-specific minimum wage information."""
+
     state: str
     tipped_minimum: float
     regular_minimum: float
@@ -251,7 +254,7 @@ class TipCreditCalculator:
         # Create synthetic employees
         employees = [
             TippedEmployee(
-                name=f"Employee {i+1}",
+                name=f"Employee {i + 1}",
                 hourly_wage=avg_cash_wage,
                 hours_worked=monthly_hours,
                 tips_received=monthly_tips,
@@ -341,9 +344,7 @@ class TipCreditCalculator:
             )
 
             per_employee = annual_projection / employee_count if employee_count > 0 else 0
-            insights.append(
-                f"📊 Per tipped employee: ~${per_employee:,.0f}/year average credit."
-            )
+            insights.append(f"📊 Per tipped employee: ~${per_employee:,.0f}/year average credit.")
 
         # State-specific notes
         if state:
@@ -361,7 +362,7 @@ class TipCreditCalculator:
             (total_credit / total_qualifying) * 100 if total_qualifying > 0 else 0
             insights.append(
                 f"📈 Qualifying tips: ${total_qualifying:,.0f} of ${total_tips:,.0f} total tips qualify "
-                f"for the {FICA_RATE*100:.2f}% FICA credit."
+                f"for the {FICA_RATE * 100:.2f}% FICA credit."
             )
 
         # Call to action
@@ -378,16 +379,12 @@ class TipCreditCalculator:
         return [
             "📋 FORM 8846: Use IRS Form 8846 to claim the Credit for Employer Social Security "
             "and Medicare Taxes Paid on Certain Employee Tips.",
-
             "📝 DOCUMENTATION: Maintain records of tip reports (Form 4070) or equivalent POS "
             "tip tracking for all employees.",
-
             "⚠️ FOOD & BEVERAGE ONLY: Credit only applies to tips from food or beverage "
             "establishments where tipping is customary.",
-
             "🔄 ANNUAL CLAIM: Credit is claimed annually on your business tax return. "
             "Cannot be claimed on payroll tax deposits.",
-
             "💡 NO DOUBLE DIP: Tips credited against minimum wage don't reduce the FICA "
             "credit calculation - calculation is based on ALL tips above min wage threshold.",
         ]

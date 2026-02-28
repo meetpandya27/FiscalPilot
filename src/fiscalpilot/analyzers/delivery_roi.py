@@ -28,6 +28,7 @@ logger = logging.getLogger("fiscalpilot.analyzers.delivery_roi")
 
 class DeliveryPlatform(str, Enum):
     """Major delivery platforms."""
+
     DOORDASH = "doordash"
     UBER_EATS = "uber_eats"
     GRUBHUB = "grubhub"
@@ -40,6 +41,7 @@ class DeliveryPlatform(str, Enum):
 @dataclass
 class PlatformFees:
     """Fee structure for a delivery platform."""
+
     platform: DeliveryPlatform
 
     # Commission (% of subtotal)
@@ -103,6 +105,7 @@ DEFAULT_PLATFORM_FEES: dict[DeliveryPlatform, PlatformFees] = {
 @dataclass
 class DeliveryOrderData:
     """Aggregated delivery data for analysis."""
+
     platform: DeliveryPlatform
 
     # Volume metrics
@@ -128,6 +131,7 @@ class DeliveryOrderData:
 @dataclass
 class PlatformROIResult:
     """ROI analysis for a single platform."""
+
     platform: DeliveryPlatform
     platform_name: str = ""
 
@@ -195,6 +199,7 @@ class DeliveryROIResult:
 @dataclass
 class DineInComparison:
     """Dine-in metrics for comparison."""
+
     average_check: float = 25.0
     food_cost_pct: float = 30.0
     labor_cost_pct: float = 28.0  # All labor
@@ -367,7 +372,9 @@ class DeliveryROIAnalyzer:
         gross_margin = (gross_profit / data.total_gross_revenue * 100) if data.total_gross_revenue > 0 else 0
 
         # Effective take rate (all-in %)
-        effective_commission = (total_platform_fees / data.total_gross_revenue * 100) if data.total_gross_revenue > 0 else 0
+        effective_commission = (
+            (total_platform_fees / data.total_gross_revenue * 100) if data.total_gross_revenue > 0 else 0
+        )
 
         return PlatformROIResult(
             platform=data.platform,

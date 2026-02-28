@@ -18,13 +18,15 @@ def _expense_txns(
         # Split into 10 transactions each
         per_txn = total / 10
         for _ in range(10):
-            txns.append({
-                "id": f"txn_{idx:04d}",
-                "amount": per_txn,
-                "category": cat,
-                "type": txn_type,
-                "date": "2024-06-15",
-            })
+            txns.append(
+                {
+                    "id": f"txn_{idx:04d}",
+                    "amount": per_txn,
+                    "category": cat,
+                    "type": txn_type,
+                    "date": "2024-06-15",
+                }
+            )
             idx += 1
     return txns
 
@@ -35,12 +37,14 @@ class TestBenchmarkAnalyzerHappyPath:
         # Restaurant benchmarks: payroll typical=32%, high=38%
         # Set payroll at 45% → should be flagged
         revenue = 1_000_000
-        txns = _expense_txns({
-            "payroll": 450_000,  # 45% of revenue (above 38% high)
-            "inventory": 300_000,  # 30% (within range)
-            "rent": 80_000,  # 8% (within range)
-            "utilities": 30_000,
-        })
+        txns = _expense_txns(
+            {
+                "payroll": 450_000,  # 45% of revenue (above 38% high)
+                "inventory": 300_000,  # 30% (within range)
+                "rent": 80_000,  # 8% (within range)
+                "utilities": 30_000,
+            }
+        )
 
         result = BenchmarkAnalyzer.analyze(txns, industry="restaurant", annual_revenue=revenue)
 
@@ -58,12 +62,14 @@ class TestBenchmarkAnalyzerHappyPath:
     def test_saas_analysis(self) -> None:
         """SaaS company with typical expenses should receive good grade."""
         revenue = 5_000_000
-        txns = _expense_txns({
-            "payroll": 2_750_000,  # 55% (within 40-70%)
-            "marketing": 1_000_000,  # 20% (within 15-40%)
-            "software": 150_000,  # 3% (within 2-8%)
-            "rent": 200_000,  # 4% (within 2-8%)
-        })
+        txns = _expense_txns(
+            {
+                "payroll": 2_750_000,  # 55% (within 40-70%)
+                "marketing": 1_000_000,  # 20% (within 15-40%)
+                "software": 150_000,  # 3% (within 2-8%)
+                "rent": 200_000,  # 4% (within 2-8%)
+            }
+        )
 
         result = BenchmarkAnalyzer.analyze(txns, industry="saas", annual_revenue=revenue)
 
@@ -74,10 +80,12 @@ class TestBenchmarkAnalyzerHappyPath:
     def test_excess_spend_calculated(self) -> None:
         """Total excess spend should reflect sum of overages."""
         revenue = 1_000_000
-        txns = _expense_txns({
-            "payroll": 500_000,  # 50% (restaurant high=38%) → excess 12% = $120k
-            "inventory": 400_000,  # 40% (restaurant high=38%) → excess 2% = $20k
-        })
+        txns = _expense_txns(
+            {
+                "payroll": 500_000,  # 50% (restaurant high=38%) → excess 12% = $120k
+                "inventory": 400_000,  # 40% (restaurant high=38%) → excess 2% = $20k
+            }
+        )
 
         result = BenchmarkAnalyzer.analyze(txns, industry="restaurant", annual_revenue=revenue)
         assert result.total_excess_spend > 0
@@ -85,12 +93,14 @@ class TestBenchmarkAnalyzerHappyPath:
     def test_health_grade_escalation(self) -> None:
         """Massively over-budget should yield D or F grade."""
         revenue = 1_000_000
-        txns = _expense_txns({
-            "payroll": 700_000,  # 70% vs 38% high → critical
-            "inventory": 500_000,  # 50% vs 38% high → critical
-            "rent": 200_000,  # 20% vs 12% high → critical
-            "marketing": 300_000,  # 30% (not in restaurant benchmarks → shows up as deviation)
-        })
+        txns = _expense_txns(
+            {
+                "payroll": 700_000,  # 70% vs 38% high → critical
+                "inventory": 500_000,  # 50% vs 38% high → critical
+                "rent": 200_000,  # 20% vs 12% high → critical
+                "marketing": 300_000,  # 30% (not in restaurant benchmarks → shows up as deviation)
+            }
+        )
 
         result = BenchmarkAnalyzer.analyze(txns, industry="restaurant", annual_revenue=revenue)
         assert result.health_grade in ("D", "F")
@@ -148,13 +158,15 @@ class TestBenchmarkAnalyzerEdgeCases:
         txns = _expense_txns({"payroll": 100_000})
         # Add income transactions
         for i in range(10):
-            txns.append({
-                "id": f"income_{i}",
-                "amount": 50_000,
-                "category": "payroll",
-                "type": "income",
-                "date": "2024-06-15",
-            })
+            txns.append(
+                {
+                    "id": f"income_{i}",
+                    "amount": 50_000,
+                    "category": "payroll",
+                    "type": "income",
+                    "date": "2024-06-15",
+                }
+            )
 
         result = BenchmarkAnalyzer.analyze(txns, industry="saas", annual_revenue=1_000_000)
 

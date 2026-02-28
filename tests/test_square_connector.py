@@ -92,7 +92,7 @@ class TestSquareValidateCredentials:
     @pytest.mark.asyncio
     async def test_validate_with_valid_token(self, connector):
         """Test validation with mock valid token."""
-        with patch.object(connector, '_get_client') as mock_get_client:
+        with patch.object(connector, "_get_client") as mock_get_client:
             mock_client = AsyncMock()
             mock_response = MagicMock()
             mock_response.status_code = 200
@@ -105,7 +105,7 @@ class TestSquareValidateCredentials:
     @pytest.mark.asyncio
     async def test_validate_with_invalid_token(self, connector):
         """Test validation with invalid token returns False."""
-        with patch.object(connector, '_get_client') as mock_get_client:
+        with patch.object(connector, "_get_client") as mock_get_client:
             mock_client = AsyncMock()
             mock_response = MagicMock()
             mock_response.status_code = 401
@@ -122,15 +122,13 @@ class TestSquarePull:
     @pytest.mark.asyncio
     async def test_pull_returns_financial_dataset(self, connector, mock_company):
         """Test that pull returns a FinancialDataset."""
-        with patch.object(connector, '_get_client') as mock_get_client:
+        with patch.object(connector, "_get_client") as mock_get_client:
             mock_client = AsyncMock()
 
             # Mock locations response
             locations_response = MagicMock()
             locations_response.status_code = 200
-            locations_response.json.return_value = {
-                "locations": [{"id": "loc_abc123", "name": "Main Store"}]
-            }
+            locations_response.json.return_value = {"locations": [{"id": "loc_abc123", "name": "Main Store"}]}
 
             # Mock payments response
             payments_response = MagicMock()
@@ -151,10 +149,12 @@ class TestSquarePull:
                 ]
             }
 
-            mock_client.get = AsyncMock(side_effect=[
-                locations_response,
-                payments_response,
-            ])
+            mock_client.get = AsyncMock(
+                side_effect=[
+                    locations_response,
+                    payments_response,
+                ]
+            )
             mock_get_client.return_value = mock_client
 
             result = await connector.pull(mock_company)
@@ -165,14 +165,12 @@ class TestSquarePull:
     @pytest.mark.asyncio
     async def test_pull_creates_income_and_expense_transactions(self, connector, mock_company):
         """Test that both income and fee expense transactions are created."""
-        with patch.object(connector, '_get_client') as mock_get_client:
+        with patch.object(connector, "_get_client") as mock_get_client:
             mock_client = AsyncMock()
 
             locations_response = MagicMock()
             locations_response.status_code = 200
-            locations_response.json.return_value = {
-                "locations": [{"id": "loc_abc123", "name": "Test Location"}]
-            }
+            locations_response.json.return_value = {"locations": [{"id": "loc_abc123", "name": "Test Location"}]}
 
             payments_response = MagicMock()
             payments_response.status_code = 200
@@ -191,10 +189,12 @@ class TestSquarePull:
                 ]
             }
 
-            mock_client.get = AsyncMock(side_effect=[
-                locations_response,
-                payments_response,
-            ])
+            mock_client.get = AsyncMock(
+                side_effect=[
+                    locations_response,
+                    payments_response,
+                ]
+            )
             mock_get_client.return_value = mock_client
 
             result = await connector.pull(mock_company)
@@ -210,7 +210,7 @@ class TestSquarePull:
     @pytest.mark.asyncio
     async def test_pull_handles_no_locations(self, connector, mock_company):
         """Test handling when no locations are found."""
-        with patch.object(connector, '_get_client') as mock_get_client:
+        with patch.object(connector, "_get_client") as mock_get_client:
             mock_client = AsyncMock()
 
             locations_response = MagicMock()
@@ -295,14 +295,12 @@ class TestSquareDailySummary:
     @pytest.mark.asyncio
     async def test_get_daily_summary(self, connector):
         """Test daily summary generation."""
-        with patch.object(connector, '_get_client') as mock_get_client:
+        with patch.object(connector, "_get_client") as mock_get_client:
             mock_client = AsyncMock()
 
             locations_response = MagicMock()
             locations_response.status_code = 200
-            locations_response.json.return_value = {
-                "locations": [{"id": "loc_abc123"}]
-            }
+            locations_response.json.return_value = {"locations": [{"id": "loc_abc123"}]}
 
             payments_response = MagicMock()
             payments_response.status_code = 200
@@ -328,10 +326,12 @@ class TestSquareDailySummary:
                 ]
             }
 
-            mock_client.get = AsyncMock(side_effect=[
-                locations_response,
-                payments_response,
-            ])
+            mock_client.get = AsyncMock(
+                side_effect=[
+                    locations_response,
+                    payments_response,
+                ]
+            )
             mock_get_client.return_value = mock_client
 
             summary = await connector.get_daily_summary(
@@ -353,9 +353,10 @@ class TestSquareItemSales:
     @pytest.mark.asyncio
     async def test_get_item_sales(self, connector):
         """Test item sales aggregation."""
-        with patch.object(connector, '_get_client') as mock_get_client, \
-             patch.object(connector, '_get_orders') as mock_get_orders:
-
+        with (
+            patch.object(connector, "_get_client") as mock_get_client,
+            patch.object(connector, "_get_orders") as mock_get_orders,
+        ):
             mock_client = AsyncMock()
             mock_get_client.return_value = mock_client
 

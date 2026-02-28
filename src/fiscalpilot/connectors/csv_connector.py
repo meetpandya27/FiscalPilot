@@ -60,11 +60,7 @@ class CSVConnector(BaseConnector):
         super().__init__(credentials, **options)
         # file_path can come from: direct param, options, or credentials
         creds = credentials or {}
-        self.file_path = (
-            file_path
-            or options.get("file_path")
-            or creds.get("file_path", "")
-        )
+        self.file_path = file_path or options.get("file_path") or creds.get("file_path", "")
         self.encoding = options.get("encoding", "utf-8")
         self.delimiter = options.get("delimiter", ",")
 
@@ -112,9 +108,7 @@ class CSVConnector(BaseConnector):
 
         return col_map
 
-    def _parse_transactions(
-        self, df: pd.DataFrame, col_map: dict[str, str]
-    ) -> list[Transaction]:
+    def _parse_transactions(self, df: pd.DataFrame, col_map: dict[str, str]) -> list[Transaction]:
         """Convert DataFrame rows to Transaction objects."""
         transactions: list[Transaction] = []
 

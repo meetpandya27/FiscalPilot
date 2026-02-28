@@ -26,6 +26,7 @@ def _make_txn(
 def _normal_txns(n: int = 200, mean: float = 500.0, spread: float = 100.0) -> list[dict[str, Any]]:
     """Create transactions with predictable amounts that look 'normal' plus a few outliers."""
     import random
+
     rng = random.Random(42)
     base = date(2024, 1, 1)
     txns = []
@@ -65,6 +66,7 @@ class TestAnomalyDetectorHappyPath:
     def test_time_series_anomalies(self) -> None:
         """Inject a spike month and verify time-series detection catches it."""
         import random
+
         rng = random.Random(123)
         txns = []
         idx = 0

@@ -38,6 +38,7 @@ from fiscalpilot.models.report import AuditReport, FindingCategory, Severity
 
 # ── Fixtures ────────────────────────────────────────────────────────
 
+
 def _config() -> FiscalPilotConfig:
     return FiscalPilotConfig(
         llm=LLMConfig(model="gpt-4o", api_key="test-key"),
@@ -95,61 +96,68 @@ def _mock_llm_response(content: str) -> AsyncMock:
 
 def _cost_optimizer_llm_response() -> str:
     """Realistic LLM response for cost optimizer agent."""
-    return json.dumps([
-        {
-            "title": "Duplicate food supplier payments",
-            "category": "cost_optimization",
-            "severity": "high",
-            "description": "Found 3 duplicate payments to vendor_0 totaling $900.",
-            "evidence": ["txn_0000 and txn_0005 are identical", "vendor_0 billed twice in June"],
-            "potential_savings": 900.0,
-            "confidence": 0.85,
-            "recommendation": "Review and dispute duplicate charges with vendor_0.",
-        },
-        {
-            "title": "Unused catering subscription",
-            "category": "unused_subscription",
-            "severity": "medium",
-            "description": "Monthly $199 subscription to CaterPro with zero events last quarter.",
-            "evidence": ["No catering events in Q3 2024"],
-            "potential_savings": 2388.0,
-            "confidence": 0.9,
-            "recommendation": "Cancel CaterPro subscription — saves $2,388/year.",
-        },
-    ])
+    return json.dumps(
+        [
+            {
+                "title": "Duplicate food supplier payments",
+                "category": "cost_optimization",
+                "severity": "high",
+                "description": "Found 3 duplicate payments to vendor_0 totaling $900.",
+                "evidence": ["txn_0000 and txn_0005 are identical", "vendor_0 billed twice in June"],
+                "potential_savings": 900.0,
+                "confidence": 0.85,
+                "recommendation": "Review and dispute duplicate charges with vendor_0.",
+            },
+            {
+                "title": "Unused catering subscription",
+                "category": "unused_subscription",
+                "severity": "medium",
+                "description": "Monthly $199 subscription to CaterPro with zero events last quarter.",
+                "evidence": ["No catering events in Q3 2024"],
+                "potential_savings": 2388.0,
+                "confidence": 0.9,
+                "recommendation": "Cancel CaterPro subscription — saves $2,388/year.",
+            },
+        ]
+    )
 
 
 def _risk_detector_llm_response() -> str:
-    return json.dumps([
-        {
-            "title": "Unusual after-hours transaction pattern",
-            "category": "risk_detection",
-            "severity": "high",
-            "description": "12 transactions processed between 2-4 AM on weekdays.",
-            "evidence": ["txn_0012: $450 at 2:30 AM", "txn_0023: $320 at 3:15 AM"],
-            "potential_savings": 0,
-            "confidence": 0.75,
-            "recommendation": "Investigate after-hours transaction sources.",
-        },
-    ])
+    return json.dumps(
+        [
+            {
+                "title": "Unusual after-hours transaction pattern",
+                "category": "risk_detection",
+                "severity": "high",
+                "description": "12 transactions processed between 2-4 AM on weekdays.",
+                "evidence": ["txn_0012: $450 at 2:30 AM", "txn_0023: $320 at 3:15 AM"],
+                "potential_savings": 0,
+                "confidence": 0.75,
+                "recommendation": "Investigate after-hours transaction sources.",
+            },
+        ]
+    )
 
 
 def _margin_optimizer_llm_response() -> str:
-    return json.dumps([
-        {
-            "title": "Menu pricing below food cost threshold",
-            "category": "margin_improvement",
-            "severity": "medium",
-            "description": "5 menu items have food cost ratios above 40%.",
-            "evidence": ["Pasta dish: 48% food cost", "Seafood platter: 52% food cost"],
-            "potential_savings": 12_000.0,
-            "confidence": 0.7,
-            "recommendation": "Reprice menu items or renegotiate supplier costs.",
-        },
-    ])
+    return json.dumps(
+        [
+            {
+                "title": "Menu pricing below food cost threshold",
+                "category": "margin_improvement",
+                "severity": "medium",
+                "description": "5 menu items have food cost ratios above 40%.",
+                "evidence": ["Pasta dish: 48% food cost", "Seafood platter: 52% food cost"],
+                "potential_savings": 12_000.0,
+                "confidence": 0.7,
+                "recommendation": "Reprice menu items or renegotiate supplier costs.",
+            },
+        ]
+    )
 
 
 # ── Specialist Agent Tests ──────────────────────────────────────────
+
 
 class TestCostOptimizerAgent:
     @pytest.mark.asyncio
@@ -223,16 +231,20 @@ class TestCostCutterAgent:
     @pytest.mark.asyncio
     @patch("fiscalpilot.agents.base.litellm.acompletion")
     async def test_analyze_returns_findings(self, mock_llm: AsyncMock) -> None:
-        response = json.dumps([{
-            "title": "Reduce linen service frequency",
-            "category": "cost_reduction",
-            "severity": "low",
-            "description": "Switch from daily to 3x/week linen service.",
-            "evidence": ["Current cost: $800/month"],
-            "potential_savings": 3200.0,
-            "confidence": 0.8,
-            "recommendation": "Renegotiate linen contract to 3x/week pickup.",
-        }])
+        response = json.dumps(
+            [
+                {
+                    "title": "Reduce linen service frequency",
+                    "category": "cost_reduction",
+                    "severity": "low",
+                    "description": "Switch from daily to 3x/week linen service.",
+                    "evidence": ["Current cost: $800/month"],
+                    "potential_savings": 3200.0,
+                    "confidence": 0.8,
+                    "recommendation": "Renegotiate linen contract to 3x/week pickup.",
+                }
+            ]
+        )
         mock_llm.side_effect = _mock_llm_response(response)
         agent = CostCutterAgent(_config())
         result = await agent.analyze(_context())
@@ -243,16 +255,20 @@ class TestRevenueAnalyzerAgent:
     @pytest.mark.asyncio
     @patch("fiscalpilot.agents.base.litellm.acompletion")
     async def test_analyze_returns_findings(self, mock_llm: AsyncMock) -> None:
-        response = json.dumps([{
-            "title": "Uncollected catering deposits",
-            "category": "revenue_leakage",
-            "severity": "medium",
-            "description": "3 catering events with no deposit collected.",
-            "evidence": ["Event #12: $2,500", "Event #15: $1,800"],
-            "potential_savings": 4300.0,
-            "confidence": 0.7,
-            "recommendation": "Implement mandatory deposit policy for catering.",
-        }])
+        response = json.dumps(
+            [
+                {
+                    "title": "Uncollected catering deposits",
+                    "category": "revenue_leakage",
+                    "severity": "medium",
+                    "description": "3 catering events with no deposit collected.",
+                    "evidence": ["Event #12: $2,500", "Event #15: $1,800"],
+                    "potential_savings": 4300.0,
+                    "confidence": 0.7,
+                    "recommendation": "Implement mandatory deposit policy for catering.",
+                }
+            ]
+        )
         mock_llm.side_effect = _mock_llm_response(response)
         agent = RevenueAnalyzerAgent(_config())
         result = await agent.analyze(_context())
@@ -264,16 +280,20 @@ class TestVendorAuditorAgent:
     @pytest.mark.asyncio
     @patch("fiscalpilot.agents.base.litellm.acompletion")
     async def test_analyze_returns_findings(self, mock_llm: AsyncMock) -> None:
-        response = json.dumps([{
-            "title": "Produce supplier 20% above market",
-            "category": "vendor_overcharge",
-            "severity": "high",
-            "description": "Fresh produce costs 20% above comparable wholesalers.",
-            "evidence": ["Average cost: $4.50/lb vs market $3.60/lb"],
-            "potential_savings": 8500.0,
-            "confidence": 0.8,
-            "recommendation": "Get competitive bids from 2-3 alternative produce suppliers.",
-        }])
+        response = json.dumps(
+            [
+                {
+                    "title": "Produce supplier 20% above market",
+                    "category": "vendor_overcharge",
+                    "severity": "high",
+                    "description": "Fresh produce costs 20% above comparable wholesalers.",
+                    "evidence": ["Average cost: $4.50/lb vs market $3.60/lb"],
+                    "potential_savings": 8500.0,
+                    "confidence": 0.8,
+                    "recommendation": "Get competitive bids from 2-3 alternative produce suppliers.",
+                }
+            ]
+        )
         mock_llm.side_effect = _mock_llm_response(response)
         agent = VendorAuditorAgent(_config())
         result = await agent.analyze(_context())
@@ -282,6 +302,7 @@ class TestVendorAuditorAgent:
 
 
 # ── BaseAgent Tests ─────────────────────────────────────────────────
+
 
 class TestBaseAgent:
     @pytest.mark.asyncio
@@ -318,9 +339,11 @@ class TestBaseAgent:
 
 # ── Coordinator Tests ───────────────────────────────────────────────
 
+
 def _make_dataset(n: int = 65) -> FinancialDataset:
     """Create a dataset with enough transactions for all analyzers."""
     import random
+
     rng = random.Random(42)
     txns = []
     base = date(2024, 1, 1)
@@ -329,17 +352,20 @@ def _make_dataset(n: int = 65) -> FinancialDataset:
 
     for i in range(n):
         from datetime import timedelta
+
         txn_date = base + timedelta(days=i * 5 % 365)
         cat_idx = i % len(categories)
-        txns.append(Transaction(
-            id=f"txn_{i:04d}",
-            date=txn_date,
-            amount=rng.uniform(50, 5000),
-            vendor=vendors[cat_idx],
-            category=categories[cat_idx],
-            type=TransactionType.EXPENSE if i % 5 != 0 else TransactionType.INCOME,
-            description=f"Transaction {i}",
-        ))
+        txns.append(
+            Transaction(
+                id=f"txn_{i:04d}",
+                date=txn_date,
+                amount=rng.uniform(50, 5000),
+                vendor=vendors[cat_idx],
+                category=categories[cat_idx],
+                type=TransactionType.EXPENSE if i % 5 != 0 else TransactionType.INCOME,
+                description=f"Transaction {i}",
+            )
+        )
     return FinancialDataset(transactions=txns)
 
 
@@ -479,10 +505,29 @@ class TestCoordinatorExtractFindings:
         coordinator = CoordinatorAgent(config=config, connectors=registry)
 
         from fiscalpilot.models.report import Finding
+
         findings = [
-            Finding(id="f1", title="Duplicate Payment", category=FindingCategory.COST_OPTIMIZATION, severity=Severity.HIGH, description="d1"),
-            Finding(id="f2", title="duplicate payment", category=FindingCategory.COST_OPTIMIZATION, severity=Severity.HIGH, description="d2"),
-            Finding(id="f3", title="Different Finding", category=FindingCategory.RISK_DETECTION, severity=Severity.MEDIUM, description="d3"),
+            Finding(
+                id="f1",
+                title="Duplicate Payment",
+                category=FindingCategory.COST_OPTIMIZATION,
+                severity=Severity.HIGH,
+                description="d1",
+            ),
+            Finding(
+                id="f2",
+                title="duplicate payment",
+                category=FindingCategory.COST_OPTIMIZATION,
+                severity=Severity.HIGH,
+                description="d2",
+            ),
+            Finding(
+                id="f3",
+                title="Different Finding",
+                category=FindingCategory.RISK_DETECTION,
+                severity=Severity.MEDIUM,
+                description="d3",
+            ),
         ]
         deduped = coordinator._deduplicate_findings(findings)
         assert len(deduped) == 2
@@ -495,6 +540,7 @@ class TestCoordinatorProposedActions:
         coordinator = CoordinatorAgent(config=config, connectors=registry)
 
         from fiscalpilot.models.report import Finding
+
         findings = [
             Finding(
                 id="f1",
@@ -519,6 +565,7 @@ class TestCoordinatorProposedActions:
         assert len(actions) == 2
         # Check that approval levels are assigned correctly
         from fiscalpilot.models.actions import ActionType, ApprovalLevel
+
         sub_action = [a for a in actions if "Unused" in a.title or "Cancel" in a.title][0]
         assert sub_action.action_type == ActionType.CANCEL_SUBSCRIPTION
         assert sub_action.approval_level == ApprovalLevel.RED

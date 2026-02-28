@@ -151,12 +151,14 @@ class TestQuickBooksConnector:
         assert "sandbox" in qbo_connector._base_url
 
     def test_init_production(self) -> None:
-        conn = QuickBooksConnector(credentials={
-            "client_id": "id",
-            "client_secret": "secret",
-            "refresh_token": "token",
-            "realm_id": "realm",
-        })
+        conn = QuickBooksConnector(
+            credentials={
+                "client_id": "id",
+                "client_secret": "secret",
+                "refresh_token": "token",
+                "realm_id": "realm",
+            }
+        )
         assert "sandbox" not in conn._base_url
         assert conn.sandbox is False
 

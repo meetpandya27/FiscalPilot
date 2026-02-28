@@ -22,15 +22,17 @@ logger = logging.getLogger("fiscalpilot.analyzers.menu_engineering")
 
 class MenuItemCategory(str, Enum):
     """Menu item classification based on BCG matrix."""
-    STAR = "star"              # High margin, high popularity
-    PLOWHORSE = "plowhorse"    # Low margin, high popularity
-    PUZZLE = "puzzle"          # High margin, low popularity
-    DOG = "dog"                # Low margin, low popularity
+
+    STAR = "star"  # High margin, high popularity
+    PLOWHORSE = "plowhorse"  # Low margin, high popularity
+    PUZZLE = "puzzle"  # High margin, low popularity
+    DOG = "dog"  # Low margin, low popularity
 
 
 @dataclass
 class MenuItemData:
     """Input data for a menu item (before analysis)."""
+
     name: str
     menu_price: float
     food_cost: float
@@ -172,29 +174,31 @@ class MenuEngineeringAnalyzer:
             MenuEngineeringResult with classifications and recommendations.
         """
         if not items:
-            return MenuEngineeringResult(
-                explanation="No menu items provided for analysis."
-            )
+            return MenuEngineeringResult(explanation="No menu items provided for analysis.")
 
         # Convert to MenuItem objects (handle both MenuItemData and dict)
         menu_items = []
         for item in items:
             if isinstance(item, MenuItemData):
-                menu_items.append(MenuItem(
-                    name=item.name,
-                    category=item.category,
-                    menu_price=float(item.menu_price),
-                    food_cost=float(item.food_cost),
-                    quantity_sold=int(item.quantity_sold),
-                ))
+                menu_items.append(
+                    MenuItem(
+                        name=item.name,
+                        category=item.category,
+                        menu_price=float(item.menu_price),
+                        food_cost=float(item.food_cost),
+                        quantity_sold=int(item.quantity_sold),
+                    )
+                )
             else:
-                menu_items.append(MenuItem(
-                    name=item.get("name", "Unknown"),
-                    category=item.get("category", "Uncategorized"),
-                    menu_price=float(item.get("menu_price", 0)),
-                    food_cost=float(item.get("food_cost", 0)),
-                    quantity_sold=int(item.get("quantity_sold", 0)),
-                ))
+                menu_items.append(
+                    MenuItem(
+                        name=item.get("name", "Unknown"),
+                        category=item.get("category", "Uncategorized"),
+                        menu_price=float(item.get("menu_price", 0)),
+                        food_cost=float(item.get("food_cost", 0)),
+                        quantity_sold=int(item.get("quantity_sold", 0)),
+                    )
+                )
 
         # Calculate totals for normalization
         total_quantity = sum(m.quantity_sold for m in menu_items)
@@ -202,8 +206,7 @@ class MenuEngineeringAnalyzer:
 
         if total_quantity == 0:
             return MenuEngineeringResult(
-                total_menu_items=len(menu_items),
-                explanation="No sales data available for analysis."
+                total_menu_items=len(menu_items), explanation="No sales data available for analysis."
             )
 
         # Calculate average contribution margin
@@ -218,8 +221,7 @@ class MenuEngineeringAnalyzer:
 
         # Determine thresholds based on percentiles
         popularity_cutoff = cls._calculate_percentile_cutoff(
-            [m.quantity_sold for m in menu_items],
-            1 - popularity_threshold
+            [m.quantity_sold for m in menu_items], 1 - popularity_threshold
         )
         profitability_cutoff = avg_cm  # Items above average CM are "profitable"
 
@@ -339,7 +341,9 @@ class MenuEngineeringAnalyzer:
         # Calculate averages
         for cat in category_map.values():
             if cat.items:
-                cat.avg_contribution_margin = cat.total_profit / cat.total_quantity_sold if cat.total_quantity_sold > 0 else 0
+                cat.avg_contribution_margin = (
+                    cat.total_profit / cat.total_quantity_sold if cat.total_quantity_sold > 0 else 0
+                )
                 cat.avg_food_cost_pct = (cat.total_cost / cat.total_revenue * 100) if cat.total_revenue > 0 else 0
 
         return sorted(category_map.values(), key=lambda x: x.total_revenue, reverse=True)
@@ -368,7 +372,9 @@ class MenuEngineeringAnalyzer:
         if plowhorses:
             sum(p.quantity_sold for p in plowhorses)
             avg_plowhorse_margin = sum(p.contribution_margin for p in plowhorses) / len(plowhorses)
-            target_margin = sum(s.contribution_margin for s in stars) / len(stars) if stars else avg_plowhorse_margin * 1.3
+            target_margin = (
+                sum(s.contribution_margin for s in stars) / len(stars) if stars else avg_plowhorse_margin * 1.3
+            )
 
             for ph in plowhorses[:3]:  # Top 3 plowhorses
                 margin_gap = target_margin - ph.contribution_margin
@@ -456,8 +462,7 @@ class MenuEngineeringAnalyzer:
 
         if dog_pct > 30:
             summary_parts.append(
-                "⚠️ HIGH DOG RATIO: Over 30% of your menu is underperforming. "
-                "Consider significant menu simplification."
+                "⚠️ HIGH DOG RATIO: Over 30% of your menu is underperforming. Consider significant menu simplification."
             )
 
         if star_pct < 15:
@@ -533,7 +538,7 @@ class MenuEngineeringAnalyzer:
         if len(dogs) > total * 0.25:
             dog_names = ", ".join(d.name for d in dogs[:3])
             insights.append(
-                f"🚨 {len(dogs)} items ({len(dogs)/total*100:.0f}%) are dogs. "
+                f"🚨 {len(dogs)} items ({len(dogs) / total * 100:.0f}%) are dogs. "
                 f"Consider removing: {dog_names}. Menu simplification improves kitchen efficiency."
             )
 

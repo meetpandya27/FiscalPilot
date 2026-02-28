@@ -160,26 +160,32 @@ MOCK_LINK_TOKEN = {
 
 class TestPlaidConnector:
     def test_init_single_token(self) -> None:
-        conn = PlaidConnector(credentials={
-            "client_id": "id",
-            "secret": "secret",
-            "access_token": "single_token",
-        })
+        conn = PlaidConnector(
+            credentials={
+                "client_id": "id",
+                "secret": "secret",
+                "access_token": "single_token",
+            }
+        )
         assert conn.access_tokens == ["single_token"]
 
     def test_init_multiple_tokens(self) -> None:
-        conn = PlaidConnector(credentials={
-            "client_id": "id",
-            "secret": "secret",
-            "access_tokens": ["token1", "token2"],
-        })
+        conn = PlaidConnector(
+            credentials={
+                "client_id": "id",
+                "secret": "secret",
+                "access_tokens": ["token1", "token2"],
+            }
+        )
         assert len(conn.access_tokens) == 2
 
     def test_init_no_tokens(self) -> None:
-        conn = PlaidConnector(credentials={
-            "client_id": "id",
-            "secret": "secret",
-        })
+        conn = PlaidConnector(
+            credentials={
+                "client_id": "id",
+                "secret": "secret",
+            }
+        )
         assert conn.access_tokens == []
 
     def test_environment_urls(self) -> None:
@@ -196,10 +202,20 @@ class TestPlaidConnector:
         from fiscalpilot.models.financial import ExpenseCategory
 
         # Detailed categories (more specific)
-        assert PlaidConnector._map_plaid_category("RENT_AND_UTILITIES", "RENT_AND_UTILITIES_RENT") == ExpenseCategory.RENT
-        assert PlaidConnector._map_plaid_category("RENT_AND_UTILITIES", "RENT_AND_UTILITIES_GAS_AND_ELECTRICITY") == ExpenseCategory.UTILITIES
-        assert PlaidConnector._map_plaid_category("FOOD_AND_DRINK", "FOOD_AND_DRINK_RESTAURANTS") == ExpenseCategory.MEALS
-        assert PlaidConnector._map_plaid_category("GENERAL_MERCHANDISE", "GENERAL_MERCHANDISE_SOFTWARE") == ExpenseCategory.SOFTWARE
+        assert (
+            PlaidConnector._map_plaid_category("RENT_AND_UTILITIES", "RENT_AND_UTILITIES_RENT") == ExpenseCategory.RENT
+        )
+        assert (
+            PlaidConnector._map_plaid_category("RENT_AND_UTILITIES", "RENT_AND_UTILITIES_GAS_AND_ELECTRICITY")
+            == ExpenseCategory.UTILITIES
+        )
+        assert (
+            PlaidConnector._map_plaid_category("FOOD_AND_DRINK", "FOOD_AND_DRINK_RESTAURANTS") == ExpenseCategory.MEALS
+        )
+        assert (
+            PlaidConnector._map_plaid_category("GENERAL_MERCHANDISE", "GENERAL_MERCHANDISE_SOFTWARE")
+            == ExpenseCategory.SOFTWARE
+        )
 
         # Primary categories (fallback)
         assert PlaidConnector._map_plaid_category("TRAVEL", "") == ExpenseCategory.TRAVEL
@@ -272,6 +288,7 @@ class TestPlaidConnector:
         rent = [t for t in expenses if t.vendor == "Sunrise Properties"][0]
         assert rent.amount == 1200.00
         from fiscalpilot.models.financial import ExpenseCategory
+
         assert rent.category == ExpenseCategory.RENT
 
         # Verify balances
@@ -304,9 +321,16 @@ class TestPlaidConnector:
             if call_count == 1:
                 return {
                     "added": [
-                        {"transaction_id": f"txn-{i}", "date": "2025-01-15", "amount": 10.0,
-                         "name": f"Store {i}", "payment_channel": "in store", "pending": False,
-                         "account_id": "acct-1"} for i in range(50)
+                        {
+                            "transaction_id": f"txn-{i}",
+                            "date": "2025-01-15",
+                            "amount": 10.0,
+                            "name": f"Store {i}",
+                            "payment_channel": "in store",
+                            "pending": False,
+                            "account_id": "acct-1",
+                        }
+                        for i in range(50)
                     ],
                     "modified": [],
                     "removed": [],
@@ -316,9 +340,16 @@ class TestPlaidConnector:
             else:
                 return {
                     "added": [
-                        {"transaction_id": f"txn-{i}", "date": "2025-01-15", "amount": 10.0,
-                         "name": f"Store {i}", "payment_channel": "in store", "pending": False,
-                         "account_id": "acct-1"} for i in range(50, 55)
+                        {
+                            "transaction_id": f"txn-{i}",
+                            "date": "2025-01-15",
+                            "amount": 10.0,
+                            "name": f"Store {i}",
+                            "payment_channel": "in store",
+                            "pending": False,
+                            "account_id": "acct-1",
+                        }
+                        for i in range(50, 55)
                     ],
                     "modified": [],
                     "removed": [],
@@ -338,12 +369,24 @@ class TestPlaidConnector:
         async def mock_api_post(endpoint: str, payload: dict) -> dict:
             return {
                 "added": [
-                    {"transaction_id": "txn-keep", "date": "2025-01-15", "amount": 10.0,
-                     "name": "Keep Me", "payment_channel": "online", "pending": False,
-                     "account_id": "acct-1"},
-                    {"transaction_id": "txn-remove", "date": "2025-01-16", "amount": 20.0,
-                     "name": "Remove Me", "payment_channel": "online", "pending": False,
-                     "account_id": "acct-1"},
+                    {
+                        "transaction_id": "txn-keep",
+                        "date": "2025-01-15",
+                        "amount": 10.0,
+                        "name": "Keep Me",
+                        "payment_channel": "online",
+                        "pending": False,
+                        "account_id": "acct-1",
+                    },
+                    {
+                        "transaction_id": "txn-remove",
+                        "date": "2025-01-16",
+                        "amount": 20.0,
+                        "name": "Remove Me",
+                        "payment_channel": "online",
+                        "pending": False,
+                        "account_id": "acct-1",
+                    },
                 ],
                 "modified": [],
                 "removed": [{"transaction_id": "txn-remove"}],
@@ -407,11 +450,13 @@ class TestPlaidConnector:
     @pytest.mark.asyncio
     async def test_multi_account_pull(self, company: CompanyProfile) -> None:
         """Test pulling from multiple linked bank accounts."""
-        conn = PlaidConnector(credentials={
-            "client_id": "id",
-            "secret": "secret",
-            "access_tokens": ["token-bank-a", "token-bank-b"],
-        })
+        conn = PlaidConnector(
+            credentials={
+                "client_id": "id",
+                "secret": "secret",
+                "access_tokens": ["token-bank-a", "token-bank-b"],
+            }
+        )
 
         call_tokens: list[str] = []
 
@@ -421,19 +466,30 @@ class TestPlaidConnector:
             if "transactions/sync" in endpoint:
                 return {
                     "added": [
-                        {"transaction_id": f"txn-{token[-1]}", "date": "2025-01-15",
-                         "amount": 100.0, "name": f"TXN from {token}",
-                         "payment_channel": "online", "pending": False,
-                         "account_id": f"acct-{token[-1]}"}
+                        {
+                            "transaction_id": f"txn-{token[-1]}",
+                            "date": "2025-01-15",
+                            "amount": 100.0,
+                            "name": f"TXN from {token}",
+                            "payment_channel": "online",
+                            "pending": False,
+                            "account_id": f"acct-{token[-1]}",
+                        }
                     ],
-                    "modified": [], "removed": [], "has_more": False,
+                    "modified": [],
+                    "removed": [],
+                    "has_more": False,
                 }
             elif "accounts/balance/get" in endpoint:
                 return {
                     "accounts": [
-                        {"account_id": f"acct-{token[-1]}", "name": f"Account {token[-1]}",
-                         "type": "depository", "subtype": "checking",
-                         "balances": {"current": 5000.0}},
+                        {
+                            "account_id": f"acct-{token[-1]}",
+                            "name": f"Account {token[-1]}",
+                            "type": "depository",
+                            "subtype": "checking",
+                            "balances": {"current": 5000.0},
+                        },
                     ],
                     "item": {"institution_id": f"ins-{token[-1]}"},
                 }

@@ -102,7 +102,6 @@ _RESTAURANT_QBO_MAP: dict[str, ExpenseCategory] = {
     "Dairy": ExpenseCategory.INVENTORY,
     "Dry Goods": ExpenseCategory.INVENTORY,
     "Frozen Foods": ExpenseCategory.INVENTORY,
-
     # Labor costs (map to PAYROLL)
     "Kitchen Labor": ExpenseCategory.PAYROLL,
     "FOH Labor": ExpenseCategory.PAYROLL,
@@ -124,7 +123,6 @@ _RESTAURANT_QBO_MAP: dict[str, ExpenseCategory] = {
     "Employee Benefits": ExpenseCategory.PAYROLL,
     "Uniforms": ExpenseCategory.SUPPLIES,
     "Staff Meals": ExpenseCategory.MEALS,
-
     # Operating expenses
     "Smallwares": ExpenseCategory.SUPPLIES,
     "Kitchen Supplies": ExpenseCategory.SUPPLIES,
@@ -355,9 +353,7 @@ class QuickBooksConnector(BaseConnector):
         async with self._rate_limit_lock:
             now = time.time()
             # Remove timestamps older than 60 seconds
-            self._request_timestamps = [
-                ts for ts in self._request_timestamps if now - ts < 60
-            ]
+            self._request_timestamps = [ts for ts in self._request_timestamps if now - ts < 60]
 
             # If we're at the limit, wait
             max_requests = _QBO_RATE_LIMIT_PER_MINUTE - _QBO_RATE_LIMIT_BUFFER
@@ -366,15 +362,12 @@ class QuickBooksConnector(BaseConnector):
                 wait_time = 60 - (now - oldest) + 0.1
                 if wait_time > 0:
                     logger.warning(
-                        "Rate limit approaching (%d requests), waiting %.1fs",
-                        len(self._request_timestamps), wait_time
+                        "Rate limit approaching (%d requests), waiting %.1fs", len(self._request_timestamps), wait_time
                     )
                     await asyncio.sleep(wait_time)
                     # Clear old timestamps after waiting
                     now = time.time()
-                    self._request_timestamps = [
-                        ts for ts in self._request_timestamps if now - ts < 60
-                    ]
+                    self._request_timestamps = [ts for ts in self._request_timestamps if now - ts < 60]
 
             self._request_timestamps.append(time.time())
 
@@ -410,7 +403,9 @@ class QuickBooksConnector(BaseConnector):
                     retry_after = int(resp.headers.get("Retry-After", backoff))
                     logger.warning(
                         "QBO rate limited (429), waiting %ds (attempt %d/%d)",
-                        retry_after, attempt + 1, len(_QBO_RETRY_BACKOFF_SECONDS)
+                        retry_after,
+                        attempt + 1,
+                        len(_QBO_RETRY_BACKOFF_SECONDS),
                     )
                     await asyncio.sleep(retry_after)
                     continue
@@ -419,7 +414,10 @@ class QuickBooksConnector(BaseConnector):
                 if resp.status_code >= 500:
                     logger.warning(
                         "QBO server error (%d), retrying in %ds (attempt %d/%d)",
-                        resp.status_code, backoff, attempt + 1, len(_QBO_RETRY_BACKOFF_SECONDS)
+                        resp.status_code,
+                        backoff,
+                        attempt + 1,
+                        len(_QBO_RETRY_BACKOFF_SECONDS),
                     )
                     await asyncio.sleep(backoff)
                     continue
@@ -430,14 +428,19 @@ class QuickBooksConnector(BaseConnector):
             except httpx.TimeoutException as e:
                 logger.warning(
                     "QBO request timeout, retrying in %ds (attempt %d/%d)",
-                    backoff, attempt + 1, len(_QBO_RETRY_BACKOFF_SECONDS)
+                    backoff,
+                    attempt + 1,
+                    len(_QBO_RETRY_BACKOFF_SECONDS),
                 )
                 last_error = e
                 await asyncio.sleep(backoff)
             except httpx.ConnectError as e:
                 logger.warning(
                     "QBO connection error, retrying in %ds (attempt %d/%d): %s",
-                    backoff, attempt + 1, len(_QBO_RETRY_BACKOFF_SECONDS), e
+                    backoff,
+                    attempt + 1,
+                    len(_QBO_RETRY_BACKOFF_SECONDS),
+                    e,
                 )
                 last_error = e
                 await asyncio.sleep(backoff)
@@ -511,9 +514,7 @@ class QuickBooksConnector(BaseConnector):
                 lines = p.get("Line", [])
                 desc_parts = []
                 for line in lines:
-                    detail = line.get("AccountBasedExpenseLineDetail", {}) or line.get(
-                        "ItemBasedExpenseLineDetail", {}
-                    )
+                    detail = line.get("AccountBasedExpenseLineDetail", {}) or line.get("ItemBasedExpenseLineDetail", {})
                     if detail:
                         acct = detail.get("AccountRef", {}).get("name", "")
                         if acct:
@@ -718,8 +719,11 @@ class QuickBooksConnector(BaseConnector):
                 acct_type = acct.get("AccountType", "")
                 # Only include balance sheet accounts
                 if acct_type not in (
-                    "Bank", "Credit Card", "Other Current Asset",
-                    "Other Current Liability", "Accounts Receivable",
+                    "Bank",
+                    "Credit Card",
+                    "Other Current Asset",
+                    "Other Current Liability",
+                    "Accounts Receivable",
                     "Accounts Payable",
                 ):
                     continue
@@ -758,7 +762,9 @@ class QuickBooksConnector(BaseConnector):
 
         logger.info(
             "Pulling QuickBooks data for %s (realm: %s, sandbox: %s)",
-            company.name, self.realm_id, self.sandbox,
+            company.name,
+            self.realm_id,
+            self.sandbox,
         )
 
         # Fetch all entity types in parallel
@@ -769,7 +775,11 @@ class QuickBooksConnector(BaseConnector):
         balances_task = asyncio.create_task(self._fetch_account_balances())
 
         purchases, deposits, invoices, bills, balances = await asyncio.gather(
-            purchases_task, deposits_task, invoices_task, bills_task, balances_task,
+            purchases_task,
+            deposits_task,
+            invoices_task,
+            bills_task,
+            balances_task,
         )
 
         all_transactions = purchases + deposits
@@ -794,7 +804,9 @@ class QuickBooksConnector(BaseConnector):
 
         logger.info(
             "QuickBooks pull complete: %d transactions, %d invoices/bills, %d balances",
-            len(all_transactions), len(all_invoices), len(balances),
+            len(all_transactions),
+            len(all_invoices),
+            len(balances),
         )
         return dataset
 

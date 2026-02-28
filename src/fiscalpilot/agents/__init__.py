@@ -1,4 +1,5 @@
 """Agents package — LLM-powered financial reasoning agents."""
+
 from fiscalpilot.agents.base import BaseAgent
 from fiscalpilot.agents.coordinator import CoordinatorAgent
 from fiscalpilot.agents.cost_cutter import CostCutterAgent

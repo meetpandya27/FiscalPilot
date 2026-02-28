@@ -23,14 +23,11 @@ from typing import Any
 logger = logging.getLogger("fiscalpilot.analyzers.benfords")
 
 # Benford's expected probabilities for first digit (1-9)
-BENFORD_FIRST_DIGIT: dict[int, float] = {
-    d: math.log10(1 + 1 / d) for d in range(1, 10)
-}
+BENFORD_FIRST_DIGIT: dict[int, float] = {d: math.log10(1 + 1 / d) for d in range(1, 10)}
 
 # Benford's expected probabilities for second digit (0-9)
 BENFORD_SECOND_DIGIT: dict[int, float] = {
-    d2: sum(math.log10(1 + 1 / (10 * d1 + d2)) for d1 in range(1, 10))
-    for d2 in range(0, 10)
+    d2: sum(math.log10(1 + 1 / (10 * d1 + d2)) for d1 in range(1, 10)) for d2 in range(0, 10)
 }
 
 # Chi-squared critical values at p=0.05 for common degrees of freedom
@@ -96,9 +93,13 @@ class BenfordsAnalyzer:
         if sample_size < cls.MIN_SAMPLE:
             return BenfordsResult(
                 first_digit=DigitDistribution(
-                    observed={}, expected=BENFORD_FIRST_DIGIT,
-                    chi_squared=0, p_value_approx=1.0, passes=True,
-                    sample_size=sample_size, msd=0,
+                    observed={},
+                    expected=BENFORD_FIRST_DIGIT,
+                    chi_squared=0,
+                    p_value_approx=1.0,
+                    passes=True,
+                    sample_size=sample_size,
+                    msd=0,
                 ),
                 second_digit=None,
                 sample_size=sample_size,
@@ -113,9 +114,7 @@ class BenfordsAnalyzer:
         # Second digit test
         second_digits = cls._leading_digits(amounts, position=2)
         second_result = (
-            cls._test_distribution(second_digits, BENFORD_SECOND_DIGIT, sample_size)
-            if sample_size >= 100
-            else None
+            cls._test_distribution(second_digits, BENFORD_SECOND_DIGIT, sample_size) if sample_size >= 100 else None
         )
 
         # Identify suspicious digits (observed >> expected)
@@ -134,9 +133,7 @@ class BenfordsAnalyzer:
         # Composite conformity score
         conformity = cls._compute_conformity_score(first_result, second_result)
 
-        summary = cls._build_summary(
-            first_result, second_result, suspicious, conformity, sample_size
-        )
+        summary = cls._build_summary(first_result, second_result, suspicious, conformity, sample_size)
 
         return BenfordsResult(
             first_digit=first_result,
@@ -223,9 +220,7 @@ class BenfordsAnalyzer:
         )
 
     @staticmethod
-    def _find_suspicious_digits(
-        result: DigitDistribution, n: int
-    ) -> list[dict[str, Any]]:
+    def _find_suspicious_digits(result: DigitDistribution, n: int) -> list[dict[str, Any]]:
         """Find digits that deviate significantly from Benford expectation."""
         suspicious: list[dict[str, Any]] = []
         total = result.sample_size or 1
@@ -236,13 +231,15 @@ class BenfordsAnalyzer:
 
             # Flag if deviation is > 5 percentage points and statistically significant
             if abs(deviation) > 0.05 and total >= 50:
-                suspicious.append({
-                    "digit": digit,
-                    "observed_pct": round(observed_pct * 100, 2),
-                    "expected_pct": round(expected_pct * 100, 2),
-                    "deviation_pct": round(deviation * 100, 2),
-                    "direction": "over-represented" if deviation > 0 else "under-represented",
-                })
+                suspicious.append(
+                    {
+                        "digit": digit,
+                        "observed_pct": round(observed_pct * 100, 2),
+                        "expected_pct": round(expected_pct * 100, 2),
+                        "deviation_pct": round(deviation * 100, 2),
+                        "direction": "over-represented" if deviation > 0 else "under-represented",
+                    }
+                )
         return suspicious
 
     @classmethod
@@ -274,9 +271,7 @@ class BenfordsAnalyzer:
         return results
 
     @staticmethod
-    def _compute_conformity_score(
-        first: DigitDistribution, second: DigitDistribution | None
-    ) -> float:
+    def _compute_conformity_score(first: DigitDistribution, second: DigitDistribution | None) -> float:
         """0.0 = highly suspicious, 1.0 = perfect Benford conformity.
 
         Based on Mean Absolute Deviation (MAD):
@@ -326,10 +321,7 @@ class BenfordsAnalyzer:
             f"  Conformity score: {conformity:.1%}",
         ]
         if second:
-            lines.append(
-                f"  Second-digit chi² = {second.chi_squared} "
-                f"({'PASS' if second.passes else 'FAIL'})"
-            )
+            lines.append(f"  Second-digit chi² = {second.chi_squared} ({'PASS' if second.passes else 'FAIL'})")
         if suspicious:
             lines.append("  Suspicious digits:")
             for s in suspicious:

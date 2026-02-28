@@ -168,14 +168,16 @@ class AnomalyDetector:
             z = (amount - mean_val) / std_val
             if abs(z) > threshold:
                 score = min(1.0, abs(z) / (threshold * 2))  # Normalize to 0-1
-                flags.append(AnomalyFlag(
-                    transaction_id=t.get("id"),
-                    amount=amount,
-                    score=round(score, 3),
-                    method="z_score",
-                    reason=f"Amount ${amount:,.2f} is {abs(z):.1f} std devs from mean ${mean_val:,.2f}",
-                    context={"z_score": round(z, 3), "mean": round(mean_val, 2), "std": round(std_val, 2)},
-                ))
+                flags.append(
+                    AnomalyFlag(
+                        transaction_id=t.get("id"),
+                        amount=amount,
+                        score=round(score, 3),
+                        method="z_score",
+                        reason=f"Amount ${amount:,.2f} is {abs(z):.1f} std devs from mean ${mean_val:,.2f}",
+                        context={"z_score": round(z, 3), "mean": round(mean_val, 2), "std": round(std_val, 2)},
+                    )
+                )
         return flags
 
     @staticmethod
@@ -201,25 +203,29 @@ class AnomalyDetector:
             if amount > upper_fence:
                 distance = (amount - upper_fence) / iqr
                 score = min(1.0, distance / (multiplier * 2))
-                flags.append(AnomalyFlag(
-                    transaction_id=t.get("id"),
-                    amount=amount,
-                    score=round(score, 3),
-                    method="iqr",
-                    reason=f"Amount ${amount:,.2f} exceeds upper fence ${upper_fence:,.2f} (IQR: ${iqr:,.2f})",
-                    context={"upper_fence": round(upper_fence, 2), "iqr": round(iqr, 2)},
-                ))
+                flags.append(
+                    AnomalyFlag(
+                        transaction_id=t.get("id"),
+                        amount=amount,
+                        score=round(score, 3),
+                        method="iqr",
+                        reason=f"Amount ${amount:,.2f} exceeds upper fence ${upper_fence:,.2f} (IQR: ${iqr:,.2f})",
+                        context={"upper_fence": round(upper_fence, 2), "iqr": round(iqr, 2)},
+                    )
+                )
             elif amount < lower_fence and lower_fence > 0:
                 distance = (lower_fence - amount) / iqr
                 score = min(1.0, distance / (multiplier * 2))
-                flags.append(AnomalyFlag(
-                    transaction_id=t.get("id"),
-                    amount=amount,
-                    score=round(score, 3),
-                    method="iqr",
-                    reason=f"Amount ${amount:,.2f} below lower fence ${lower_fence:,.2f}",
-                    context={"lower_fence": round(lower_fence, 2), "iqr": round(iqr, 2)},
-                ))
+                flags.append(
+                    AnomalyFlag(
+                        transaction_id=t.get("id"),
+                        amount=amount,
+                        score=round(score, 3),
+                        method="iqr",
+                        reason=f"Amount ${amount:,.2f} below lower fence ${lower_fence:,.2f}",
+                        context={"lower_fence": round(lower_fence, 2), "iqr": round(iqr, 2)},
+                    )
+                )
         return flags
 
     @classmethod
@@ -269,7 +275,7 @@ class AnomalyDetector:
         # Rolling stats (use all-except-current for expected range)
         anomalies: list[TimeSeriesAnomaly] = []
         for i, period in enumerate(sorted_periods):
-            others = values[:i] + values[i + 1:]
+            others = values[:i] + values[i + 1 :]
             if not others:
                 continue
             other_mean = sum(others) / len(others)
@@ -284,14 +290,16 @@ class AnomalyDetector:
             if abs(z) > 2.0:
                 dev_pct = ((actual - other_mean) / max(other_mean, 1)) * 100
                 score = min(1.0, abs(z) / 4.0)
-                anomalies.append(TimeSeriesAnomaly(
-                    period=period,
-                    total_spend=round(actual, 2),
-                    expected_range=(round(low_bound, 2), round(high_bound, 2)),
-                    deviation_pct=round(dev_pct, 1),
-                    score=round(score, 3),
-                    contributing_transactions=period_txn_ids.get(period, [])[:20],
-                ))
+                anomalies.append(
+                    TimeSeriesAnomaly(
+                        period=period,
+                        total_spend=round(actual, 2),
+                        expected_range=(round(low_bound, 2), round(high_bound, 2)),
+                        deviation_pct=round(dev_pct, 1),
+                        score=round(score, 3),
+                        contributing_transactions=period_txn_ids.get(period, [])[:20],
+                    )
+                )
 
         return anomalies
 
@@ -325,17 +333,19 @@ class AnomalyDetector:
                 z = (amounts[i] - mean_val) / std_val
                 if abs(z) > z_threshold:
                     score = min(1.0, abs(z) / (z_threshold * 2))
-                    flags.append(AnomalyFlag(
-                        transaction_id=t.get("id"),
-                        amount=amounts[i],
-                        score=round(score, 3),
-                        method="vendor_z_score",
-                        reason=(
-                            f"Vendor '{vendor}' payment ${amounts[i]:,.2f} is "
-                            f"{abs(z):.1f}σ from vendor mean ${mean_val:,.2f}"
-                        ),
-                        context={"vendor": vendor, "vendor_mean": round(mean_val, 2)},
-                    ))
+                    flags.append(
+                        AnomalyFlag(
+                            transaction_id=t.get("id"),
+                            amount=amounts[i],
+                            score=round(score, 3),
+                            method="vendor_z_score",
+                            reason=(
+                                f"Vendor '{vendor}' payment ${amounts[i]:,.2f} is "
+                                f"{abs(z):.1f}σ from vendor mean ${mean_val:,.2f}"
+                            ),
+                            context={"vendor": vendor, "vendor_mean": round(mean_val, 2)},
+                        )
+                    )
 
             if flags:
                 results[vendor] = flags
@@ -398,7 +408,7 @@ class AnomalyDetector:
         lines = [
             f"Anomaly Detection ({total} transactions):",
             f"  Mean: ${stats['mean']:,.2f} | Median: ${stats['median']:,.2f} | Std: ${stats['std_dev']:,.2f}",
-            f"  Flagged: {len(flags)} transactions ({len(flags)/max(total,1)*100:.1f}%)",
+            f"  Flagged: {len(flags)} transactions ({len(flags) / max(total, 1) * 100:.1f}%)",
         ]
         if ts_anomalies:
             lines.append(f"  Time-series anomalies: {len(ts_anomalies)} periods")

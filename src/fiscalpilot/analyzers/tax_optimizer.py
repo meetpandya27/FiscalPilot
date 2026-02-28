@@ -176,16 +176,11 @@ class TaxOptimizer:
 
         # Compute totals
         total_savings = sum(o.estimated_savings for o in opportunities)
-        total_deductible = sum(
-            spend * DEDUCTIBLE_CATEGORIES.get(cat, 0)
-            for cat, spend in category_spend.items()
-        )
+        total_deductible = sum(spend * DEDUCTIBLE_CATEGORIES.get(cat, 0) for cat, spend in category_spend.items())
 
         opportunities.sort(key=lambda o: o.estimated_savings, reverse=True)
 
-        summary = cls._build_summary(
-            opportunities, total_savings, total_deductible, uncategorized, tax_rate
-        )
+        summary = cls._build_summary(opportunities, total_savings, total_deductible, uncategorized, tax_rate)
 
         return TaxOptimizationResult(
             opportunities=opportunities,
@@ -233,21 +228,23 @@ class TaxOptimizer:
             savings = total * deduction_rate * tax_rate
             cat_label = proper_cat.replace("_", " ").title()
 
-            opportunities.append(TaxOpportunity(
-                title=f"Reclassify {len(txns)} transactions as {cat_label}",
-                category="miscategorized",
-                estimated_savings=round(savings, 2),
-                confidence=0.75,
-                description=(
-                    f"Found {len(txns)} transactions (${total:,.2f}) categorized as 'other' "
-                    f"that appear to be {cat_label} expenses — fully deductible."
-                ),
-                recommendation=(
-                    f"Reclassify these as '{proper_cat}' for proper tax deduction. "
-                    f"Estimated tax savings: ${savings:,.2f}/yr."
-                ),
-                affected_transactions=[t.get("id", "") for t in txns if t.get("id")],
-            ))
+            opportunities.append(
+                TaxOpportunity(
+                    title=f"Reclassify {len(txns)} transactions as {cat_label}",
+                    category="miscategorized",
+                    estimated_savings=round(savings, 2),
+                    confidence=0.75,
+                    description=(
+                        f"Found {len(txns)} transactions (${total:,.2f}) categorized as 'other' "
+                        f"that appear to be {cat_label} expenses — fully deductible."
+                    ),
+                    recommendation=(
+                        f"Reclassify these as '{proper_cat}' for proper tax deduction. "
+                        f"Estimated tax savings: ${savings:,.2f}/yr."
+                    ),
+                    affected_transactions=[t.get("id", "") for t in txns if t.get("id")],
+                )
+            )
 
         return opportunities
 
@@ -267,8 +264,7 @@ class TaxOptimizer:
         expected_deductions = {
             "professional_fees": (
                 "Accounting/legal fees",
-                "Most businesses benefit from professional tax and legal advice. "
-                "Estimated deduction: 2-5% of revenue.",
+                "Most businesses benefit from professional tax and legal advice. Estimated deduction: 2-5% of revenue.",
                 0.02,
             ),
             "insurance": (
@@ -283,17 +279,19 @@ class TaxOptimizer:
                 estimated_deduction = annual_revenue * pct
                 savings = estimated_deduction * tax_rate
                 if savings >= 100:
-                    opportunities.append(TaxOpportunity(
-                        title=f"No {title} deductions found",
-                        category="missing_deduction",
-                        estimated_savings=round(savings, 2),
-                        confidence=0.5,
-                        description=f"No transactions found for '{cat}'. {desc}",
-                        recommendation=(
-                            f"Verify if {title.lower()} are being tracked. If currently "
-                            f"uncategorized, properly classify them for ~${savings:,.2f} in tax savings."
-                        ),
-                    ))
+                    opportunities.append(
+                        TaxOpportunity(
+                            title=f"No {title} deductions found",
+                            category="missing_deduction",
+                            estimated_savings=round(savings, 2),
+                            confidence=0.5,
+                            description=f"No transactions found for '{cat}'. {desc}",
+                            recommendation=(
+                                f"Verify if {title.lower()} are being tracked. If currently "
+                                f"uncategorized, properly classify them for ~${savings:,.2f} in tax savings."
+                            ),
+                        )
+                    )
 
         return opportunities
 
@@ -305,9 +303,9 @@ class TaxOptimizer:
     ) -> list[TaxOpportunity]:
         """Identify equipment purchases eligible for Section 179 or bonus depreciation."""
         equipment_txns = [
-            t for t in transactions
-            if _enum_str(t.get("category", "")).lower() == "equipment"
-            and abs(float(t.get("amount", 0))) >= 500
+            t
+            for t in transactions
+            if _enum_str(t.get("category", "")).lower() == "equipment" and abs(float(t.get("amount", 0))) >= 500
         ]
 
         if not equipment_txns:
@@ -316,23 +314,25 @@ class TaxOptimizer:
         total_equipment = sum(abs(float(t.get("amount", 0))) for t in equipment_txns)
         savings = total_equipment * tax_rate  # Full deduction via Section 179
 
-        return [TaxOpportunity(
-            title=f"Section 179 deduction for {len(equipment_txns)} equipment purchases",
-            category="depreciation",
-            estimated_savings=round(savings, 2),
-            confidence=0.7,
-            description=(
-                f"Found ${total_equipment:,.2f} in equipment purchases. Under Section 179, "
-                f"businesses can deduct the full cost of qualifying equipment in the year purchased "
-                f"(up to $1.16M for 2025)."
-            ),
-            recommendation=(
-                f"Elect Section 179 expensing for qualifying equipment to deduct "
-                f"${total_equipment:,.2f} immediately instead of depreciating over multiple years. "
-                f"Consult your CPA for eligibility."
-            ),
-            affected_transactions=[t.get("id", "") for t in equipment_txns if t.get("id")],
-        )]
+        return [
+            TaxOpportunity(
+                title=f"Section 179 deduction for {len(equipment_txns)} equipment purchases",
+                category="depreciation",
+                estimated_savings=round(savings, 2),
+                confidence=0.7,
+                description=(
+                    f"Found ${total_equipment:,.2f} in equipment purchases. Under Section 179, "
+                    f"businesses can deduct the full cost of qualifying equipment in the year purchased "
+                    f"(up to $1.16M for 2025)."
+                ),
+                recommendation=(
+                    f"Elect Section 179 expensing for qualifying equipment to deduct "
+                    f"${total_equipment:,.2f} immediately instead of depreciating over multiple years. "
+                    f"Consult your CPA for eligibility."
+                ),
+                affected_transactions=[t.get("id", "") for t in equipment_txns if t.get("id")],
+            )
+        ]
 
     @classmethod
     def _evaluate_entity_structure(
@@ -413,10 +413,7 @@ class TaxOptimizer:
         tax_rate: float,
     ) -> TaxOpportunity | None:
         """Check if business meals are being properly deducted at 50%."""
-        meal_txns = [
-            t for t in transactions
-            if _enum_str(t.get("category", "")).lower() == "meals"
-        ]
+        meal_txns = [t for t in transactions if _enum_str(t.get("category", "")).lower() == "meals"]
         if not meal_txns:
             return None
 

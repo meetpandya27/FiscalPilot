@@ -35,43 +35,71 @@ def sample_dataset():
     transactions = [
         # Food costs - 30% of revenue
         Transaction(
-            id="1", date=date(2024, 1, 15), amount=2500,
-            description="Sysco Foods", vendor="Sysco",
-            type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY,
+            id="1",
+            date=date(2024, 1, 15),
+            amount=2500,
+            description="Sysco Foods",
+            vendor="Sysco",
+            type=TransactionType.EXPENSE,
+            category=ExpenseCategory.INVENTORY,
         ),
         Transaction(
-            id="2", date=date(2024, 1, 20), amount=1800,
-            description="US Foods", vendor="US Foods",
-            type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY,
+            id="2",
+            date=date(2024, 1, 20),
+            amount=1800,
+            description="US Foods",
+            vendor="US Foods",
+            type=TransactionType.EXPENSE,
+            category=ExpenseCategory.INVENTORY,
         ),
         # Labor costs - 32%
         Transaction(
-            id="3", date=date(2024, 1, 15), amount=3200,
-            description="Bi-weekly payroll", vendor="ADP Payroll",
-            type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL,
+            id="3",
+            date=date(2024, 1, 15),
+            amount=3200,
+            description="Bi-weekly payroll",
+            vendor="ADP Payroll",
+            type=TransactionType.EXPENSE,
+            category=ExpenseCategory.PAYROLL,
         ),
         Transaction(
-            id="4", date=date(2024, 1, 31), amount=3000,
-            description="Bi-weekly payroll", vendor="ADP Payroll",
-            type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL,
+            id="4",
+            date=date(2024, 1, 31),
+            amount=3000,
+            description="Bi-weekly payroll",
+            vendor="ADP Payroll",
+            type=TransactionType.EXPENSE,
+            category=ExpenseCategory.PAYROLL,
         ),
         # Rent - 8%
         Transaction(
-            id="5", date=date(2024, 1, 1), amount=1500,
-            description="Monthly rent", vendor="Property Management",
-            type=TransactionType.EXPENSE, category=ExpenseCategory.RENT,
+            id="5",
+            date=date(2024, 1, 1),
+            amount=1500,
+            description="Monthly rent",
+            vendor="Property Management",
+            type=TransactionType.EXPENSE,
+            category=ExpenseCategory.RENT,
         ),
         # Utilities - 2%
         Transaction(
-            id="6", date=date(2024, 1, 10), amount=400,
-            description="Electric bill", vendor="ComEd",
-            type=TransactionType.EXPENSE, category=ExpenseCategory.UTILITIES,
+            id="6",
+            date=date(2024, 1, 10),
+            amount=400,
+            description="Electric bill",
+            vendor="ComEd",
+            type=TransactionType.EXPENSE,
+            category=ExpenseCategory.UTILITIES,
         ),
         # Income
         Transaction(
-            id="7", date=date(2024, 1, 31), amount=15000,
-            description="January sales", vendor="POS System",
-            type=TransactionType.INCOME, category=None,
+            id="7",
+            date=date(2024, 1, 31),
+            amount=15000,
+            description="January sales",
+            vendor="POS System",
+            type=TransactionType.INCOME,
+            category=None,
         ),
     ]
 
@@ -116,14 +144,16 @@ class TestRestaurantAgentAnalyze:
         agent = RestaurantAgent(mock_config)
 
         # Mock LLM call to avoid actual API call
-        with patch.object(agent, '_call_llm', new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = '[]'  # Empty recommendations
+        with patch.object(agent, "_call_llm", new_callable=AsyncMock) as mock_llm:
+            mock_llm.return_value = "[]"  # Empty recommendations
 
-            result = await agent.analyze({
-                "dataset": sample_dataset,
-                "annual_revenue": 180_000,
-                "company": {"name": "Test Restaurant"},
-            })
+            result = await agent.analyze(
+                {
+                    "dataset": sample_dataset,
+                    "annual_revenue": 180_000,
+                    "company": {"name": "Test Restaurant"},
+                }
+            )
 
         assert "kpi_results" in result
         assert "health_grade" in result
@@ -135,14 +165,16 @@ class TestRestaurantAgentAnalyze:
         """Test that findings are generated from KPIs."""
         agent = RestaurantAgent(mock_config)
 
-        with patch.object(agent, '_call_llm', new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = '[]'
+        with patch.object(agent, "_call_llm", new_callable=AsyncMock) as mock_llm:
+            mock_llm.return_value = "[]"
 
-            result = await agent.analyze({
-                "dataset": sample_dataset,
-                "annual_revenue": 180_000,
-                "company": {"name": "Test Restaurant"},
-            })
+            result = await agent.analyze(
+                {
+                    "dataset": sample_dataset,
+                    "annual_revenue": 180_000,
+                    "company": {"name": "Test Restaurant"},
+                }
+            )
 
         findings = result["findings"]
         assert len(findings) > 0
@@ -158,14 +190,16 @@ class TestRestaurantAgentAnalyze:
         """Test that action proposals are generated."""
         agent = RestaurantAgent(mock_config)
 
-        with patch.object(agent, '_call_llm', new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = '[]'
+        with patch.object(agent, "_call_llm", new_callable=AsyncMock) as mock_llm:
+            mock_llm.return_value = "[]"
 
-            result = await agent.analyze({
-                "dataset": sample_dataset,
-                "annual_revenue": 180_000,
-                "company": {"name": "Test Restaurant"},
-            })
+            result = await agent.analyze(
+                {
+                    "dataset": sample_dataset,
+                    "annual_revenue": 180_000,
+                    "company": {"name": "Test Restaurant"},
+                }
+            )
 
         # Should have action proposals
         assert "proposed_actions" in result
@@ -175,9 +209,11 @@ class TestRestaurantAgentAnalyze:
         """Test that missing dataset returns error."""
         agent = RestaurantAgent(mock_config)
 
-        result = await agent.analyze({
-            "company": {"name": "Test Restaurant"},
-        })
+        result = await agent.analyze(
+            {
+                "company": {"name": "Test Restaurant"},
+            }
+        )
 
         assert "error" in result
         assert "dataset" in result["error"].lower()
@@ -193,14 +229,22 @@ class TestRestaurantAgentActionGeneration:
         # With $10,000 annual revenue and $4,000 food cost = 40%
         transactions = [
             Transaction(
-                id="1", date=date(2024, 1, 15), amount=4000,
-                description="Food supplies", vendor="Sysco",
-                type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY,
+                id="1",
+                date=date(2024, 1, 15),
+                amount=4000,
+                description="Food supplies",
+                vendor="Sysco",
+                type=TransactionType.EXPENSE,
+                category=ExpenseCategory.INVENTORY,
             ),
             Transaction(
-                id="2", date=date(2024, 1, 31), amount=10000,
-                description="January sales", vendor="POS",
-                type=TransactionType.INCOME, category=None,
+                id="2",
+                date=date(2024, 1, 31),
+                amount=10000,
+                description="January sales",
+                vendor="POS",
+                type=TransactionType.INCOME,
+                category=None,
             ),
         ]
         dataset = FinancialDataset(
@@ -212,15 +256,17 @@ class TestRestaurantAgentActionGeneration:
 
         agent = RestaurantAgent(mock_config)
 
-        with patch.object(agent, '_call_llm', new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = '[]'
+        with patch.object(agent, "_call_llm", new_callable=AsyncMock) as mock_llm:
+            mock_llm.return_value = "[]"
 
             # Use $10,000 annual revenue so $4000 food cost = 40%
-            result = await agent.analyze({
-                "dataset": dataset,
-                "annual_revenue": 10_000,
-                "company": {"name": "Test Restaurant"},
-            })
+            result = await agent.analyze(
+                {
+                    "dataset": dataset,
+                    "annual_revenue": 10_000,
+                    "company": {"name": "Test Restaurant"},
+                }
+            )
 
         # Should generate food cost action since 40% > 32% threshold
         actions = result.get("proposed_actions", [])
@@ -233,19 +279,31 @@ class TestRestaurantAgentActionGeneration:
         # Create dataset with no marketing spend
         transactions = [
             Transaction(
-                id="1", date=date(2024, 1, 15), amount=3000,
-                description="Food", vendor="Sysco",
-                type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY,
+                id="1",
+                date=date(2024, 1, 15),
+                amount=3000,
+                description="Food",
+                vendor="Sysco",
+                type=TransactionType.EXPENSE,
+                category=ExpenseCategory.INVENTORY,
             ),
             Transaction(
-                id="2", date=date(2024, 1, 15), amount=3000,
-                description="Payroll", vendor="ADP",
-                type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL,
+                id="2",
+                date=date(2024, 1, 15),
+                amount=3000,
+                description="Payroll",
+                vendor="ADP",
+                type=TransactionType.EXPENSE,
+                category=ExpenseCategory.PAYROLL,
             ),
             Transaction(
-                id="3", date=date(2024, 1, 31), amount=10000,
-                description="Sales", vendor="POS",
-                type=TransactionType.INCOME, category=None,
+                id="3",
+                date=date(2024, 1, 31),
+                amount=10000,
+                description="Sales",
+                vendor="POS",
+                type=TransactionType.INCOME,
+                category=None,
             ),
         ]
         dataset = FinancialDataset(
@@ -257,14 +315,16 @@ class TestRestaurantAgentActionGeneration:
 
         agent = RestaurantAgent(mock_config)
 
-        with patch.object(agent, '_call_llm', new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = '[]'
+        with patch.object(agent, "_call_llm", new_callable=AsyncMock) as mock_llm:
+            mock_llm.return_value = "[]"
 
-            result = await agent.analyze({
-                "dataset": dataset,
-                "annual_revenue": 120_000,
-                "company": {"name": "Test Restaurant"},
-            })
+            result = await agent.analyze(
+                {
+                    "dataset": dataset,
+                    "annual_revenue": 120_000,
+                    "company": {"name": "Test Restaurant"},
+                }
+            )
 
         # Should generate marketing action
         actions = result.get("proposed_actions", [])
@@ -293,14 +353,16 @@ class TestRestaurantAgentLLMIntegration:
             }
         ]"""
 
-        with patch.object(agent, '_call_llm', new_callable=AsyncMock) as mock_llm:
+        with patch.object(agent, "_call_llm", new_callable=AsyncMock) as mock_llm:
             mock_llm.return_value = mock_recommendations
 
-            result = await agent.analyze({
-                "dataset": sample_dataset,
-                "annual_revenue": 180_000,
-                "company": {"name": "Test Restaurant"},
-            })
+            result = await agent.analyze(
+                {
+                    "dataset": sample_dataset,
+                    "annual_revenue": 180_000,
+                    "company": {"name": "Test Restaurant"},
+                }
+            )
 
         recommendations = result.get("recommendations", [])
         assert len(recommendations) == 1
@@ -311,14 +373,16 @@ class TestRestaurantAgentLLMIntegration:
         """Test graceful handling of invalid JSON from LLM."""
         agent = RestaurantAgent(mock_config)
 
-        with patch.object(agent, '_call_llm', new_callable=AsyncMock) as mock_llm:
+        with patch.object(agent, "_call_llm", new_callable=AsyncMock) as mock_llm:
             mock_llm.return_value = "This is not valid JSON"
 
-            result = await agent.analyze({
-                "dataset": sample_dataset,
-                "annual_revenue": 180_000,
-                "company": {"name": "Test Restaurant"},
-            })
+            result = await agent.analyze(
+                {
+                    "dataset": sample_dataset,
+                    "annual_revenue": 180_000,
+                    "company": {"name": "Test Restaurant"},
+                }
+            )
 
         # Should still return KPI results even if LLM fails
         assert "kpi_results" in result
@@ -329,14 +393,16 @@ class TestRestaurantAgentLLMIntegration:
         """Test graceful handling of LLM exceptions."""
         agent = RestaurantAgent(mock_config)
 
-        with patch.object(agent, '_call_llm', new_callable=AsyncMock) as mock_llm:
+        with patch.object(agent, "_call_llm", new_callable=AsyncMock) as mock_llm:
             mock_llm.side_effect = Exception("API error")
 
-            result = await agent.analyze({
-                "dataset": sample_dataset,
-                "annual_revenue": 180_000,
-                "company": {"name": "Test Restaurant"},
-            })
+            result = await agent.analyze(
+                {
+                    "dataset": sample_dataset,
+                    "annual_revenue": 180_000,
+                    "company": {"name": "Test Restaurant"},
+                }
+            )
 
         # Should still return KPI results
         assert "kpi_results" in result

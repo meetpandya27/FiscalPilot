@@ -201,10 +201,7 @@ class ExecutionEngine:
         Convenience method that gathers approved actions from the gate
         and executes them in one pass.
         """
-        approved = [
-            a for a in self._approval_gate._pending.values()
-            if a.status == ActionStatus.APPROVED
-        ]
+        approved = [a for a in self._approval_gate._pending.values() if a.status == ActionStatus.APPROVED]
         return await self.execute(approved, dry_run=dry_run)
 
     async def rollback(self, action_ids: list[str]) -> list[ExecutionResult]:
@@ -221,12 +218,14 @@ class ExecutionEngine:
                 continue
             if not prev_result.rollback_available:
                 logger.warning("Action %s does not support rollback", action_id)
-                results.append(ExecutionResult(
-                    action_id=action_id,
-                    status=ActionStatus.FAILED,
-                    summary="Rollback not available for this action.",
-                    error="rollback_not_available",
-                ))
+                results.append(
+                    ExecutionResult(
+                        action_id=action_id,
+                        status=ActionStatus.FAILED,
+                        summary="Rollback not available for this action.",
+                        error="rollback_not_available",
+                    )
+                )
                 continue
 
             # Find the action in pending
@@ -243,12 +242,14 @@ class ExecutionEngine:
                 self._execution_log.append(result)
             except Exception as e:
                 logger.error("Rollback failed for action %s: %s", action_id, e)
-                results.append(ExecutionResult(
-                    action_id=action_id,
-                    status=ActionStatus.FAILED,
-                    summary=f"Rollback error: {e}",
-                    error=str(e),
-                ))
+                results.append(
+                    ExecutionResult(
+                        action_id=action_id,
+                        status=ActionStatus.FAILED,
+                        summary=f"Rollback error: {e}",
+                        error=str(e),
+                    )
+                )
 
         return results
 

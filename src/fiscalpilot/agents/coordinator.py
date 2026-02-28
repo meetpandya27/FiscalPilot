@@ -144,9 +144,7 @@ Never be vague. Every recommendation should have a clear next step."""
         proposed_actions = self._generate_proposed_actions(all_findings, company)
 
         # Step 9: Generate executive summary
-        executive_summary = await self._generate_executive_summary(
-            company, all_findings, dataset
-        )
+        executive_summary = await self._generate_executive_summary(company, all_findings, dataset)
 
         # Build final report
         report = AuditReport(
@@ -227,9 +225,7 @@ Never be vague. Every recommendation should have a clear next step."""
         proposed_actions = self._generate_proposed_actions(all_findings, company)
 
         # Step 6: Generate executive summary heuristically (no LLM)
-        executive_summary = self._generate_local_executive_summary(
-            company, all_findings, dataset, intelligence
-        )
+        executive_summary = self._generate_local_executive_summary(company, all_findings, dataset, intelligence)
 
         report = AuditReport(
             id=str(uuid.uuid4()),
@@ -294,37 +290,42 @@ Never be vague. Every recommendation should have a clear next step."""
 
                 # Generate finding if non-conforming
                 if result.conformity_score < 0.5:
-                    findings.append(Finding(
-                        id=f"benfords_{uuid.uuid4().hex[:8]}",
-                        title="Significant Benford's Law Deviation Detected",
-                        category=FindingCategory.RISK_DETECTION,
-                        severity=Severity.HIGH,
-                        description=(
-                            f"Transaction amounts deviate significantly from Benford's Law "
-                            f"(conformity: {result.conformity_score:.1%}). This may indicate "
-                            f"fabricated data, duplicate entries, or systematic manipulation."
-                        ),
-                        evidence=[result.summary] + [
-                            f"Digit {s['digit']}: {s['observed_pct']}% vs expected {s['expected_pct']}%"
-                            for s in result.suspicious_digits[:5]
-                        ],
-                        confidence=min(0.9, 1.0 - result.conformity_score),
-                        recommendation="Conduct a forensic review of transaction sources.",
-                    ))
+                    findings.append(
+                        Finding(
+                            id=f"benfords_{uuid.uuid4().hex[:8]}",
+                            title="Significant Benford's Law Deviation Detected",
+                            category=FindingCategory.RISK_DETECTION,
+                            severity=Severity.HIGH,
+                            description=(
+                                f"Transaction amounts deviate significantly from Benford's Law "
+                                f"(conformity: {result.conformity_score:.1%}). This may indicate "
+                                f"fabricated data, duplicate entries, or systematic manipulation."
+                            ),
+                            evidence=[result.summary]
+                            + [
+                                f"Digit {s['digit']}: {s['observed_pct']}% vs expected {s['expected_pct']}%"
+                                for s in result.suspicious_digits[:5]
+                            ],
+                            confidence=min(0.9, 1.0 - result.conformity_score),
+                            recommendation="Conduct a forensic review of transaction sources.",
+                        )
+                    )
                 elif result.conformity_score < 0.7:
-                    findings.append(Finding(
-                        id=f"benfords_{uuid.uuid4().hex[:8]}",
-                        title="Marginal Benford's Law Conformity",
-                        category=FindingCategory.COMPLIANCE,
-                        severity=Severity.MEDIUM,
-                        description=(
-                            f"Transaction amounts show marginal conformity to Benford's Law "
-                            f"(score: {result.conformity_score:.1%}). Worth investigating."
-                        ),
-                        evidence=[result.summary],
-                        confidence=0.6,
-                        recommendation="Review flagged digit patterns for potential data quality issues.",
-                    ))
+                    findings.append(
+                        Finding(
+                            id=f"benfords_{uuid.uuid4().hex[:8]}",
+                            title="Marginal Benford's Law Conformity",
+                            category=FindingCategory.COMPLIANCE,
+                            severity=Severity.MEDIUM,
+                            description=(
+                                f"Transaction amounts show marginal conformity to Benford's Law "
+                                f"(score: {result.conformity_score:.1%}). Worth investigating."
+                            ),
+                            evidence=[result.summary],
+                            confidence=0.6,
+                            recommendation="Review flagged digit patterns for potential data quality issues.",
+                        )
+                    )
 
                 logger.info("Benford's analysis complete: conformity=%.1f%%", result.conformity_score * 100)
             except Exception as e:
@@ -352,22 +353,24 @@ Never be vague. Every recommendation should have a clear next step."""
                 # Time-series anomalies → findings
                 for ts in result.time_series_anomalies:
                     if ts.score >= 0.6:
-                        findings.append(Finding(
-                            id=f"anomaly_ts_{uuid.uuid4().hex[:8]}",
-                            title=f"Anomalous spending in {ts.period}",
-                            category=FindingCategory.COST_OPTIMIZATION,
-                            severity=Severity.MEDIUM if ts.score < 0.8 else Severity.HIGH,
-                            description=(
-                                f"Spending of ${ts.total_spend:,.2f} in {ts.period} deviates "
-                                f"{ts.deviation_pct:+.1f}% from expected range "
-                                f"(${ts.expected_range[0]:,.2f}–${ts.expected_range[1]:,.2f})."
-                            ),
-                            evidence=[f"Period: {ts.period}, Score: {ts.score:.2f}"],
-                            potential_savings=max(0, ts.total_spend - ts.expected_range[1]),
-                            confidence=ts.score,
-                            recommendation="Review this period for unusual purchases or billing errors.",
-                            affected_transactions=ts.contributing_transactions,
-                        ))
+                        findings.append(
+                            Finding(
+                                id=f"anomaly_ts_{uuid.uuid4().hex[:8]}",
+                                title=f"Anomalous spending in {ts.period}",
+                                category=FindingCategory.COST_OPTIMIZATION,
+                                severity=Severity.MEDIUM if ts.score < 0.8 else Severity.HIGH,
+                                description=(
+                                    f"Spending of ${ts.total_spend:,.2f} in {ts.period} deviates "
+                                    f"{ts.deviation_pct:+.1f}% from expected range "
+                                    f"(${ts.expected_range[0]:,.2f}–${ts.expected_range[1]:,.2f})."
+                                ),
+                                evidence=[f"Period: {ts.period}, Score: {ts.score:.2f}"],
+                                potential_savings=max(0, ts.total_spend - ts.expected_range[1]),
+                                confidence=ts.score,
+                                recommendation="Review this period for unusual purchases or billing errors.",
+                                affected_transactions=ts.contributing_transactions,
+                            )
+                        )
 
                 logger.info("Anomaly detection complete: %d flagged", result.flagged_count)
             except Exception as e:
@@ -381,9 +384,7 @@ Never be vague. Every recommendation should have a clear next step."""
                 industry = company.industry.value if company.industry else "other"
                 revenue = company.annual_revenue or 0
 
-                result = BenchmarkAnalyzer.analyze(
-                    txn_dicts, industry=industry, annual_revenue=revenue
-                )
+                result = BenchmarkAnalyzer.analyze(txn_dicts, industry=industry, annual_revenue=revenue)
                 intelligence.benchmark_summary = result.summary
                 intelligence.benchmark_grade = result.health_grade
                 intelligence.benchmark_excess_spend = result.total_excess_spend
@@ -393,21 +394,23 @@ Never be vague. Every recommendation should have a clear next step."""
                 # Benchmark deviations → findings
                 for dev in result.deviations:
                     if dev.severity in ("critical", "high"):
-                        findings.append(Finding(
-                            id=f"benchmark_{uuid.uuid4().hex[:8]}",
-                            title=f"{dev.category.replace('_', ' ').title()} exceeds industry benchmark",
-                            category=FindingCategory.BENCHMARK_DEVIATION,
-                            severity=Severity.HIGH if dev.severity == "high" else Severity.CRITICAL,
-                            description=dev.recommendation,
-                            evidence=[
-                                f"Actual: {dev.actual_pct:.1f}% of revenue",
-                                f"Industry range: {dev.benchmark_low:.0f}%–{dev.benchmark_high:.0f}%",
-                                f"Typical: {dev.benchmark_typical:.0f}%",
-                            ],
-                            potential_savings=dev.annual_excess,
-                            confidence=0.75,
-                            recommendation=dev.recommendation,
-                        ))
+                        findings.append(
+                            Finding(
+                                id=f"benchmark_{uuid.uuid4().hex[:8]}",
+                                title=f"{dev.category.replace('_', ' ').title()} exceeds industry benchmark",
+                                category=FindingCategory.BENCHMARK_DEVIATION,
+                                severity=Severity.HIGH if dev.severity == "high" else Severity.CRITICAL,
+                                description=dev.recommendation,
+                                evidence=[
+                                    f"Actual: {dev.actual_pct:.1f}% of revenue",
+                                    f"Industry range: {dev.benchmark_low:.0f}%–{dev.benchmark_high:.0f}%",
+                                    f"Typical: {dev.benchmark_typical:.0f}%",
+                                ],
+                                potential_savings=dev.annual_excess,
+                                confidence=0.75,
+                                recommendation=dev.recommendation,
+                            )
+                        )
 
                 logger.info("Benchmark analysis complete: grade=%s", result.health_grade)
             except Exception as e:
@@ -428,31 +431,35 @@ Never be vague. Every recommendation should have a clear next step."""
 
                 # Critical runway → finding
                 if 0 < result.runway_months < 6:
-                    findings.append(Finding(
-                        id=f"cashflow_{uuid.uuid4().hex[:8]}",
-                        title=f"Cash runway is only {result.runway_months:.1f} months",
-                        category=FindingCategory.CASH_FLOW,
-                        severity=Severity.CRITICAL if result.runway_months < 3 else Severity.HIGH,
-                        description=(
-                            f"At the current burn rate of ${result.average_monthly_burn:,.2f}/month, "
-                            f"cash reserves will be depleted in ~{result.runway_months:.1f} months."
-                        ),
-                        evidence=result.risk_alerts[:5],
-                        confidence=0.8,
-                        recommendation="Immediately reduce expenses or secure additional funding.",
-                    ))
+                    findings.append(
+                        Finding(
+                            id=f"cashflow_{uuid.uuid4().hex[:8]}",
+                            title=f"Cash runway is only {result.runway_months:.1f} months",
+                            category=FindingCategory.CASH_FLOW,
+                            severity=Severity.CRITICAL if result.runway_months < 3 else Severity.HIGH,
+                            description=(
+                                f"At the current burn rate of ${result.average_monthly_burn:,.2f}/month, "
+                                f"cash reserves will be depleted in ~{result.runway_months:.1f} months."
+                            ),
+                            evidence=result.risk_alerts[:5],
+                            confidence=0.8,
+                            recommendation="Immediately reduce expenses or secure additional funding.",
+                        )
+                    )
 
                 for alert in result.risk_alerts:
                     if "negative balance" in alert.lower():
-                        findings.append(Finding(
-                            id=f"cashflow_{uuid.uuid4().hex[:8]}",
-                            title="Projected negative cash balance",
-                            category=FindingCategory.CASH_FLOW,
-                            severity=Severity.CRITICAL,
-                            description=alert,
-                            confidence=0.7,
-                            recommendation="Review upcoming expenses and accelerate receivables collection.",
-                        ))
+                        findings.append(
+                            Finding(
+                                id=f"cashflow_{uuid.uuid4().hex[:8]}",
+                                title="Projected negative cash balance",
+                                category=FindingCategory.CASH_FLOW,
+                                severity=Severity.CRITICAL,
+                                description=alert,
+                                confidence=0.7,
+                                recommendation="Review upcoming expenses and accelerate receivables collection.",
+                            )
+                        )
                         break
 
                 logger.info("Cash flow forecast complete: runway=%.1f months", result.runway_months)
@@ -475,18 +482,20 @@ Never be vague. Every recommendation should have a clear next step."""
                 # Tax opportunities → findings
                 for opp in result.opportunities:
                     if opp.estimated_savings >= 500:
-                        findings.append(Finding(
-                            id=f"tax_{uuid.uuid4().hex[:8]}",
-                            title=opp.title,
-                            category=FindingCategory.TAX_OPPORTUNITY,
-                            severity=Severity.MEDIUM if opp.estimated_savings < 5000 else Severity.HIGH,
-                            description=opp.description,
-                            evidence=[],
-                            potential_savings=opp.estimated_savings,
-                            confidence=opp.confidence,
-                            recommendation=opp.recommendation,
-                            affected_transactions=opp.affected_transactions,
-                        ))
+                        findings.append(
+                            Finding(
+                                id=f"tax_{uuid.uuid4().hex[:8]}",
+                                title=opp.title,
+                                category=FindingCategory.TAX_OPPORTUNITY,
+                                severity=Severity.MEDIUM if opp.estimated_savings < 5000 else Severity.HIGH,
+                                description=opp.description,
+                                evidence=[],
+                                potential_savings=opp.estimated_savings,
+                                confidence=opp.confidence,
+                                recommendation=opp.recommendation,
+                                affected_transactions=opp.affected_transactions,
+                            )
+                        )
 
                 logger.info("Tax optimization complete: $%.2f potential savings", result.total_estimated_savings)
             except Exception as e:
@@ -523,18 +532,14 @@ Never be vague. Every recommendation should have a clear next step."""
                 merged.period_end = ds.period_end
         return merged
 
-    def _build_context(
-        self, company: CompanyProfile, dataset: FinancialDataset
-    ) -> dict[str, Any]:
+    def _build_context(self, company: CompanyProfile, dataset: FinancialDataset) -> dict[str, Any]:
         """Build the shared context dict that all agents receive."""
         return {
             "company": company.model_dump(),
             "total_transactions": len(dataset.transactions),
             "total_expenses": dataset.total_expenses,
             "total_income": dataset.total_income,
-            "transactions_sample": [
-                t.model_dump() for t in dataset.transactions[:500]
-            ],
+            "transactions_sample": [t.model_dump() for t in dataset.transactions[:500]],
             "invoices_sample": [inv.model_dump() for inv in dataset.invoices[:100]],
             "balances": [b.model_dump() for b in dataset.balances],
             "period_start": str(dataset.period_start) if dataset.period_start else None,
@@ -589,9 +594,7 @@ Never be vague. Every recommendation should have a clear next step."""
             )
         return action_items
 
-    def _generate_proposed_actions(
-        self, findings: list[Finding], company: CompanyProfile
-    ) -> list[ProposedAction]:
+    def _generate_proposed_actions(self, findings: list[Finding], company: CompanyProfile) -> list[ProposedAction]:
         """Generate executable ProposedAction objects from findings.
 
         Maps each finding to an appropriate action type, assigns an
@@ -722,7 +725,7 @@ Key metrics:
 - Total income: ${dataset.total_income:,.2f}
 - Findings: {len(findings)} total, {critical_count} critical
 - Total potential savings: ${total_savings:,.2f}
-- Top opportunities: {', '.join(top_opps)}
+- Top opportunities: {", ".join(top_opps)}
 
 Write a 3-4 paragraph executive summary that:
 1. Opens with the most impactful finding.
@@ -793,7 +796,11 @@ Be specific, use dollar amounts, and be direct. No fluff."""
         if intelligence.benchmark_grade:
             highlights.append(
                 f"Industry benchmark grade: **{intelligence.benchmark_grade}**"
-                + (f" with ${intelligence.benchmark_excess_spend:,.2f} excess spending" if intelligence.benchmark_excess_spend > 0 else "")
+                + (
+                    f" with ${intelligence.benchmark_excess_spend:,.2f} excess spending"
+                    if intelligence.benchmark_excess_spend > 0
+                    else ""
+                )
             )
         if intelligence.anomaly_flagged_count > 0:
             highlights.append(f"{intelligence.anomaly_flagged_count} anomalous transactions flagged for review")
@@ -806,16 +813,12 @@ Be specific, use dollar amounts, and be direct. No fluff."""
             highlights.append(f"Tax optimization potential: ${intelligence.tax_savings_estimate:,.2f}")
 
         if highlights:
-            paragraphs.append(
-                "**Key intelligence highlights:** " + ". ".join(highlights) + "."
-            )
+            paragraphs.append("**Key intelligence highlights:** " + ". ".join(highlights) + ".")
 
         # Top action items
         if len(findings) >= 3:
             top3 = findings[:3]
-            items = "; ".join(
-                f"({i+1}) {f.title} — ${f.potential_savings:,.2f}" for i, f in enumerate(top3)
-            )
+            items = "; ".join(f"({i + 1}) {f.title} — ${f.potential_savings:,.2f}" for i, f in enumerate(top3))
             paragraphs.append(f"**Top 3 recommended actions:** {items}.")
 
         # Closing

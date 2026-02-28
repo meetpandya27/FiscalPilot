@@ -1,4 +1,5 @@
 """Connectors package — data source integrations."""
+
 from fiscalpilot.connectors.base import BaseConnector
 from fiscalpilot.connectors.csv_connector import CSVConnector
 from fiscalpilot.connectors.excel_connector import ExcelConnector

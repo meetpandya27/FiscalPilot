@@ -109,6 +109,7 @@ class TestOAuth2TokenManager:
         mgr = self._make_manager(tmp_path)
         # Pre-save a token through the manager (will be encrypted)
         from fiscalpilot.auth.oauth2 import TokenData
+
         pre_token = TokenData(
             access_token="old_access",
             refresh_token="old_refresh",

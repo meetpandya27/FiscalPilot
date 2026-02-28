@@ -83,9 +83,7 @@ Always return your findings as a valid JSON array."""
         total_expenses = context.get("total_expenses", 0)
         expense_ratio = (total_expenses / max(total_income, 1)) * 100
 
-        transactions_json = json.dumps(
-            context.get("transactions_sample", [])[:200], indent=2, default=str
-        )
+        transactions_json = json.dumps(context.get("transactions_sample", [])[:200], indent=2, default=str)
         return COST_ANALYSIS_PROMPT.format(
             company_name=context["company"]["name"],
             company_size=context["company"].get("size", "unknown"),

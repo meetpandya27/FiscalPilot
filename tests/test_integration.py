@@ -36,9 +36,7 @@ from fiscalpilot.models.company import CompanyProfile, Industry
 
 # Custom marker for integration tests
 def pytest_configure(config):
-    config.addinivalue_line(
-        "markers", "integration: marks tests as integration tests (require credentials)"
-    )
+    config.addinivalue_line("markers", "integration: marks tests as integration tests (require credentials)")
 
 
 # -------------------------------------------------------------------------
@@ -153,9 +151,7 @@ class TestQuickBooksIntegration:
         )
 
         start, end = date_range
-        dataset = await connector.pull(
-            company_profile, start_date=start, end_date=end
-        )
+        dataset = await connector.pull(company_profile, start_date=start, end_date=end)
         await connector.close()
 
         # Should return a valid dataset
@@ -235,9 +231,7 @@ class TestXeroIntegration:
         )
 
         start, end = date_range
-        dataset = await connector.pull(
-            company_profile, start_date=start, end_date=end
-        )
+        dataset = await connector.pull(company_profile, start_date=start, end_date=end)
         await connector.close()
 
         assert dataset is not None
@@ -314,9 +308,7 @@ class TestPlaidIntegration:
         )
 
         start, end = date_range
-        dataset = await connector.pull(
-            company_profile, start_date=start, end_date=end
-        )
+        dataset = await connector.pull(company_profile, start_date=start, end_date=end)
         await connector.close()
 
         assert dataset is not None
@@ -408,9 +400,7 @@ class TestSquareIntegration:
         )
 
         start, end = date_range
-        dataset = await connector.pull(
-            company_profile, start_date=start, end_date=end
-        )
+        dataset = await connector.pull(company_profile, start_date=start, end_date=end)
         await connector.close()
 
         assert dataset is not None
@@ -531,6 +521,7 @@ class TestOAuth2Flows:
 
             # Create a mock token to save
             from fiscalpilot.auth.oauth2 import TokenData
+
             test_token = TokenData(
                 access_token="test-access-token",
                 token_type="Bearer",

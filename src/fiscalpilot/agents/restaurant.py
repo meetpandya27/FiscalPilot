@@ -163,10 +163,12 @@ Always return your recommendations as a valid JSON array."""
         self._last_analysis = kpi_result
 
         # Step 2: Build strategic prompt with KPI data
-        prompt = self._build_prompt({
-            **context,
-            "kpi_result": kpi_result,
-        })
+        prompt = self._build_prompt(
+            {
+                **context,
+                "kpi_result": kpi_result,
+            }
+        )
 
         # Step 3: Get LLM recommendations
         messages = [{"role": "user", "content": prompt}]
@@ -299,10 +301,7 @@ Always return your recommendations as a valid JSON array."""
 
     def _make_steps(self, descriptions: list[str]) -> list[ActionStep]:
         """Convert step descriptions to ActionStep objects."""
-        return [
-            ActionStep(order=i + 1, description=desc, reversible=False)
-            for i, desc in enumerate(descriptions)
-        ]
+        return [ActionStep(order=i + 1, description=desc, reversible=False) for i, desc in enumerate(descriptions)]
 
     def _generate_actions(self, result: RestaurantAnalysisResult) -> list[ProposedAction]:
         """Generate action proposals based on KPI analysis."""
@@ -317,98 +316,114 @@ Always return your recommendations as a valid JSON array."""
                 excess_pct = kpi.actual - 30  # vs typical
                 potential_savings = result.total_revenue * (excess_pct / 100)
 
-                actions.append(ProposedAction(
-                    id=f"act_food_cost_{int(kpi.actual)}",
-                    title=f"Reduce Food Cost from {kpi.actual:.1f}% to 30%",
-                    description=(
-                        f"Food cost is {kpi.actual:.1f}%, which is {excess_pct:.1f}% above the "
-                        f"industry target of 30%. This represents ${potential_savings:,.0f}/year "
-                        f"in potential savings."
-                    ),
-                    action_type=ActionType.CUSTOM,
-                    estimated_savings=potential_savings,
-                    confidence=0.85,
-                    approval_level=ApprovalLevel.YELLOW,
-                    steps=self._make_steps([
-                        "Conduct full inventory audit",
-                        "Review portion sizes against recipe cards",
-                        "Request quotes from 2-3 alternative food suppliers",
-                        "Analyze waste logs for top 10 waste items",
-                        "Consider menu engineering to promote high-margin items",
-                    ]),
-                ))
+                actions.append(
+                    ProposedAction(
+                        id=f"act_food_cost_{int(kpi.actual)}",
+                        title=f"Reduce Food Cost from {kpi.actual:.1f}% to 30%",
+                        description=(
+                            f"Food cost is {kpi.actual:.1f}%, which is {excess_pct:.1f}% above the "
+                            f"industry target of 30%. This represents ${potential_savings:,.0f}/year "
+                            f"in potential savings."
+                        ),
+                        action_type=ActionType.CUSTOM,
+                        estimated_savings=potential_savings,
+                        confidence=0.85,
+                        approval_level=ApprovalLevel.YELLOW,
+                        steps=self._make_steps(
+                            [
+                                "Conduct full inventory audit",
+                                "Review portion sizes against recipe cards",
+                                "Request quotes from 2-3 alternative food suppliers",
+                                "Analyze waste logs for top 10 waste items",
+                                "Consider menu engineering to promote high-margin items",
+                            ]
+                        ),
+                    )
+                )
 
             elif kpi.name == "labor_cost_pct" and kpi.actual > 32:
                 # Labor cost action
                 excess_pct = kpi.actual - 30
                 potential_savings = result.total_revenue * (excess_pct / 100)
 
-                actions.append(ProposedAction(
-                    id=f"act_labor_cost_{int(kpi.actual)}",
-                    title=f"Optimize Labor Cost from {kpi.actual:.1f}% to 30%",
-                    description=(
-                        f"Labor cost at {kpi.actual:.1f}% exceeds target by {excess_pct:.1f}%. "
-                        f"Potential savings: ${potential_savings:,.0f}/year through scheduling "
-                        f"optimization and productivity improvements."
-                    ),
-                    action_type=ActionType.CUSTOM,
-                    estimated_savings=potential_savings,
-                    confidence=0.80,
-                    approval_level=ApprovalLevel.RED,  # Labor changes are sensitive
-                    steps=self._make_steps([
-                        "Analyze hourly sales data vs. staff schedules",
-                        "Identify overstaffed shifts (labor % > 40%)",
-                        "Cross-train FOH and BOH staff for flexibility",
-                        "Implement staggered shift starts based on traffic patterns",
-                        "Review overtime patterns and adjust scheduling",
-                    ]),
-                ))
+                actions.append(
+                    ProposedAction(
+                        id=f"act_labor_cost_{int(kpi.actual)}",
+                        title=f"Optimize Labor Cost from {kpi.actual:.1f}% to 30%",
+                        description=(
+                            f"Labor cost at {kpi.actual:.1f}% exceeds target by {excess_pct:.1f}%. "
+                            f"Potential savings: ${potential_savings:,.0f}/year through scheduling "
+                            f"optimization and productivity improvements."
+                        ),
+                        action_type=ActionType.CUSTOM,
+                        estimated_savings=potential_savings,
+                        confidence=0.80,
+                        approval_level=ApprovalLevel.RED,  # Labor changes are sensitive
+                        steps=self._make_steps(
+                            [
+                                "Analyze hourly sales data vs. staff schedules",
+                                "Identify overstaffed shifts (labor % > 40%)",
+                                "Cross-train FOH and BOH staff for flexibility",
+                                "Implement staggered shift starts based on traffic patterns",
+                                "Review overtime patterns and adjust scheduling",
+                            ]
+                        ),
+                    )
+                )
 
             elif kpi.name == "prime_cost_pct" and kpi.actual > 68:
                 # Prime cost critical action
-                actions.append(ProposedAction(
-                    id=f"act_prime_cost_{int(kpi.actual)}",
-                    title=f"URGENT: Prime Cost at {kpi.actual:.1f}% — Margin Crisis",
-                    description=(
-                        f"Prime cost (food + labor) at {kpi.actual:.1f}% is critically high. "
-                        f"Industry target is 55-65%. Immediate action required to protect margins."
-                    ),
-                    action_type=ActionType.CUSTOM,
-                    estimated_savings=result.total_revenue * 0.05,  # Target 5% improvement
-                    confidence=0.90,
-                    approval_level=ApprovalLevel.RED,
-                    steps=self._make_steps([
-                        "Emergency review of food and labor costs",
-                        "Implement immediate portion control measures",
-                        "Freeze non-essential hiring",
-                        "Review menu prices — consider 5-10% increase",
-                        "Weekly prime cost tracking until below 65%",
-                    ]),
-                ))
+                actions.append(
+                    ProposedAction(
+                        id=f"act_prime_cost_{int(kpi.actual)}",
+                        title=f"URGENT: Prime Cost at {kpi.actual:.1f}% — Margin Crisis",
+                        description=(
+                            f"Prime cost (food + labor) at {kpi.actual:.1f}% is critically high. "
+                            f"Industry target is 55-65%. Immediate action required to protect margins."
+                        ),
+                        action_type=ActionType.CUSTOM,
+                        estimated_savings=result.total_revenue * 0.05,  # Target 5% improvement
+                        confidence=0.90,
+                        approval_level=ApprovalLevel.RED,
+                        steps=self._make_steps(
+                            [
+                                "Emergency review of food and labor costs",
+                                "Implement immediate portion control measures",
+                                "Freeze non-essential hiring",
+                                "Review menu prices — consider 5-10% increase",
+                                "Weekly prime cost tracking until below 65%",
+                            ]
+                        ),
+                    )
+                )
 
         # Add marketing opportunity if spend is low
         marketing_pct = result.expense_ratios.get("marketing", 0)
         if marketing_pct < 1.0:
-            actions.append(ProposedAction(
-                id="act_marketing_invest",
-                title="Invest in Customer Acquisition — Marketing at <1%",
-                description=(
-                    f"Marketing spend is only {marketing_pct:.1f}% of revenue. "
-                    f"Industry recommends 2-4% for growth. Consider local marketing, "
-                    f"social media, or loyalty programs."
-                ),
-                action_type=ActionType.CUSTOM,
-                estimated_savings=result.total_revenue * 0.05,  # 5% revenue growth potential
-                confidence=0.70,
-                approval_level=ApprovalLevel.YELLOW,
-                steps=self._make_steps([
-                    "Set marketing budget at 2-3% of revenue",
-                    "Launch or optimize Google Business Profile",
-                    "Implement customer loyalty/rewards program",
-                    "Plan 2-3 seasonal promotions",
-                    "Track marketing ROI by channel",
-                ]),
-            ))
+            actions.append(
+                ProposedAction(
+                    id="act_marketing_invest",
+                    title="Invest in Customer Acquisition — Marketing at <1%",
+                    description=(
+                        f"Marketing spend is only {marketing_pct:.1f}% of revenue. "
+                        f"Industry recommends 2-4% for growth. Consider local marketing, "
+                        f"social media, or loyalty programs."
+                    ),
+                    action_type=ActionType.CUSTOM,
+                    estimated_savings=result.total_revenue * 0.05,  # 5% revenue growth potential
+                    confidence=0.70,
+                    approval_level=ApprovalLevel.YELLOW,
+                    steps=self._make_steps(
+                        [
+                            "Set marketing budget at 2-3% of revenue",
+                            "Launch or optimize Google Business Profile",
+                            "Implement customer loyalty/rewards program",
+                            "Plan 2-3 seasonal promotions",
+                            "Track marketing ROI by channel",
+                        ]
+                    ),
+                )
+            )
 
         return actions
 
@@ -579,7 +594,7 @@ Always return your recommendations as a valid JSON array."""
         """
         tipped_employees = [
             TippedEmployee(
-                name=emp.get("name", f"Employee {i+1}"),
+                name=emp.get("name", f"Employee {i + 1}"),
                 hourly_wage=emp["hourly_wage"],
                 hours_worked=emp["hours_worked"],
                 tips_received=emp["tips_received"],
@@ -648,18 +663,20 @@ Always return your recommendations as a valid JSON array."""
             platform_str = data.get("platform", "doordash").lower().replace(" ", "_")
             platform = platform_map.get(platform_str, DeliveryPlatform.DOORDASH)
 
-            delivery_data.append(DeliveryOrderData(
-                platform=platform,
-                total_orders=data.get("total_orders", 0),
-                total_gross_revenue=data.get("total_gross_revenue", 0),
-                food_cost_pct=data.get("food_cost_pct", 32),  # Often higher for delivery
-                packaging_cost_per_order=data.get("packaging_cost_per_order", 0.75),
-                labor_cost_per_order=data.get("labor_cost_per_order", 0.50),
-                commission_pct=data.get("commission_pct"),
-                marketing_spend=data.get("marketing_spend", 0),
-                total_refunds=data.get("total_refunds", 0),
-                total_adjustments=data.get("total_adjustments", 0),
-            ))
+            delivery_data.append(
+                DeliveryOrderData(
+                    platform=platform,
+                    total_orders=data.get("total_orders", 0),
+                    total_gross_revenue=data.get("total_gross_revenue", 0),
+                    food_cost_pct=data.get("food_cost_pct", 32),  # Often higher for delivery
+                    packaging_cost_per_order=data.get("packaging_cost_per_order", 0.75),
+                    labor_cost_per_order=data.get("labor_cost_per_order", 0.50),
+                    commission_pct=data.get("commission_pct"),
+                    marketing_spend=data.get("marketing_spend", 0),
+                    total_refunds=data.get("total_refunds", 0),
+                    total_adjustments=data.get("total_adjustments", 0),
+                )
+            )
 
         from fiscalpilot.analyzers.delivery_roi import DineInComparison
 

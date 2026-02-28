@@ -121,39 +121,41 @@ MOCK_INVOICE_AP = {
 }
 
 MOCK_TRIAL_BALANCE = {
-    "Reports": [{
-        "ReportName": "TrialBalance",
-        "Rows": [
-            {
-                "RowType": "Section",
-                "Title": "Bank Accounts",
-                "Rows": [
-                    {
-                        "RowType": "Row",
-                        "Cells": [
-                            {"Value": "Business Checking"},
-                            {"Value": "50000.00"},
-                            {"Value": "0"},
-                        ],
-                    },
-                ],
-            },
-            {
-                "RowType": "Section",
-                "Title": "Accounts Receivable",
-                "Rows": [
-                    {
-                        "RowType": "Row",
-                        "Cells": [
-                            {"Value": "Trade Debtors"},
-                            {"Value": "12000.00"},
-                            {"Value": "0"},
-                        ],
-                    },
-                ],
-            },
-        ],
-    }],
+    "Reports": [
+        {
+            "ReportName": "TrialBalance",
+            "Rows": [
+                {
+                    "RowType": "Section",
+                    "Title": "Bank Accounts",
+                    "Rows": [
+                        {
+                            "RowType": "Row",
+                            "Cells": [
+                                {"Value": "Business Checking"},
+                                {"Value": "50000.00"},
+                                {"Value": "0"},
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "RowType": "Section",
+                    "Title": "Accounts Receivable",
+                    "Rows": [
+                        {
+                            "RowType": "Row",
+                            "Cells": [
+                                {"Value": "Trade Debtors"},
+                                {"Value": "12000.00"},
+                                {"Value": "0"},
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+    ],
 }
 
 MOCK_CONNECTIONS = [
@@ -210,10 +212,12 @@ class TestXeroConnector:
 
         async def mock_api_get(endpoint: str, params: dict | None = None) -> dict:
             if "BankTransactions" in endpoint:
-                return {"BankTransactions": [
-                    MOCK_BANK_TRANSACTION_SPEND,
-                    MOCK_BANK_TRANSACTION_RECEIVE,
-                ]}
+                return {
+                    "BankTransactions": [
+                        MOCK_BANK_TRANSACTION_SPEND,
+                        MOCK_BANK_TRANSACTION_RECEIVE,
+                    ]
+                }
             elif "Invoices" in endpoint:
                 return {"Invoices": [MOCK_INVOICE_AR, MOCK_INVOICE_AP]}
             elif "TrialBalance" in endpoint:

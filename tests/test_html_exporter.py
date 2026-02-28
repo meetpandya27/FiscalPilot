@@ -34,6 +34,7 @@ from fiscalpilot.models.report import (
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def sample_finding():
     """Create a sample finding."""
@@ -124,6 +125,7 @@ def minimal_report():
 # Helper Function Tests
 # ---------------------------------------------------------------------------
 
+
 class TestHelperFunctions:
     """Test helper functions."""
 
@@ -161,6 +163,7 @@ class TestHelperFunctions:
 # Render HTML Tests
 # ---------------------------------------------------------------------------
 
+
 class TestRenderHtml:
     """Test main HTML rendering function."""
 
@@ -169,7 +172,7 @@ class TestRenderHtml:
         html = render_html(sample_report)
 
         assert "<!DOCTYPE html>" in html
-        assert "<html lang=\"en\">" in html
+        assert '<html lang="en">' in html
         assert "</html>" in html
         assert "<head>" in html
         assert "</head>" in html
@@ -244,6 +247,7 @@ class TestRenderHtml:
 # ---------------------------------------------------------------------------
 # Component Rendering Tests
 # ---------------------------------------------------------------------------
+
 
 class TestRenderFindingsHtml:
     """Test findings HTML rendering."""
@@ -339,6 +343,7 @@ class TestRenderProposedActionsHtml:
 # Edge Cases
 # ---------------------------------------------------------------------------
 
+
 class TestEdgeCases:
     """Test edge cases and boundary conditions."""
 
@@ -350,7 +355,7 @@ class TestEdgeCases:
 
     def test_special_characters_in_description(self, sample_finding):
         """Test handling of special characters."""
-        sample_finding.description = "Cost is > 32% & < 50% for \"premium\" items"
+        sample_finding.description = 'Cost is > 32% & < 50% for "premium" items'
         html = _render_findings_html([sample_finding])
         assert "&gt;" in html
         assert "&lt;" in html
@@ -379,14 +384,16 @@ class TestEdgeCases:
         """Test that all severity levels render correctly."""
         findings = []
         for severity in Severity:
-            findings.append(Finding(
-                id=f"f-{severity.value}",
-                title=f"Finding with {severity.value} severity",
-                category=FindingCategory.COST_OPTIMIZATION,
-                severity=severity,
-                description="Test description",
-                potential_savings=100.0,
-            ))
+            findings.append(
+                Finding(
+                    id=f"f-{severity.value}",
+                    title=f"Finding with {severity.value} severity",
+                    category=FindingCategory.COST_OPTIMIZATION,
+                    severity=severity,
+                    description="Test description",
+                    potential_savings=100.0,
+                )
+            )
 
         html = _render_findings_html(findings)
         for severity in Severity:
@@ -425,6 +432,7 @@ class TestEdgeCases:
 # ---------------------------------------------------------------------------
 # Integration Tests
 # ---------------------------------------------------------------------------
+
 
 class TestIntegration:
     """Integration tests for complete report rendering."""

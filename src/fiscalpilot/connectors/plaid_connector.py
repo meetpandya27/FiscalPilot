@@ -215,9 +215,12 @@ class PlaidConnector(BaseConnector):
         Returns:
             access_token to use for API calls.
         """
-        data = await self._api_post("item/public_token/exchange", {
-            "public_token": public_token,
-        })
+        data = await self._api_post(
+            "item/public_token/exchange",
+            {
+                "public_token": public_token,
+            },
+        )
 
         access_token = data["access_token"]
 
@@ -302,8 +305,7 @@ class PlaidConnector(BaseConnector):
 
         if not self.client_id or not self.secret:
             raise ValueError(
-                "client_id and secret are required. "
-                "Get them from https://dashboard.plaid.com/developers/keys"
+                "client_id and secret are required. Get them from https://dashboard.plaid.com/developers/keys"
             )
 
         # Create link token
@@ -466,16 +468,21 @@ class PlaidConnector(BaseConnector):
 
                 inst_id = item.get("institution_id")
                 if inst_id:
-                    inst_data = await self._api_post("institutions/get_by_id", {
-                        "institution_id": inst_id,
-                        "country_codes": ["US"],
-                    })
+                    inst_data = await self._api_post(
+                        "institutions/get_by_id",
+                        {
+                            "institution_id": inst_id,
+                            "country_codes": ["US"],
+                        },
+                    )
                     institution = inst_data.get("institution", {})
-                    institutions.append({
-                        "id": inst_id,
-                        "name": institution.get("name", "Unknown"),
-                        "products": item.get("available_products", []),
-                    })
+                    institutions.append(
+                        {
+                            "id": inst_id,
+                            "name": institution.get("name", "Unknown"),
+                            "products": item.get("available_products", []),
+                        }
+                    )
             except Exception as e:
                 logger.warning("Failed to get institution info: %s", e)
 
@@ -509,11 +516,11 @@ class PlaidConnector(BaseConnector):
             # Handle specific Plaid errors
             if error_code == "ITEM_LOGIN_REQUIRED":
                 raise PermissionError(
-                    f"Plaid: Bank connection needs re-authentication. "
-                    f"Please re-link through Plaid Link. ({error_msg})"
+                    f"Plaid: Bank connection needs re-authentication. Please re-link through Plaid Link. ({error_msg})"
                 )
             elif error_code == "RATE_LIMIT_EXCEEDED":
                 import asyncio
+
                 logger.warning("Plaid rate limited, waiting 60s")
                 await asyncio.sleep(60)
                 resp = await client.post(url, json=payload)
@@ -589,9 +596,12 @@ class PlaidConnector(BaseConnector):
 
     async def _fetch_balances_for_token(self, access_token: str) -> list[AccountBalance]:
         """Fetch account balances for a single access token."""
-        data = await self._api_post("accounts/balance/get", {
-            "access_token": access_token,
-        })
+        data = await self._api_post(
+            "accounts/balance/get",
+            {
+                "access_token": access_token,
+            },
+        )
 
         balances: list[AccountBalance] = []
         for acct in data.get("accounts", []):
@@ -640,26 +650,19 @@ class PlaidConnector(BaseConnector):
         import asyncio
 
         if not self.access_tokens:
-            raise ValueError(
-                "No Plaid access tokens configured. "
-                "Please link a bank account through Plaid Link first."
-            )
+            raise ValueError("No Plaid access tokens configured. Please link a bank account through Plaid Link first.")
 
         logger.info(
             "Pulling Plaid data for %s (%d linked accounts, %s to %s)",
-            company.name, len(self.access_tokens),
-            self.start_date, self.end_date,
+            company.name,
+            len(self.access_tokens),
+            self.start_date,
+            self.end_date,
         )
 
         # Fetch transactions and balances for all tokens in parallel
-        txn_tasks = [
-            asyncio.create_task(self._fetch_transactions_for_token(token))
-            for token in self.access_tokens
-        ]
-        bal_tasks = [
-            asyncio.create_task(self._fetch_balances_for_token(token))
-            for token in self.access_tokens
-        ]
+        txn_tasks = [asyncio.create_task(self._fetch_transactions_for_token(token)) for token in self.access_tokens]
+        bal_tasks = [asyncio.create_task(self._fetch_balances_for_token(token)) for token in self.access_tokens]
 
         txn_results = await asyncio.gather(*txn_tasks, return_exceptions=True)
         bal_results = await asyncio.gather(*bal_tasks, return_exceptions=True)
@@ -696,7 +699,9 @@ class PlaidConnector(BaseConnector):
 
         logger.info(
             "Plaid pull complete: %d transactions, %d balances from %d accounts",
-            len(all_transactions), len(all_balances), len(self.access_tokens),
+            len(all_transactions),
+            len(all_balances),
+            len(self.access_tokens),
         )
         return dataset
 
@@ -712,20 +717,26 @@ class PlaidConnector(BaseConnector):
         if not self.access_tokens:
             # Can still validate API keys without access tokens
             try:
-                await self._api_post("institutions/get", {
-                    "count": 1,
-                    "offset": 0,
-                    "country_codes": ["US"],
-                })
+                await self._api_post(
+                    "institutions/get",
+                    {
+                        "count": 1,
+                        "offset": 0,
+                        "country_codes": ["US"],
+                    },
+                )
                 return True
             except Exception:
                 return False
 
         # Validate by fetching account info for the first token
         try:
-            await self._api_post("accounts/get", {
-                "access_token": self.access_tokens[0],
-            })
+            await self._api_post(
+                "accounts/get",
+                {
+                    "access_token": self.access_tokens[0],
+                },
+            )
             return True
         except Exception as e:
             logger.warning("Plaid credential validation failed: %s", e)
@@ -751,18 +762,22 @@ class PlaidConnector(BaseConnector):
                 data = await self._api_post("accounts/get", {"access_token": token})
                 item = data.get("item", {})
                 accounts = data.get("accounts", [])
-                account_statuses.append({
-                    "index": i,
-                    "institution_id": item.get("institution_id"),
-                    "accounts": len(accounts),
-                    "healthy": True,
-                })
+                account_statuses.append(
+                    {
+                        "index": i,
+                        "institution_id": item.get("institution_id"),
+                        "accounts": len(accounts),
+                        "healthy": True,
+                    }
+                )
             except Exception as e:
-                account_statuses.append({
-                    "index": i,
-                    "healthy": False,
-                    "error": str(e),
-                })
+                account_statuses.append(
+                    {
+                        "index": i,
+                        "healthy": False,
+                        "error": str(e),
+                    }
+                )
 
         all_healthy = all(s["healthy"] for s in account_statuses)
         results["healthy"] = all_healthy

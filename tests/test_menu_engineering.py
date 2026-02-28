@@ -151,12 +151,17 @@ class TestMenuEngineeringRecommendations:
         result = MenuEngineeringAnalyzer.analyze(items)
 
         puzzle = next((i for i in result.items if i.name == "Puzzle"), None)
-        assert puzzle is not None, f"Puzzle not found. Classifications: {[(i.name, i.classification) for i in result.items]}"
+        assert puzzle is not None, (
+            f"Puzzle not found. Classifications: {[(i.name, i.classification) for i in result.items]}"
+        )
         assert puzzle.classification == MenuItemCategory.PUZZLE, f"Puzzle classified as {puzzle.classification}"
         assert puzzle.recommendation
         # Puzzles get promotion/marketing recommendations
         rec_lower = puzzle.recommendation.lower()
-        assert any(word in rec_lower for word in ["promot", "market", "visib", "placement", "increase", "boost", "featue", "sell"])
+        assert any(
+            word in rec_lower
+            for word in ["promot", "market", "visib", "placement", "increase", "boost", "featue", "sell"]
+        )
 
 
 class TestMenuEngineeringResult:

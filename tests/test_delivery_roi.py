@@ -132,7 +132,7 @@ class TestDineInComparison:
                 total_orders=500,
                 total_gross_revenue=17500,
                 commission_pct=25,  # Higher commission to ensure delivery is worse
-                food_cost_pct=35,   # Higher food cost for delivery
+                food_cost_pct=35,  # Higher food cost for delivery
             )
         ]
 

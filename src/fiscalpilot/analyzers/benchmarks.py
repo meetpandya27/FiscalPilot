@@ -123,17 +123,19 @@ class BenchmarkAnalyzer:
             recommendation = cls._generate_recommendation(category, actual_pct, low, typical, high, annual_revenue)
 
             if severity != "ok":
-                deviations.append(BenchmarkDeviation(
-                    category=category,
-                    actual_pct=round(actual_pct, 2),
-                    benchmark_low=low,
-                    benchmark_typical=typical,
-                    benchmark_high=high,
-                    deviation_from_typical=round(deviation, 2),
-                    severity=severity,
-                    annual_excess=round(excess, 2),
-                    recommendation=recommendation,
-                ))
+                deviations.append(
+                    BenchmarkDeviation(
+                        category=category,
+                        actual_pct=round(actual_pct, 2),
+                        benchmark_low=low,
+                        benchmark_typical=typical,
+                        benchmark_high=high,
+                        deviation_from_typical=round(deviation, 2),
+                        severity=severity,
+                        annual_excess=round(excess, 2),
+                        recommendation=recommendation,
+                    )
+                )
 
         # Sort by severity priority, then by excess
         severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
@@ -256,9 +258,7 @@ class BenchmarkAnalyzer:
         return ""
 
     @staticmethod
-    def _compute_grade(
-        deviations: list[BenchmarkDeviation], total_excess: float, revenue: float
-    ) -> str:
+    def _compute_grade(deviations: list[BenchmarkDeviation], total_excess: float, revenue: float) -> str:
         """Compute an overall health grade A-F."""
         critical = sum(1 for d in deviations if d.severity == "critical")
         high = sum(1 for d in deviations if d.severity == "high")

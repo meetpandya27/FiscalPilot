@@ -88,9 +88,7 @@ class CashFlowForecaster:
         forecast_months = max(1, min(12, forecast_months))
 
         # Group transactions by month
-        monthly: dict[str, dict[str, float | int]] = defaultdict(
-            lambda: {"inflows": 0.0, "outflows": 0.0, "count": 0}
-        )
+        monthly: dict[str, dict[str, float | int]] = defaultdict(lambda: {"inflows": 0.0, "outflows": 0.0, "count": 0})
 
         for t in transactions:
             raw_date = t.get("date")
@@ -137,14 +135,16 @@ class CashFlowForecaster:
             data = monthly[period]
             net = nets[i]
             running += net
-            historical.append(MonthlyCashFlow(
-                period=period,
-                inflows=round(data["inflows"], 2),
-                outflows=round(data["outflows"], 2),
-                net=round(net, 2),
-                running_balance=round(running, 2),
-                transaction_count=int(data["count"]),
-            ))
+            historical.append(
+                MonthlyCashFlow(
+                    period=period,
+                    inflows=round(data["inflows"], 2),
+                    outflows=round(data["outflows"], 2),
+                    net=round(net, 2),
+                    running_balance=round(running, 2),
+                    transaction_count=int(data["count"]),
+                )
+            )
 
         # Compute averages
         inflow_series = [m.inflows for m in historical]
@@ -188,15 +188,17 @@ class CashFlowForecaster:
             net = proj_inflow - proj_outflow
             running_forecast += net
 
-            forecast.append(MonthlyCashFlow(
-                period=period_key,
-                inflows=round(proj_inflow, 2),
-                outflows=round(proj_outflow, 2),
-                net=round(net, 2),
-                running_balance=round(running_forecast, 2),
-                transaction_count=0,
-                is_forecast=True,
-            ))
+            forecast.append(
+                MonthlyCashFlow(
+                    period=period_key,
+                    inflows=round(proj_inflow, 2),
+                    outflows=round(proj_outflow, 2),
+                    net=round(net, 2),
+                    running_balance=round(running_forecast, 2),
+                    transaction_count=0,
+                    is_forecast=True,
+                )
+            )
 
         # Runway calculation
         monthly_burn = avg_outflow - avg_inflow
@@ -211,13 +213,10 @@ class CashFlowForecaster:
         seasonal_patterns = cls._detect_patterns(historical)
 
         # Risk alerts
-        risk_alerts = cls._generate_risk_alerts(
-            forecast, runway, avg_burn, current_balance
-        )
+        risk_alerts = cls._generate_risk_alerts(forecast, runway, avg_burn, current_balance)
 
         summary = cls._build_summary(
-            historical, forecast, current_balance, avg_inflow, avg_outflow,
-            runway, seasonal_patterns, risk_alerts
+            historical, forecast, current_balance, avg_inflow, avg_outflow, runway, seasonal_patterns, risk_alerts
         )
 
         return CashFlowForecast(
@@ -247,9 +246,7 @@ class CashFlowForecaster:
         return result
 
     @staticmethod
-    def _compute_seasonal_indices(
-        historical: list[MonthlyCashFlow], field_name: str
-    ) -> dict[int, float] | None:
+    def _compute_seasonal_indices(historical: list[MonthlyCashFlow], field_name: str) -> dict[int, float] | None:
         """Compute monthly seasonal indices (month → multiplier).
 
         Returns None if < 12 months of data.
@@ -292,8 +289,19 @@ class CashFlowForecaster:
             month_inflows[month_num].append(m.inflows)
 
         month_names = [
-            "", "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
+            "",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
         ]
 
         # High outflow months (>20% above average)
@@ -308,12 +316,14 @@ class CashFlowForecaster:
             months = [m for m, _ in high_spend_months]
             avg_dev = sum(d for _, d in high_spend_months) / len(high_spend_months)
             month_labels = ", ".join(month_names[m] for m in months)
-            patterns.append(SeasonalPattern(
-                pattern="high_outflows",
-                months=months,
-                average_deviation_pct=round(avg_dev, 1),
-                description=f"Higher-than-average outflows in {month_labels} ({avg_dev:.0f}% above avg).",
-            ))
+            patterns.append(
+                SeasonalPattern(
+                    pattern="high_outflows",
+                    months=months,
+                    average_deviation_pct=round(avg_dev, 1),
+                    description=f"Higher-than-average outflows in {month_labels} ({avg_dev:.0f}% above avg).",
+                )
+            )
 
         # Low inflow months (>20% below average)
         low_inflow_months = []
@@ -327,12 +337,14 @@ class CashFlowForecaster:
             months = [m for m, _ in low_inflow_months]
             avg_dev = sum(d for _, d in low_inflow_months) / len(low_inflow_months)
             month_labels = ", ".join(month_names[m] for m in months)
-            patterns.append(SeasonalPattern(
-                pattern="low_inflows",
-                months=months,
-                average_deviation_pct=round(avg_dev, 1),
-                description=f"Lower-than-average inflows in {month_labels} ({avg_dev:.0f}% below avg).",
-            ))
+            patterns.append(
+                SeasonalPattern(
+                    pattern="low_inflows",
+                    months=months,
+                    average_deviation_pct=round(avg_dev, 1),
+                    description=f"Lower-than-average inflows in {month_labels} ({avg_dev:.0f}% below avg).",
+                )
+            )
 
         return patterns
 
@@ -349,31 +361,23 @@ class CashFlowForecaster:
         # Negative balance warning
         for m in forecast:
             if m.running_balance < 0:
-                alerts.append(
-                    f"CRITICAL: Projected negative balance of ${m.running_balance:,.2f} in {m.period}."
-                )
+                alerts.append(f"CRITICAL: Projected negative balance of ${m.running_balance:,.2f} in {m.period}.")
                 break
 
         # Tight months (balance < 1 month of outflows)
         tight = [m for m in forecast if 0 < m.running_balance < m.outflows]
         if tight:
-            alerts.append(
-                f"WARNING: {len(tight)} month(s) with less than 1 month of operating expenses in reserve."
-            )
+            alerts.append(f"WARNING: {len(tight)} month(s) with less than 1 month of operating expenses in reserve.")
 
         # Short runway
         if 0 < runway < 6:
-            alerts.append(
-                f"WARNING: Cash runway is only {runway:.1f} months at current burn rate."
-            )
+            alerts.append(f"WARNING: Cash runway is only {runway:.1f} months at current burn rate.")
         elif runway == 0:
             alerts.append("CRITICAL: Cash position is negative. Immediate action required.")
 
         # High burn rate
         if current_balance > 0 and avg_burn > current_balance * 0.15:
-            alerts.append(
-                f"CAUTION: Monthly burn rate (${avg_burn:,.2f}) exceeds 15% of current balance."
-            )
+            alerts.append(f"CAUTION: Monthly burn rate (${avg_burn:,.2f}) exceeds 15% of current balance.")
 
         return alerts
 

@@ -1,6 +1,5 @@
 """Tests for the connector registry."""
 
-
 from fiscalpilot.config import ConnectorConfig, FiscalPilotConfig
 from fiscalpilot.connectors.base import BaseConnector
 from fiscalpilot.connectors.registry import ConnectorRegistry
@@ -45,11 +44,7 @@ class TestConnectorRegistry:
         csv_file = tmp_path / "test.csv"
         csv_file.write_text("date,amount\n2025-01-01,100")
 
-        config = FiscalPilotConfig(
-            connectors=[
-                ConnectorConfig(type="csv", options={"file_path": str(csv_file)})
-            ]
-        )
+        config = FiscalPilotConfig(connectors=[ConnectorConfig(type="csv", options={"file_path": str(csv_file)})])
 
         registry = ConnectorRegistry()
         registry.auto_discover(config)
@@ -58,9 +53,7 @@ class TestConnectorRegistry:
 
     def test_disabled_connector_skipped(self) -> None:
         config = FiscalPilotConfig(
-            connectors=[
-                ConnectorConfig(type="csv", enabled=False, options={"file_path": "test.csv"})
-            ]
+            connectors=[ConnectorConfig(type="csv", enabled=False, options={"file_path": "test.csv"})]
         )
 
         registry = ConnectorRegistry()

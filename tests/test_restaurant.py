@@ -188,12 +188,12 @@ class TestSeverityRatings:
         """Food cost >38% should be critical."""
         transactions = [
             Transaction(date=date(2024, 1, 1), amount=1_000_000, type=TransactionType.INCOME),
-            Transaction(date=date(2024, 1, 1), amount=420_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),
+            Transaction(
+                date=date(2024, 1, 1), amount=420_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY
+            ),
         ]
         dataset = FinancialDataset(
-            transactions=transactions,
-            period_start=date(2024, 1, 1),
-            period_end=date(2024, 12, 31)
+            transactions=transactions, period_start=date(2024, 1, 1), period_end=date(2024, 12, 31)
         )
 
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
@@ -206,12 +206,12 @@ class TestSeverityRatings:
         """Food cost <25% should be excellent."""
         transactions = [
             Transaction(date=date(2024, 1, 1), amount=1_000_000, type=TransactionType.INCOME),
-            Transaction(date=date(2024, 1, 1), amount=200_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),
+            Transaction(
+                date=date(2024, 1, 1), amount=200_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY
+            ),
         ]
         dataset = FinancialDataset(
-            transactions=transactions,
-            period_start=date(2024, 1, 1),
-            period_end=date(2024, 12, 31)
+            transactions=transactions, period_start=date(2024, 1, 1), period_end=date(2024, 12, 31)
         )
 
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
@@ -224,12 +224,12 @@ class TestSeverityRatings:
         """Labor cost between 35-38% should be warning."""
         transactions = [
             Transaction(date=date(2024, 1, 1), amount=1_000_000, type=TransactionType.INCOME),
-            Transaction(date=date(2024, 1, 1), amount=360_000, type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL),
+            Transaction(
+                date=date(2024, 1, 1), amount=360_000, type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL
+            ),
         ]
         dataset = FinancialDataset(
-            transactions=transactions,
-            period_start=date(2024, 1, 1),
-            period_end=date(2024, 12, 31)
+            transactions=transactions, period_start=date(2024, 1, 1), period_end=date(2024, 12, 31)
         )
 
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
@@ -244,12 +244,12 @@ class TestAlertsAndOpportunities:
         """Critical KPIs should generate alerts."""
         transactions = [
             Transaction(date=date(2024, 1, 1), amount=1_000_000, type=TransactionType.INCOME),
-            Transaction(date=date(2024, 1, 1), amount=450_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),
+            Transaction(
+                date=date(2024, 1, 1), amount=450_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY
+            ),
         ]
         dataset = FinancialDataset(
-            transactions=transactions,
-            period_start=date(2024, 1, 1),
-            period_end=date(2024, 12, 31)
+            transactions=transactions, period_start=date(2024, 1, 1), period_end=date(2024, 12, 31)
         )
 
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
@@ -261,14 +261,18 @@ class TestAlertsAndOpportunities:
         """Low marketing spend should generate opportunity."""
         transactions = [
             Transaction(date=date(2024, 1, 1), amount=1_000_000, type=TransactionType.INCOME),
-            Transaction(date=date(2024, 1, 1), amount=280_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),
-            Transaction(date=date(2024, 1, 1), amount=280_000, type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL),
-            Transaction(date=date(2024, 1, 1), amount=5_000, type=TransactionType.EXPENSE, category=ExpenseCategory.MARKETING),
+            Transaction(
+                date=date(2024, 1, 1), amount=280_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY
+            ),
+            Transaction(
+                date=date(2024, 1, 1), amount=280_000, type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL
+            ),
+            Transaction(
+                date=date(2024, 1, 1), amount=5_000, type=TransactionType.EXPENSE, category=ExpenseCategory.MARKETING
+            ),
         ]
         dataset = FinancialDataset(
-            transactions=transactions,
-            period_start=date(2024, 1, 1),
-            period_end=date(2024, 12, 31)
+            transactions=transactions, period_start=date(2024, 1, 1), period_end=date(2024, 12, 31)
         )
 
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
@@ -281,15 +285,21 @@ class TestHealthScore:
         """All critical KPIs should result in low health score."""
         transactions = [
             Transaction(date=date(2024, 1, 1), amount=1_000_000, type=TransactionType.INCOME),
-            Transaction(date=date(2024, 1, 1), amount=450_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),  # 45% food
-            Transaction(date=date(2024, 1, 1), amount=420_000, type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL),  # 42% labor
-            Transaction(date=date(2024, 1, 1), amount=80_000, type=TransactionType.EXPENSE, category=ExpenseCategory.RENT),
-            Transaction(date=date(2024, 1, 1), amount=60_000, type=TransactionType.EXPENSE, category=ExpenseCategory.UTILITIES),
+            Transaction(
+                date=date(2024, 1, 1), amount=450_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY
+            ),  # 45% food
+            Transaction(
+                date=date(2024, 1, 1), amount=420_000, type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL
+            ),  # 42% labor
+            Transaction(
+                date=date(2024, 1, 1), amount=80_000, type=TransactionType.EXPENSE, category=ExpenseCategory.RENT
+            ),
+            Transaction(
+                date=date(2024, 1, 1), amount=60_000, type=TransactionType.EXPENSE, category=ExpenseCategory.UTILITIES
+            ),
         ]
         dataset = FinancialDataset(
-            transactions=transactions,
-            period_start=date(2024, 1, 1),
-            period_end=date(2024, 12, 31)
+            transactions=transactions, period_start=date(2024, 1, 1), period_end=date(2024, 12, 31)
         )
 
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
@@ -301,15 +311,21 @@ class TestHealthScore:
         """All healthy KPIs should result in high health score."""
         transactions = [
             Transaction(date=date(2024, 1, 1), amount=1_000_000, type=TransactionType.INCOME),
-            Transaction(date=date(2024, 1, 1), amount=280_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),  # 28% food
-            Transaction(date=date(2024, 1, 1), amount=280_000, type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL),  # 28% labor
-            Transaction(date=date(2024, 1, 1), amount=60_000, type=TransactionType.EXPENSE, category=ExpenseCategory.RENT),
-            Transaction(date=date(2024, 1, 1), amount=20_000, type=TransactionType.EXPENSE, category=ExpenseCategory.UTILITIES),
+            Transaction(
+                date=date(2024, 1, 1), amount=280_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY
+            ),  # 28% food
+            Transaction(
+                date=date(2024, 1, 1), amount=280_000, type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL
+            ),  # 28% labor
+            Transaction(
+                date=date(2024, 1, 1), amount=60_000, type=TransactionType.EXPENSE, category=ExpenseCategory.RENT
+            ),
+            Transaction(
+                date=date(2024, 1, 1), amount=20_000, type=TransactionType.EXPENSE, category=ExpenseCategory.UTILITIES
+            ),
         ]
         dataset = FinancialDataset(
-            transactions=transactions,
-            period_start=date(2024, 1, 1),
-            period_end=date(2024, 12, 31)
+            transactions=transactions, period_start=date(2024, 1, 1), period_end=date(2024, 12, 31)
         )
 
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
@@ -362,12 +378,12 @@ class TestEdgeCases:
     def test_zero_revenue(self) -> None:
         """Handle zero revenue gracefully."""
         transactions = [
-            Transaction(date=date(2024, 1, 1), amount=1000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),
+            Transaction(
+                date=date(2024, 1, 1), amount=1000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY
+            ),
         ]
         dataset = FinancialDataset(
-            transactions=transactions,
-            period_start=date(2024, 1, 1),
-            period_end=date(2024, 12, 31)
+            transactions=transactions, period_start=date(2024, 1, 1), period_end=date(2024, 12, 31)
         )
 
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=0)
@@ -383,9 +399,7 @@ class TestEdgeCases:
             Transaction(date=date(2024, 1, 1), amount=50_000, type=TransactionType.EXPENSE),  # No category
         ]
         dataset = FinancialDataset(
-            transactions=transactions,
-            period_start=date(2024, 1, 1),
-            period_end=date(2024, 12, 31)
+            transactions=transactions, period_start=date(2024, 1, 1), period_end=date(2024, 12, 31)
         )
 
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)

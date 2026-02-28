@@ -83,10 +83,12 @@ def audit(
     from fiscalpilot.models.company import CompanyProfile, Industry
     from fiscalpilot.pilot import FiscalPilot
 
-    console.print(Panel.fit(
-        "[bold blue]🛫 FiscalPilot[/bold blue] — Full Financial Audit",
-        subtitle=f"v{__version__}",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold blue]🛫 FiscalPilot[/bold blue] — Full Financial Audit",
+            subtitle=f"v{__version__}",
+        )
+    )
 
     try:
         industry_enum = Industry(industry.lower())
@@ -152,10 +154,12 @@ def scan(
     from fiscalpilot.models.company import CompanyProfile, Industry
     from fiscalpilot.pilot import FiscalPilot
 
-    console.print(Panel.fit(
-        "[bold blue]🛫 FiscalPilot[/bold blue] — Quick Scan",
-        subtitle=f"v{__version__}",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold blue]🛫 FiscalPilot[/bold blue] — Quick Scan",
+            subtitle=f"v{__version__}",
+        )
+    )
 
     if not csv and not excel:
         console.print("[red]Error: Provide --csv or --excel file path[/red]")
@@ -259,10 +263,12 @@ def restaurant(
     import os
     from pathlib import Path
 
-    console.print(Panel.fit(
-        "[bold blue]🍽️ FiscalPilot[/bold blue] — Restaurant Analysis",
-        subtitle=f"v{__version__}",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold blue]🍽️ FiscalPilot[/bold blue] — Restaurant Analysis",
+            subtitle=f"v{__version__}",
+        )
+    )
 
     if not csv and not square:
         console.print("[red]Error: Provide --csv file or use --square connector[/red]")
@@ -291,6 +297,7 @@ def restaurant(
             console.print("[red]Error: Set SQUARE_ACCESS_TOKEN environment variable[/red]")
             raise typer.Exit(1)
         from fiscalpilot.connectors import SquarePOSConnector
+
         connector = SquarePOSConnector(access_token=access_token)
         with console.status("[bold green]Pulling from Square POS...[/bold green]"):
             dataset = asyncio.run(connector.pull())
@@ -343,6 +350,7 @@ def restaurant(
     # Additional analyses (if flags provided)
     if breakeven and revenue > 0:
         from fiscalpilot.analyzers.breakeven import BreakevenCalculator
+
         console.print("\n[bold]📈 Break-even Analysis[/bold]")
         # Estimate costs based on typical restaurant ratios
         monthly_revenue = revenue / 12
@@ -358,10 +366,13 @@ def restaurant(
             average_check=35,
         )
         console.print(f"  Break-even Revenue: ${be_result.breakeven_revenue_monthly:,.0f}/month")
-        console.print(f"  Break-even Covers: {be_result.breakeven_covers_monthly:,.0f}/month ({be_result.breakeven_covers_daily:.0f}/day)")
+        console.print(
+            f"  Break-even Covers: {be_result.breakeven_covers_monthly:,.0f}/month ({be_result.breakeven_covers_daily:.0f}/day)"
+        )
 
     if tips:
         from fiscalpilot.analyzers.tip_credit import TipCreditCalculator
+
         console.print("\n[bold]💰 Tip Tax Credit Estimate[/bold]")
         # Quick estimate based on typical staffing
         estimate = TipCreditCalculator.quick_estimate(
@@ -382,6 +393,7 @@ def restaurant(
 def _save_restaurant_report(result, company_name: str, output: str) -> None:
     """Save restaurant analysis to markdown."""
     from pathlib import Path
+
     lines = [
         f"# Restaurant Analysis: {company_name}",
         "",
@@ -393,7 +405,9 @@ def _save_restaurant_report(result, company_name: str, output: str) -> None:
         "|-----|--------|--------|--------|",
     ]
     for kpi in result.kpis:
-        lines.append(f"| {kpi.display_name} | {kpi.actual:.1f}% | {kpi.benchmark_low:.0f}-{kpi.benchmark_high:.0f}% | {kpi.severity.value} |")
+        lines.append(
+            f"| {kpi.display_name} | {kpi.actual:.1f}% | {kpi.benchmark_low:.0f}-{kpi.benchmark_high:.0f}% | {kpi.severity.value} |"
+        )
 
     if result.critical_alerts:
         lines.extend(["", "## Critical Alerts", ""])
@@ -519,10 +533,12 @@ def _connect_quickbooks_interactive(sandbox: bool = False, port: int = 8080) -> 
     """Interactive QuickBooks OAuth2 connection."""
     from fiscalpilot.connectors.quickbooks_connector import QuickBooksConnector
 
-    console.print(Panel.fit(
-        "[bold blue]🔗 QuickBooks Connection[/bold blue]",
-        subtitle="OAuth2 Setup",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold blue]🔗 QuickBooks Connection[/bold blue]",
+            subtitle="OAuth2 Setup",
+        )
+    )
     console.print()
 
     # Get credentials
@@ -574,10 +590,12 @@ def _connect_xero_interactive(port: int = 8080) -> None:
     """Interactive Xero OAuth2 connection."""
     from fiscalpilot.connectors.xero_connector import XeroConnector
 
-    console.print(Panel.fit(
-        "[bold blue]🔗 Xero Connection[/bold blue]",
-        subtitle="OAuth2 Setup",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold blue]🔗 Xero Connection[/bold blue]",
+            subtitle="OAuth2 Setup",
+        )
+    )
     console.print()
 
     # Get credentials
@@ -625,10 +643,12 @@ def _connect_xero_interactive(port: int = 8080) -> None:
 
 def _connect_square_interactive(sandbox: bool = False) -> None:
     """Interactive Square connection (access token based)."""
-    console.print(Panel.fit(
-        "[bold blue]🔗 Square Connection[/bold blue]",
-        subtitle="Access Token Setup",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold blue]🔗 Square Connection[/bold blue]",
+            subtitle="Access Token Setup",
+        )
+    )
     console.print()
 
     console.print("[bold]Square uses personal access tokens[/bold]")
@@ -658,10 +678,12 @@ def _connect_plaid_interactive(sandbox: bool = False, port: int = 8080) -> None:
     """Interactive Plaid Link connection."""
     from fiscalpilot.connectors.plaid_connector import PlaidConnector
 
-    console.print(Panel.fit(
-        "[bold blue]🏦 Plaid Bank Connection[/bold blue]",
-        subtitle="Plaid Link Setup",
-    ))
+    console.print(
+        Panel.fit(
+            "[bold blue]🏦 Plaid Bank Connection[/bold blue]",
+            subtitle="Plaid Link Setup",
+        )
+    )
     console.print()
 
     # Get credentials

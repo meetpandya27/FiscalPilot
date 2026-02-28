@@ -2,7 +2,6 @@
 Tests for the approval gate (v0.4 human-in-the-loop).
 """
 
-
 from fiscalpilot.execution.approval import ApprovalGate
 from fiscalpilot.models.actions import (
     ActionStatus,

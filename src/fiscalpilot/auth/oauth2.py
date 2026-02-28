@@ -43,6 +43,7 @@ logger = logging.getLogger("fiscalpilot.auth.oauth2")
 # Encryption helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_encryption_key() -> bytes:
     """Derive an encryption key from machine-specific data.
 
@@ -89,6 +90,7 @@ def _decrypt_data(encrypted: str) -> str:
 # PKCE helpers
 # ---------------------------------------------------------------------------
 
+
 def generate_pkce_pair() -> tuple[str, str]:
     """Generate a PKCE code_verifier and code_challenge pair.
 
@@ -108,6 +110,7 @@ def generate_pkce_pair() -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 # Local callback server
 # ---------------------------------------------------------------------------
+
 
 class _OAuthCallbackHandler(BaseHTTPRequestHandler):
     """HTTP handler for OAuth2 callback."""
@@ -269,6 +272,7 @@ class OAuthCallbackServer:
 
         raise TimeoutError(f"OAuth callback not received within {timeout}s")
 
+
 # Default token storage location
 _DEFAULT_TOKEN_DIR = Path.home() / ".fiscalpilot" / "tokens"
 
@@ -324,9 +328,18 @@ class TokenData:
             expires_in=expires_in,
             expires_at=time.time() + expires_in,
             scope=data.get("scope", ""),
-            extra={k: v for k, v in data.items() if k not in {
-                "access_token", "refresh_token", "token_type", "expires_in", "scope",
-            }},
+            extra={
+                k: v
+                for k, v in data.items()
+                if k
+                not in {
+                    "access_token",
+                    "refresh_token",
+                    "token_type",
+                    "expires_in",
+                    "scope",
+                }
+            },
         )
 
 
@@ -496,10 +509,7 @@ class OAuth2TokenManager:
             httpx.HTTPStatusError: If the refresh request fails.
         """
         if not self._token or not self._token.refresh_token:
-            raise ValueError(
-                f"No refresh token available for {self.provider}. "
-                "Please authenticate first."
-            )
+            raise ValueError(f"No refresh token available for {self.provider}. Please authenticate first.")
 
         client = await self._get_client()
 
@@ -537,10 +547,7 @@ class OAuth2TokenManager:
             if stored:
                 self._token = stored
             else:
-                raise ValueError(
-                    f"No tokens configured for {self.provider}. "
-                    "Call load_or_set() first."
-                )
+                raise ValueError(f"No tokens configured for {self.provider}. Call load_or_set() first.")
 
         if self._token.is_expired:
             await self.refresh()

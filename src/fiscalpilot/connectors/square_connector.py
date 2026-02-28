@@ -285,38 +285,42 @@ class SquarePOSConnector(BaseConnector):
 
         # Main sale transaction (income)
         if total_amount > 0:
-            transactions.append(Transaction(
-                id=f"square_{payment_id}",
-                date=txn_date,
-                amount=float(total_amount),
-                description=description,
-                vendor=f"Square POS - {location_name}",
-                type=TransactionType.INCOME,
-                category=None,  # Income transactions don't need expense category
-                raw_data={
-                    "source": "square",
-                    "payment_id": payment_id,
-                    "source_type": source_type,
-                    "tip_amount": float(tip_amount),
-                },
-            ))
+            transactions.append(
+                Transaction(
+                    id=f"square_{payment_id}",
+                    date=txn_date,
+                    amount=float(total_amount),
+                    description=description,
+                    vendor=f"Square POS - {location_name}",
+                    type=TransactionType.INCOME,
+                    category=None,  # Income transactions don't need expense category
+                    raw_data={
+                        "source": "square",
+                        "payment_id": payment_id,
+                        "source_type": source_type,
+                        "tip_amount": float(tip_amount),
+                    },
+                )
+            )
 
         # Processing fee transaction (expense)
         if fee_amount > 0:
-            transactions.append(Transaction(
-                id=f"square_{payment_id}_fee",
-                date=txn_date,
-                amount=float(fee_amount),
-                description=f"Square processing fee - {payment_method}",
-                vendor="Square",
-                type=TransactionType.EXPENSE,
-                category=ExpenseCategory.PROFESSIONAL_FEES,
-                raw_data={
-                    "source": "square",
-                    "payment_id": payment_id,
-                    "fee_type": "processing",
-                },
-            ))
+            transactions.append(
+                Transaction(
+                    id=f"square_{payment_id}_fee",
+                    date=txn_date,
+                    amount=float(fee_amount),
+                    description=f"Square processing fee - {payment_method}",
+                    vendor="Square",
+                    type=TransactionType.EXPENSE,
+                    category=ExpenseCategory.PROFESSIONAL_FEES,
+                    raw_data={
+                        "source": "square",
+                        "payment_id": payment_id,
+                        "fee_type": "processing",
+                    },
+                )
+            )
 
         return transactions
 
@@ -407,9 +411,7 @@ class SquarePOSConnector(BaseConnector):
                                 "end_at": f"{end_date.isoformat()}T23:59:59Z",
                             }
                         },
-                        "state_filter": {
-                            "states": ["COMPLETED"]
-                        },
+                        "state_filter": {"states": ["COMPLETED"]},
                     },
                     "sort": {
                         "sort_field": "CREATED_AT",
@@ -495,10 +497,7 @@ class SquarePOSConnector(BaseConnector):
 
                 amount = payment.get("amount_money", {}).get("amount", 0) / 100
                 tip = payment.get("tip_money", {}).get("amount", 0) / 100
-                fees = sum(
-                    f.get("amount_money", {}).get("amount", 0)
-                    for f in payment.get("processing_fee", [])
-                ) / 100
+                fees = sum(f.get("amount_money", {}).get("amount", 0) for f in payment.get("processing_fee", [])) / 100
 
                 daily_data[txn_date]["total_sales"] += amount
                 daily_data[txn_date]["transaction_count"] += 1

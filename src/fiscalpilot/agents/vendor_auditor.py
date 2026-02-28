@@ -76,9 +76,7 @@ and alternative vendor suggestions. You work with all business sizes.
 Always return your findings as a valid JSON array."""
 
     def _build_prompt(self, context: dict[str, Any]) -> str:
-        transactions_json = json.dumps(
-            context.get("transactions_sample", [])[:200], indent=2, default=str
-        )
+        transactions_json = json.dumps(context.get("transactions_sample", [])[:200], indent=2, default=str)
         return VENDOR_ANALYSIS_PROMPT.format(
             company_name=context["company"]["name"],
             company_size=context["company"].get("size", "unknown"),

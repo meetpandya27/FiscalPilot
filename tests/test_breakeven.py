@@ -181,8 +181,7 @@ class TestBreakevenInsights:
             average_check=25,
         )
 
-        food_warning = any("food" in i.lower() and "high" in i.lower()
-                          for i in result.insights)
+        food_warning = any("food" in i.lower() and "high" in i.lower() for i in result.insights)
         assert food_warning
 
     def test_high_labor_cost_warning(self):
@@ -225,8 +224,7 @@ class TestBreakevenEdgeCases:
 
         # Should return error insight when CM <= 0
         if result.contribution_margin_pct <= 0:
-            assert any("impossible" in i.lower() or "error" in i.lower()
-                      for i in result.insights)
+            assert any("impossible" in i.lower() or "error" in i.lower() for i in result.insights)
 
     def test_zero_average_check(self):
         """Should handle zero average check gracefully."""

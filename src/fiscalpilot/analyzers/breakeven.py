@@ -25,7 +25,8 @@ logger = logging.getLogger("fiscalpilot.analyzers.breakeven")
 
 class CostType(str, Enum):
     """Classification of restaurant costs."""
-    FIXED = "fixed"        # Doesn't change with sales volume
+
+    FIXED = "fixed"  # Doesn't change with sales volume
     VARIABLE = "variable"  # Changes proportionally with sales
     SEMI_VARIABLE = "semi_variable"  # Has fixed and variable components
 
@@ -40,12 +41,10 @@ DEFAULT_COST_CLASSIFICATION: dict[ExpenseCategory, CostType] = {
     ExpenseCategory.PROFESSIONAL_FEES: CostType.FIXED,
     ExpenseCategory.INTEREST: CostType.FIXED,
     ExpenseCategory.DEPRECIATION: CostType.FIXED,
-
     # Variable costs
     ExpenseCategory.INVENTORY: CostType.VARIABLE,  # Food cost
     ExpenseCategory.SUPPLIES: CostType.VARIABLE,
     ExpenseCategory.SHIPPING: CostType.VARIABLE,
-
     # Semi-variable (default to fixed for simplicity)
     ExpenseCategory.PAYROLL: CostType.SEMI_VARIABLE,
     ExpenseCategory.UTILITIES: CostType.SEMI_VARIABLE,
@@ -86,26 +85,26 @@ class CostBreakdown:
     def total_fixed(self) -> float:
         """Total fixed costs per period."""
         return (
-            self.rent +
-            self.insurance +
-            self.management_salaries +
-            self.loan_payments +
-            self.equipment_leases +
-            self.software_subscriptions +
-            self.base_utilities +
-            self.other_fixed
+            self.rent
+            + self.insurance
+            + self.management_salaries
+            + self.loan_payments
+            + self.equipment_leases
+            + self.software_subscriptions
+            + self.base_utilities
+            + self.other_fixed
         )
 
     @property
     def total_variable_pct(self) -> float:
         """Total variable costs as % of revenue."""
         return (
-            self.food_cost_pct +
-            self.hourly_labor_pct +
-            self.supplies_pct +
-            self.credit_card_fees_pct +
-            self.delivery_commissions_pct +
-            self.other_variable_pct
+            self.food_cost_pct
+            + self.hourly_labor_pct
+            + self.supplies_pct
+            + self.credit_card_fees_pct
+            + self.delivery_commissions_pct
+            + self.other_variable_pct
         )
 
     @property
@@ -155,6 +154,7 @@ class BreakevenResult:
 @dataclass
 class ScenarioResult:
     """Result of a what-if scenario."""
+
     name: str
     revenue: float
     covers: float
@@ -178,7 +178,6 @@ class BreakevenCalculator:
         software_subscriptions: float = 0.0,
         base_utilities: float = 0.0,
         other_fixed: float = 0.0,
-
         # Variable costs (% of revenue)
         food_cost_pct: float = 30.0,
         hourly_labor_pct: float = 20.0,
@@ -186,11 +185,9 @@ class BreakevenCalculator:
         credit_card_fees_pct: float = 2.5,
         delivery_commissions_pct: float = 0.0,
         other_variable_pct: float = 1.0,
-
         # Operating parameters
         average_check: float = 25.0,
         days_operating_per_week: int = 7,
-
         # Current performance (for comparison)
         current_monthly_revenue: float | None = None,
         current_monthly_covers: float | None = None,
@@ -356,9 +353,7 @@ class BreakevenCalculator:
             if txn.type.value == "income":
                 total_income += txn.amount
             elif txn.type.value == "expense" and txn.category:
-                totals_by_category[txn.category] = (
-                    totals_by_category.get(txn.category, 0) + txn.amount
-                )
+                totals_by_category[txn.category] = totals_by_category.get(txn.category, 0) + txn.amount
 
         # Annualize if partial year
         if dataset.period_start and dataset.period_end:
@@ -424,24 +419,28 @@ class BreakevenCalculator:
         # Scenario 1: 10% above break-even
         rev_110 = breakeven_monthly * 1.10
         profit_110 = (rev_110 * cm_ratio) - costs.total_fixed
-        scenarios.append({
-            "name": "10% Above Break-even",
-            "revenue": rev_110,
-            "covers": rev_110 / average_check if average_check > 0 else 0,
-            "profit": profit_110,
-            "margin_pct": (profit_110 / rev_110 * 100) if rev_110 > 0 else 0,
-        })
+        scenarios.append(
+            {
+                "name": "10% Above Break-even",
+                "revenue": rev_110,
+                "covers": rev_110 / average_check if average_check > 0 else 0,
+                "profit": profit_110,
+                "margin_pct": (profit_110 / rev_110 * 100) if rev_110 > 0 else 0,
+            }
+        )
 
         # Scenario 2: 25% above break-even
         rev_125 = breakeven_monthly * 1.25
         profit_125 = (rev_125 * cm_ratio) - costs.total_fixed
-        scenarios.append({
-            "name": "25% Above Break-even",
-            "revenue": rev_125,
-            "covers": rev_125 / average_check if average_check > 0 else 0,
-            "profit": profit_125,
-            "margin_pct": (profit_125 / rev_125 * 100) if rev_125 > 0 else 0,
-        })
+        scenarios.append(
+            {
+                "name": "25% Above Break-even",
+                "revenue": rev_125,
+                "covers": rev_125 / average_check if average_check > 0 else 0,
+                "profit": profit_125,
+                "margin_pct": (profit_125 / rev_125 * 100) if rev_125 > 0 else 0,
+            }
+        )
 
         # Scenario 3: Target 10% net margin
         target_margin = 0.10
@@ -451,13 +450,15 @@ class BreakevenCalculator:
         if cm_ratio > target_margin:
             rev_10pct = costs.total_fixed / (cm_ratio - target_margin)
             profit_10pct = rev_10pct * target_margin
-            scenarios.append({
-                "name": "Target 10% Net Margin",
-                "revenue": rev_10pct,
-                "covers": rev_10pct / average_check if average_check > 0 else 0,
-                "profit": profit_10pct,
-                "margin_pct": 10.0,
-            })
+            scenarios.append(
+                {
+                    "name": "Target 10% Net Margin",
+                    "revenue": rev_10pct,
+                    "covers": rev_10pct / average_check if average_check > 0 else 0,
+                    "profit": profit_10pct,
+                    "margin_pct": 10.0,
+                }
+            )
 
         # Scenario 4: If food cost reduced by 3%
         if costs.food_cost_pct > 3:
@@ -465,12 +466,14 @@ class BreakevenCalculator:
             new_cm_ratio = (100 - new_variable_pct) / 100
             new_breakeven = costs.total_fixed / new_cm_ratio
             savings = breakeven_monthly - new_breakeven
-            scenarios.append({
-                "name": "If Food Cost -3%",
-                "breakeven_reduction": savings,
-                "new_breakeven": new_breakeven,
-                "description": f"Reducing food cost by 3% lowers break-even by ${savings:,.0f}/month",
-            })
+            scenarios.append(
+                {
+                    "name": "If Food Cost -3%",
+                    "breakeven_reduction": savings,
+                    "new_breakeven": new_breakeven,
+                    "description": f"Reducing food cost by 3% lowers break-even by ${savings:,.0f}/month",
+                }
+            )
 
         return scenarios
 
@@ -531,8 +534,7 @@ class BreakevenCalculator:
                 )
             elif margin_of_safety > 10:
                 insights.append(
-                    f"⚠️ MODERATE BUFFER: {margin_of_safety:.1f}% above break-even. "
-                    "Limited cushion for slow periods."
+                    f"⚠️ MODERATE BUFFER: {margin_of_safety:.1f}% above break-even. Limited cushion for slow periods."
                 )
             else:
                 insights.append(

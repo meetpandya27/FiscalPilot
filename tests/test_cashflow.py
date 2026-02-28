@@ -16,26 +16,33 @@ def _monthly_txns(
     txns: list[dict[str, Any]] = []
     idx = 0
     for m in range(months):
-        d = date(start.year, start.month + m if start.month + m <= 12 else (start.month + m - 12),
-                 15) if start.month + m <= 12 else date(start.year + 1, start.month + m - 12, 15)
+        d = (
+            date(start.year, start.month + m if start.month + m <= 12 else (start.month + m - 12), 15)
+            if start.month + m <= 12
+            else date(start.year + 1, start.month + m - 12, 15)
+        )
         # Income
-        txns.append({
-            "id": f"inc_{idx}",
-            "amount": monthly_income,
-            "date": str(d),
-            "type": "income",
-            "category": "revenue",
-        })
+        txns.append(
+            {
+                "id": f"inc_{idx}",
+                "amount": monthly_income,
+                "date": str(d),
+                "type": "income",
+                "category": "revenue",
+            }
+        )
         idx += 1
         # Expenses (split into 4)
         for _ in range(4):
-            txns.append({
-                "id": f"exp_{idx}",
-                "amount": monthly_expense / 4,
-                "date": str(d + timedelta(days=_ * 5)),
-                "type": "expense",
-                "category": "general",
-            })
+            txns.append(
+                {
+                    "id": f"exp_{idx}",
+                    "amount": monthly_expense / 4,
+                    "date": str(d + timedelta(days=_ * 5)),
+                    "type": "expense",
+                    "category": "general",
+                }
+            )
             idx += 1
     return txns
 

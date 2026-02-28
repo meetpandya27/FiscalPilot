@@ -111,12 +111,14 @@ class ApprovalGate:
                 auto_approved.append(action)
                 self._record_decision(action, "approved", "system:auto", "Yellow auto-approve + notify")
                 # Queue notification
-                self._notifications.append({
-                    "action_id": action.id,
-                    "title": action.title,
-                    "level": level.value,
-                    "message": f"Auto-approved action: {action.title} (saves ${action.estimated_savings:,.2f})",
-                })
+                self._notifications.append(
+                    {
+                        "action_id": action.id,
+                        "title": action.title,
+                        "level": level.value,
+                        "message": f"Auto-approved action: {action.title} (saves ${action.estimated_savings:,.2f})",
+                    }
+                )
                 logger.debug("Auto-approved YELLOW action: %s (notification queued)", action.title)
 
             else:
@@ -178,7 +180,10 @@ class ApprovalGate:
                         len(rule.approver_emails),
                     )
                     self._record_decision(
-                        action, "partial_approval", approved_by, f"Multi-party: {len(partial)}/{len(rule.approver_emails)}"
+                        action,
+                        "partial_approval",
+                        approved_by,
+                        f"Multi-party: {len(partial)}/{len(rule.approver_emails)}",
                     )
                     continue
 
@@ -237,9 +242,11 @@ class ApprovalGate:
         reason: str,
     ) -> None:
         """Record an immutable approval decision in the audit trail."""
-        self._decisions.append(ApprovalDecision(
-            action_id=action.id,
-            decision=decision,
-            decided_by=decided_by,
-            reason=reason,
-        ))
+        self._decisions.append(
+            ApprovalDecision(
+                action_id=action.id,
+                decision=decision,
+                decided_by=decided_by,
+                reason=reason,
+            )
+        )
