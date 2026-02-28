@@ -266,7 +266,7 @@ class BenchmarkAnalyzer:
 
         excess_pct = (total_excess / max(revenue, 1)) * 100
 
-        score = 100
+        score: float = 100
         score -= critical * 20
         score -= high * 10
         score -= medium * 5

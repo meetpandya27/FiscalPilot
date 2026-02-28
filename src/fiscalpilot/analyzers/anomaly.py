@@ -380,9 +380,9 @@ class AnomalyDetector:
     @staticmethod
     def _deduplicate_flags(flags: list[AnomalyFlag]) -> list[AnomalyFlag]:
         """Merge flags for the same transaction, keeping the highest score."""
-        by_id: dict[str | None, AnomalyFlag] = {}
+        by_id: dict[str | int, AnomalyFlag] = {}
         for f in flags:
-            key = f.transaction_id or id(f)
+            key: str | int = f.transaction_id if f.transaction_id else id(f)
             existing = by_id.get(key)
             if existing is None or f.score > existing.score:
                 if existing and f.transaction_id:

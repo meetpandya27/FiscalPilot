@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import asdict
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from fiscalpilot.agents.base import BaseAgent
 from fiscalpilot.analyzers.breakeven import (
@@ -46,9 +46,7 @@ from fiscalpilot.analyzers.tip_credit import (
     TippedEmployee,
 )
 from fiscalpilot.models.actions import ActionStep, ActionType, ApprovalLevel, ProposedAction
-
-if TYPE_CHECKING:
-    from fiscalpilot.models.financial import FinancialDataset
+from fiscalpilot.models.financial import FinancialDataset
 
 logger = logging.getLogger("fiscalpilot.agents.restaurant")
 
@@ -147,8 +145,8 @@ Always return your recommendations as a valid JSON array."""
             Dict with 'kpi_results', 'findings', 'actions', and 'recommendations'.
         """
         # Step 1: Run pure-computation KPI analysis (no LLM)
-        dataset: FinancialDataset = context.get("dataset")
-        if not dataset:
+        dataset = context.get("dataset")
+        if not dataset or not isinstance(dataset, FinancialDataset):
             logger.error("No dataset provided to RestaurantAgent")
             return {"findings": [], "error": "Missing financial dataset"}
 

@@ -127,11 +127,12 @@ Never be vague. Every recommendation should have a clear next step."""
         # Step 5: Aggregate findings (intelligence + agent results)
         all_findings: list[Finding] = list(intel_findings)
         for i, result in enumerate(results):
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 logger.error("Agent %s failed: %s", self._agents[i].name, result)
                 continue
-            findings = self._extract_findings(result, self._agents[i].name)
-            all_findings.extend(findings)
+            if isinstance(result, dict):
+                findings = self._extract_findings(result, self._agents[i].name)
+                all_findings.extend(findings)
 
         # Step 6: Deduplicate and rank
         all_findings = self._deduplicate_findings(all_findings)
@@ -182,10 +183,11 @@ Never be vague. Every recommendation should have a clear next step."""
 
         all_findings: list[Finding] = []
         for i, result in enumerate(results):
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 continue
-            findings = self._extract_findings(result, quick_agents[i].name)
-            all_findings.extend(findings)
+            if isinstance(result, dict):
+                findings = self._extract_findings(result, quick_agents[i].name)
+                all_findings.extend(findings)
 
         return AuditReport(
             id=str(uuid.uuid4()),
@@ -282,14 +284,14 @@ Never be vague. Every recommendation should have a clear next step."""
             try:
                 from fiscalpilot.analyzers.benfords import BenfordsAnalyzer
 
-                result = BenfordsAnalyzer.analyze(txn_dicts)
-                intelligence.benfords_summary = result.summary
-                intelligence.benfords_conformity_score = result.conformity_score
-                extra_context["benfords_analysis"] = result.summary
-                extra_context["benfords_conformity_score"] = result.conformity_score
+                benfords_result = BenfordsAnalyzer.analyze(txn_dicts)
+                intelligence.benfords_summary = benfords_result.summary
+                intelligence.benfords_conformity_score = benfords_result.conformity_score
+                extra_context["benfords_analysis"] = benfords_result.summary
+                extra_context["benfords_conformity_score"] = benfords_result.conformity_score
 
                 # Generate finding if non-conforming
-                if result.conformity_score < 0.5:
+                if benfords_result.conformity_score < 0.5:
                     findings.append(
                         Finding(
                             id=f"benfords_{uuid.uuid4().hex[:8]}",
@@ -298,19 +300,19 @@ Never be vague. Every recommendation should have a clear next step."""
                             severity=Severity.HIGH,
                             description=(
                                 f"Transaction amounts deviate significantly from Benford's Law "
-                                f"(conformity: {result.conformity_score:.1%}). This may indicate "
+                                f"(conformity: {benfords_result.conformity_score:.1%}). This may indicate "
                                 f"fabricated data, duplicate entries, or systematic manipulation."
                             ),
-                            evidence=[result.summary]
+                            evidence=[benfords_result.summary]
                             + [
                                 f"Digit {s['digit']}: {s['observed_pct']}% vs expected {s['expected_pct']}%"
-                                for s in result.suspicious_digits[:5]
+                                for s in benfords_result.suspicious_digits[:5]
                             ],
-                            confidence=min(0.9, 1.0 - result.conformity_score),
+                            confidence=min(0.9, 1.0 - benfords_result.conformity_score),
                             recommendation="Conduct a forensic review of transaction sources.",
                         )
                     )
-                elif result.conformity_score < 0.7:
+                elif benfords_result.conformity_score < 0.7:
                     findings.append(
                         Finding(
                             id=f"benfords_{uuid.uuid4().hex[:8]}",
@@ -319,15 +321,15 @@ Never be vague. Every recommendation should have a clear next step."""
                             severity=Severity.MEDIUM,
                             description=(
                                 f"Transaction amounts show marginal conformity to Benford's Law "
-                                f"(score: {result.conformity_score:.1%}). Worth investigating."
+                                f"(score: {benfords_result.conformity_score:.1%}). Worth investigating."
                             ),
-                            evidence=[result.summary],
+                            evidence=[benfords_result.summary],
                             confidence=0.6,
                             recommendation="Review flagged digit patterns for potential data quality issues.",
                         )
                     )
 
-                logger.info("Benford's analysis complete: conformity=%.1f%%", result.conformity_score * 100)
+                logger.info("Benford's analysis complete: conformity=%.1f%%", benfords_result.conformity_score * 100)
             except Exception as e:
                 logger.warning("Benford's analysis failed: %s", e)
 
@@ -336,22 +338,22 @@ Never be vague. Every recommendation should have a clear next step."""
             try:
                 from fiscalpilot.analyzers.anomaly import AnomalyDetector
 
-                result = AnomalyDetector.analyze(txn_dicts)
-                intelligence.anomaly_summary = result.summary
-                intelligence.anomaly_flagged_count = result.flagged_count
-                extra_context["anomaly_detection"] = result.summary
-                extra_context["anomaly_flagged_count"] = result.flagged_count
+                anomaly_result = AnomalyDetector.analyze(txn_dicts)
+                intelligence.anomaly_summary = anomaly_result.summary
+                intelligence.anomaly_flagged_count = anomaly_result.flagged_count
+                extra_context["anomaly_detection"] = anomaly_result.summary
+                extra_context["anomaly_flagged_count"] = anomaly_result.flagged_count
 
                 # Inject top flagged transactions into context for agents
-                if result.flags:
-                    top_flags = result.flags[:20]
+                if anomaly_result.flags:
+                    top_flags = anomaly_result.flags[:20]
                     extra_context["anomaly_flags"] = [
                         {"id": f.transaction_id, "amount": f.amount, "score": f.score, "reason": f.reason}
                         for f in top_flags
                     ]
 
                 # Time-series anomalies → findings
-                for ts in result.time_series_anomalies:
+                for ts in anomaly_result.time_series_anomalies:
                     if ts.score >= 0.6:
                         findings.append(
                             Finding(
@@ -372,7 +374,7 @@ Never be vague. Every recommendation should have a clear next step."""
                             )
                         )
 
-                logger.info("Anomaly detection complete: %d flagged", result.flagged_count)
+                logger.info("Anomaly detection complete: %d flagged", anomaly_result.flagged_count)
             except Exception as e:
                 logger.warning("Anomaly detection failed: %s", e)
 
@@ -384,15 +386,15 @@ Never be vague. Every recommendation should have a clear next step."""
                 industry = company.industry.value if company.industry else "other"
                 revenue = company.annual_revenue or 0
 
-                result = BenchmarkAnalyzer.analyze(txn_dicts, industry=industry, annual_revenue=revenue)
-                intelligence.benchmark_summary = result.summary
-                intelligence.benchmark_grade = result.health_grade
-                intelligence.benchmark_excess_spend = result.total_excess_spend
-                extra_context["benchmark_analysis"] = result.summary
-                extra_context["benchmark_grade"] = result.health_grade
+                benchmark_result = BenchmarkAnalyzer.analyze(txn_dicts, industry=industry, annual_revenue=revenue)
+                intelligence.benchmark_summary = benchmark_result.summary
+                intelligence.benchmark_grade = benchmark_result.health_grade
+                intelligence.benchmark_excess_spend = benchmark_result.total_excess_spend
+                extra_context["benchmark_analysis"] = benchmark_result.summary
+                extra_context["benchmark_grade"] = benchmark_result.health_grade
 
                 # Benchmark deviations → findings
-                for dev in result.deviations:
+                for dev in benchmark_result.deviations:
                     if dev.severity in ("critical", "high"):
                         findings.append(
                             Finding(
@@ -412,7 +414,7 @@ Never be vague. Every recommendation should have a clear next step."""
                             )
                         )
 
-                logger.info("Benchmark analysis complete: grade=%s", result.health_grade)
+                logger.info("Benchmark analysis complete: grade=%s", benchmark_result.health_grade)
             except Exception as e:
                 logger.warning("Benchmark analysis failed: %s", e)
 
@@ -423,31 +425,31 @@ Never be vague. Every recommendation should have a clear next step."""
 
                 balance = sum(b.balance for b in dataset.balances) if dataset.balances else 0
 
-                result = CashFlowForecaster.analyze(txn_dicts, current_balance=balance)
-                intelligence.cashflow_summary = result.summary
-                intelligence.cashflow_runway_months = result.runway_months
-                extra_context["cashflow_forecast"] = result.summary
-                extra_context["cashflow_runway_months"] = result.runway_months
+                cashflow_result = CashFlowForecaster.analyze(txn_dicts, current_balance=balance)
+                intelligence.cashflow_summary = cashflow_result.summary
+                intelligence.cashflow_runway_months = cashflow_result.runway_months
+                extra_context["cashflow_forecast"] = cashflow_result.summary
+                extra_context["cashflow_runway_months"] = cashflow_result.runway_months
 
                 # Critical runway → finding
-                if 0 < result.runway_months < 6:
+                if 0 < cashflow_result.runway_months < 6:
                     findings.append(
                         Finding(
                             id=f"cashflow_{uuid.uuid4().hex[:8]}",
-                            title=f"Cash runway is only {result.runway_months:.1f} months",
+                            title=f"Cash runway is only {cashflow_result.runway_months:.1f} months",
                             category=FindingCategory.CASH_FLOW,
-                            severity=Severity.CRITICAL if result.runway_months < 3 else Severity.HIGH,
+                            severity=Severity.CRITICAL if cashflow_result.runway_months < 3 else Severity.HIGH,
                             description=(
-                                f"At the current burn rate of ${result.average_monthly_burn:,.2f}/month, "
-                                f"cash reserves will be depleted in ~{result.runway_months:.1f} months."
+                                f"At the current burn rate of ${cashflow_result.average_monthly_burn:,.2f}/month, "
+                                f"cash reserves will be depleted in ~{cashflow_result.runway_months:.1f} months."
                             ),
-                            evidence=result.risk_alerts[:5],
+                            evidence=cashflow_result.risk_alerts[:5],
                             confidence=0.8,
                             recommendation="Immediately reduce expenses or secure additional funding.",
                         )
                     )
 
-                for alert in result.risk_alerts:
+                for alert in cashflow_result.risk_alerts:
                     if "negative balance" in alert.lower():
                         findings.append(
                             Finding(
@@ -462,7 +464,7 @@ Never be vague. Every recommendation should have a clear next step."""
                         )
                         break
 
-                logger.info("Cash flow forecast complete: runway=%.1f months", result.runway_months)
+                logger.info("Cash flow forecast complete: runway=%.1f months", cashflow_result.runway_months)
             except Exception as e:
                 logger.warning("Cash flow forecast failed: %s", e)
 
@@ -471,16 +473,16 @@ Never be vague. Every recommendation should have a clear next step."""
             try:
                 from fiscalpilot.analyzers.tax_optimizer import TaxOptimizer
 
-                result = TaxOptimizer.analyze(
+                tax_result = TaxOptimizer.analyze(
                     txn_dicts,
                     annual_revenue=company.annual_revenue or 0,
                 )
-                intelligence.tax_summary = result.summary
-                intelligence.tax_savings_estimate = result.total_estimated_savings
-                extra_context["tax_analysis"] = result.summary
+                intelligence.tax_summary = tax_result.summary
+                intelligence.tax_savings_estimate = tax_result.total_estimated_savings
+                extra_context["tax_analysis"] = tax_result.summary
 
                 # Tax opportunities → findings
-                for opp in result.opportunities:
+                for opp in tax_result.opportunities:
                     if opp.estimated_savings >= 500:
                         findings.append(
                             Finding(
@@ -497,7 +499,7 @@ Never be vague. Every recommendation should have a clear next step."""
                             )
                         )
 
-                logger.info("Tax optimization complete: $%.2f potential savings", result.total_estimated_savings)
+                logger.info("Tax optimization complete: $%.2f potential savings", tax_result.total_estimated_savings)
             except Exception as e:
                 logger.warning("Tax optimization failed: %s", e)
 

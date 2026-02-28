@@ -51,7 +51,7 @@ def _category_color(category: FindingCategory) -> str:
     return colors[idx % len(colors)]
 
 
-def _health_score_color(score: int) -> str:
+def _health_score_color(score: float) -> str:
     """Get color based on health score."""
     if score >= 80:
         return "#16a34a"  # green

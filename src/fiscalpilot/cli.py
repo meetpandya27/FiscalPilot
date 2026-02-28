@@ -287,6 +287,7 @@ def restaurant(
 
     # Pull data
     dataset = None
+    connector = None
     if csv:
         connector = CSVConnector(credentials={"file_path": csv})
         with console.status("[bold green]Loading transactions...[/bold green]"):
@@ -300,7 +301,11 @@ def restaurant(
 
         connector = SquarePOSConnector(access_token=access_token)
         with console.status("[bold green]Pulling from Square POS...[/bold green]"):
-            dataset = asyncio.run(connector.pull())
+            dataset = asyncio.run(connector.pull(profile))
+
+    if not dataset:
+        console.print("[red]Error: No data source provided. Use --csv or --square[/red]")
+        raise typer.Exit(1)
 
     # Run KPI analysis
     console.print("\n[bold]📊 Restaurant KPIs[/bold]")
@@ -375,13 +380,13 @@ def restaurant(
 
         console.print("\n[bold]💰 Tip Tax Credit Estimate[/bold]")
         # Quick estimate based on typical staffing
-        estimate = TipCreditCalculator.quick_estimate(
+        tip_estimate = TipCreditCalculator.quick_estimate(
             num_tipped_employees=8,
-            avg_monthly_tips_per_employee=2500,
-            avg_hours_per_employee=140,
+            avg_tips_per_hour=18.0,  # ~$2500/month / 140 hours
+            avg_hours_per_employee=35.0,  # weekly
         )
-        console.print(f"  Estimated Monthly Credit: ${estimate['monthly_credit']:,.2f}")
-        console.print(f"  Estimated Annual Credit: ${estimate['annual_credit']:,.2f}")
+        console.print(f"  Estimated Monthly Credit: ${tip_estimate.total_fica_credit:,.2f}")
+        console.print(f"  Estimated Annual Credit: ${tip_estimate.annual_credit_projection:,.2f}")
 
     # Save report
     report_path = Path(output)
