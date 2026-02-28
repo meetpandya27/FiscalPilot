@@ -1,0 +1,37 @@
+# CODEOWNERS - Define who owns which parts of the codebase
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+*                           @meetpandya27
+
+# Core application
+/src/fiscalpilot/           @meetpandya27
+/src/fiscalpilot/agents/    @meetpandya27
+/src/fiscalpilot/analyzers/ @meetpandya27
+
+# Connectors - financial integrations
+/src/fiscalpilot/connectors/    @meetpandya27
+/src/fiscalpilot/auth/          @meetpandya27
+
+# Execution engine - critical path
+/src/fiscalpilot/execution/     @meetpandya27
+
+# CLI and exporters
+/src/fiscalpilot/cli.py         @meetpandya27
+/src/fiscalpilot/exporters/     @meetpandya27
+
+# Tests
+/tests/                     @meetpandya27
+
+# Documentation
+*.md                        @meetpandya27
+/docs/                      @meetpandya27
+
+# CI/CD and project config
+/.github/                   @meetpandya27
+/pyproject.toml             @meetpandya27
+/Dockerfile*                @meetpandya27
+/docker-compose.yml         @meetpandya27
+
+# Web UI
+/app.py                     @meetpandya27

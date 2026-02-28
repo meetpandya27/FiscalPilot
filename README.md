@@ -7,11 +7,16 @@
 **Your AI Chief Financial Officer that doesn't just analyze — it acts.**  
 **Analyze. Recommend. Execute. All on YOUR infrastructure.**
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![CI](https://github.com/meetpandya27/FiscalPilot/actions/workflows/ci.yml/badge.svg)](https://github.com/meetpandya27/FiscalPilot/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/meetpandya27/FiscalPilot/branch/main/graph/badge.svg)](https://codecov.io/gh/meetpandya27/FiscalPilot)
+[![PyPI version](https://img.shields.io/pypi/v/fiscalpilot.svg)](https://pypi.org/project/fiscalpilot/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+<br />
 [![GitHub Stars](https://img.shields.io/github/stars/meetpandya27/FiscalPilot?style=social)](https://github.com/meetpandya27/FiscalPilot)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289DA?logo=discord&logoColor=white)](https://discord.com/invite/kj3q9S2E5)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
 <br />
 
