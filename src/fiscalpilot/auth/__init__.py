@@ -14,7 +14,7 @@ from fiscalpilot.auth.oauth2 import (
 
 __all__ = [
     "OAuth2TokenManager",
-    "OAuthCallbackServer", 
+    "OAuthCallbackServer",
     "TokenData",
     "generate_pkce_pair",
 ]

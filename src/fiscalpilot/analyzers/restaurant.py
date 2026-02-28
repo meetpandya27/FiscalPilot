@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date, timedelta
 from enum import Enum
 from typing import Any
 
@@ -38,7 +37,7 @@ class RestaurantKPISeverity(str, Enum):
 @dataclass
 class RestaurantKPI:
     """A single restaurant KPI with benchmark comparison."""
-    
+
     name: str
     display_name: str
     actual: float
@@ -54,27 +53,27 @@ class RestaurantKPI:
 @dataclass
 class RestaurantAnalysisResult:
     """Complete restaurant financial analysis."""
-    
+
     analysis_period: str
     total_revenue: float
     total_expenses: float
     net_operating_income: float
-    
+
     # Core KPIs
     kpis: list[RestaurantKPI] = field(default_factory=list)
-    
+
     # Expense breakdown
     expense_breakdown: dict[str, float] = field(default_factory=dict)
     expense_ratios: dict[str, float] = field(default_factory=dict)
-    
+
     # Time-based analysis
     daily_revenue: dict[str, float] = field(default_factory=dict)
     weekly_revenue: dict[str, float] = field(default_factory=dict)
-    
+
     # Alerts
     critical_alerts: list[str] = field(default_factory=list)
     opportunities: list[str] = field(default_factory=list)
-    
+
     # Health score (0-100)
     health_score: int = 0
     health_grade: str = "B"
@@ -115,7 +114,7 @@ RESTAURANT_COST_BUCKETS = {
 
 class RestaurantAnalyzer:
     """Analyze restaurant financials with industry-specific metrics."""
-    
+
     @classmethod
     def analyze(
         cls,
@@ -126,13 +125,13 @@ class RestaurantAnalyzer:
         operating_hours_per_week: float | None = None,
     ) -> RestaurantAnalysisResult:
         """Run full restaurant financial analysis.
-        
+
         Args:
             dataset: Financial data from connector.
             annual_revenue: Annual revenue (if not derivable from transactions).
             seat_count: Number of seats for RevPASH calculation.
             operating_hours_per_week: Hours open per week (default 70).
-            
+
         Returns:
             RestaurantAnalysisResult with all KPIs and recommendations.
         """
@@ -143,14 +142,14 @@ class RestaurantAnalyzer:
         total_expenses = sum(
             t.amount for t in dataset.transactions if t.type.value == "expense"
         )
-        
+
         # Annualize if we have partial-year data
         if dataset.period_start and dataset.period_end:
             days_in_period = (dataset.period_end - dataset.period_start).days + 1
             annualization_factor = 365 / max(days_in_period, 1)
         else:
             annualization_factor = 1.0
-        
+
         # Use provided annual revenue or annualize from income transactions
         if annual_revenue:
             revenue = annual_revenue
@@ -159,35 +158,35 @@ class RestaurantAnalyzer:
             if revenue == 0:
                 # Estimate from expenses (typical restaurant expense ratio 92-98%)
                 revenue = total_expenses * annualization_factor / 0.95
-        
+
         # Calculate expense breakdown by category
         expense_breakdown = cls._calculate_expense_breakdown(dataset.transactions)
         expense_ratios = {
             cat: (amount / revenue * 100) if revenue > 0 else 0
             for cat, amount in expense_breakdown.items()
         }
-        
+
         # Calculate restaurant-specific cost buckets
         cost_buckets = cls._calculate_cost_buckets(dataset.transactions, revenue)
-        
+
         # Generate KPIs
         kpis = cls._generate_kpis(cost_buckets, revenue, total_expenses)
-        
+
         # Calculate daily/weekly revenue patterns
         daily_revenue, weekly_revenue = cls._calculate_revenue_patterns(dataset.transactions)
-        
+
         # Generate alerts and opportunities
         critical_alerts, opportunities = cls._generate_insights(kpis, cost_buckets, revenue)
-        
+
         # Calculate health score
         health_score, health_grade = cls._calculate_health_score(kpis)
-        
+
         # Build analysis period string
         if dataset.period_start and dataset.period_end:
             analysis_period = f"{dataset.period_start} to {dataset.period_end}"
         else:
             analysis_period = "Full dataset"
-        
+
         return RestaurantAnalysisResult(
             analysis_period=analysis_period,
             total_revenue=revenue,
@@ -203,7 +202,7 @@ class RestaurantAnalyzer:
             health_score=health_score,
             health_grade=health_grade,
         )
-    
+
     @classmethod
     def _calculate_expense_breakdown(
         cls, transactions: list[Transaction]
@@ -216,7 +215,7 @@ class RestaurantAnalyzer:
             cat_val = txn.category.value if txn.category else "other"
             breakdown[cat_val] = breakdown.get(cat_val, 0) + txn.amount
         return breakdown
-    
+
     @classmethod
     def _calculate_cost_buckets(
         cls, transactions: list[Transaction], revenue: float
@@ -224,7 +223,7 @@ class RestaurantAnalyzer:
         """Calculate restaurant-specific cost buckets."""
         # Sum by bucket
         bucket_totals: dict[str, float] = {name: 0 for name in RESTAURANT_COST_BUCKETS}
-        
+
         for txn in transactions:
             if txn.type.value != "expense":
                 continue
@@ -232,7 +231,7 @@ class RestaurantAnalyzer:
             if not cat:
                 bucket_totals["other"] += txn.amount
                 continue
-            
+
             # Find which bucket this category belongs to
             placed = False
             for bucket_name, categories in RESTAURANT_COST_BUCKETS.items():
@@ -242,29 +241,29 @@ class RestaurantAnalyzer:
                     break
             if not placed:
                 bucket_totals["other"] += txn.amount
-        
+
         # Calculate percentages
         result: dict[str, dict[str, float]] = {}
         for bucket_name, total in bucket_totals.items():
             pct = (total / revenue * 100) if revenue > 0 else 0
             result[bucket_name] = {"total": total, "percent": pct}
-        
+
         # Add prime cost (food + labor)
         prime_total = bucket_totals["food_cost"] + bucket_totals["labor_cost"]
         prime_pct = (prime_total / revenue * 100) if revenue > 0 else 0
         result["prime_cost"] = {"total": prime_total, "percent": prime_pct}
-        
+
         return result
-    
+
     @classmethod
     def _generate_kpis(
-        cls, cost_buckets: dict[str, dict[str, float]], 
-        revenue: float, 
+        cls, cost_buckets: dict[str, dict[str, float]],
+        revenue: float,
         total_expenses: float
     ) -> list[RestaurantKPI]:
         """Generate restaurant KPIs with severity ratings."""
         kpis: list[RestaurantKPI] = []
-        
+
         # Food Cost %
         food = cost_buckets.get("food_cost", {"percent": 0})
         food_pct = food["percent"]
@@ -281,7 +280,7 @@ class RestaurantAnalyzer:
             insight=cls._food_cost_insight(food_pct, bench),
             action=cls._food_cost_action(food_pct, bench),
         ))
-        
+
         # Labor Cost %
         labor = cost_buckets.get("labor_cost", {"percent": 0})
         labor_pct = labor["percent"]
@@ -298,7 +297,7 @@ class RestaurantAnalyzer:
             insight=cls._labor_cost_insight(labor_pct, bench),
             action=cls._labor_cost_action(labor_pct, bench),
         ))
-        
+
         # Prime Cost % (Food + Labor)
         prime = cost_buckets.get("prime_cost", {"percent": 0})
         prime_pct = prime["percent"]
@@ -315,7 +314,7 @@ class RestaurantAnalyzer:
             insight=f"Prime cost (food + labor) is {prime_pct:.1f}% vs target {bench['typical']}%.",
             action="Review both food and labor costs for optimization opportunities." if prime_pct > bench["high"] else "",
         ))
-        
+
         # Occupancy Cost %
         occupancy = cost_buckets.get("occupancy_cost", {"percent": 0})
         occupancy_pct = occupancy["percent"]
@@ -332,7 +331,7 @@ class RestaurantAnalyzer:
             insight=f"Rent + utilities at {occupancy_pct:.1f}% of revenue.",
             action="Consider renegotiating lease or energy audit." if occupancy_pct > bench["high"] else "",
         ))
-        
+
         # Net Margin
         net_margin = ((revenue - total_expenses) / revenue * 100) if revenue > 0 else 0
         bench = RESTAURANT_BENCHMARKS["net_margin"]
@@ -348,13 +347,13 @@ class RestaurantAnalyzer:
             insight=f"Net margin of {net_margin:.1f}% {'exceeds' if net_margin >= bench['typical'] else 'below'} industry average.",
             action="Focus on cost reduction." if net_margin < bench["low"] else "",
         ))
-        
+
         return kpis
-    
+
     @staticmethod
     def _get_severity(
-        actual: float, 
-        bench: dict[str, float], 
+        actual: float,
+        bench: dict[str, float],
         higher_is_worse: bool = True
     ) -> RestaurantKPISeverity:
         """Determine KPI severity based on benchmarks."""
@@ -376,7 +375,7 @@ class RestaurantAnalyzer:
                 return RestaurantKPISeverity.HEALTHY
             else:
                 return RestaurantKPISeverity.EXCELLENT
-    
+
     @staticmethod
     def _get_margin_severity(actual: float, bench: dict[str, float]) -> RestaurantKPISeverity:
         """Margin severity — higher is better."""
@@ -388,7 +387,7 @@ class RestaurantAnalyzer:
             return RestaurantKPISeverity.HEALTHY
         else:
             return RestaurantKPISeverity.EXCELLENT
-    
+
     @staticmethod
     def _food_cost_insight(actual: float, bench: dict[str, float]) -> str:
         if actual < bench["low"]:
@@ -399,7 +398,7 @@ class RestaurantAnalyzer:
             return f"Food cost at {actual:.1f}% is elevated — above typical {bench['typical']}%."
         else:
             return f"ALERT: Food cost at {actual:.1f}% is critically high — {actual - bench['typical']:.1f}% above target."
-    
+
     @staticmethod
     def _food_cost_action(actual: float, bench: dict[str, float]) -> str:
         if actual <= bench["typical"]:
@@ -408,7 +407,7 @@ class RestaurantAnalyzer:
             return "Review portion sizes and supplier pricing. Consider menu engineering."
         else:
             return "URGENT: Conduct full inventory audit. Renegotiate supplier contracts. Check for waste/theft."
-    
+
     @staticmethod
     def _labor_cost_insight(actual: float, bench: dict[str, float]) -> str:
         if actual < bench["low"]:
@@ -419,7 +418,7 @@ class RestaurantAnalyzer:
             return f"Labor cost at {actual:.1f}% is elevated — review scheduling efficiency."
         else:
             return f"ALERT: Labor cost at {actual:.1f}% is critically high — affecting profitability."
-    
+
     @staticmethod
     def _labor_cost_action(actual: float, bench: dict[str, float]) -> str:
         if actual <= bench["typical"]:
@@ -428,7 +427,7 @@ class RestaurantAnalyzer:
             return "Optimize shift scheduling. Cross-train staff. Consider POS labor tracking."
         else:
             return "URGENT: Review staffing levels. Implement labor cost targets. Consider tech automation."
-    
+
     @classmethod
     def _calculate_revenue_patterns(
         cls, transactions: list[Transaction]
@@ -436,30 +435,30 @@ class RestaurantAnalyzer:
         """Calculate revenue by day and week."""
         daily: dict[str, float] = {}
         weekly: dict[str, float] = {}
-        
+
         for txn in transactions:
             if txn.type.value != "income":
                 continue
-            
+
             day_key = txn.date.strftime("%A")  # Day name
             daily[day_key] = daily.get(day_key, 0) + txn.amount
-            
+
             # ISO week number
             week_key = f"Week {txn.date.isocalendar()[1]}"
             weekly[week_key] = weekly.get(week_key, 0) + txn.amount
-        
+
         return daily, weekly
-    
+
     @classmethod
     def _generate_insights(
-        cls, kpis: list[RestaurantKPI], 
+        cls, kpis: list[RestaurantKPI],
         cost_buckets: dict[str, dict[str, float]],
         revenue: float
     ) -> tuple[list[str], list[str]]:
         """Generate critical alerts and optimization opportunities."""
         alerts: list[str] = []
         opportunities: list[str] = []
-        
+
         for kpi in kpis:
             if kpi.severity == RestaurantKPISeverity.CRITICAL:
                 alerts.append(f"🚨 {kpi.display_name}: {kpi.actual:.1f}% — {kpi.action}")
@@ -467,25 +466,25 @@ class RestaurantAnalyzer:
                 opportunities.append(f"⚠️ {kpi.display_name}: {kpi.actual:.1f}% — {kpi.action}")
             elif kpi.severity == RestaurantKPISeverity.EXCELLENT:
                 opportunities.append(f"✅ {kpi.display_name}: {kpi.actual:.1f}% — performing well!")
-        
+
         # Check for common restaurant issues
         food_pct = cost_buckets.get("food_cost", {}).get("percent", 0)
         labor_pct = cost_buckets.get("labor_cost", {}).get("percent", 0)
-        
+
         if food_pct > 32 and labor_pct > 32:
             alerts.append(
                 "🚨 Both food and labor costs are elevated. "
                 "Prime cost squeeze is affecting margins."
             )
-        
+
         marketing_pct = cost_buckets.get("marketing", {}).get("percent", 0)
         if marketing_pct < 1.0:
             opportunities.append(
                 "💡 Marketing spend is very low. Consider investing in customer acquisition."
             )
-        
+
         return alerts, opportunities
-    
+
     @classmethod
     def _calculate_health_score(
         cls, kpis: list[RestaurantKPI]
@@ -493,7 +492,7 @@ class RestaurantAnalyzer:
         """Calculate overall health score (0-100) and letter grade."""
         if not kpis:
             return 50, "C"
-        
+
         # Weight each KPI equally for simplicity
         scores: list[int] = []
         for kpi in kpis:
@@ -505,9 +504,9 @@ class RestaurantAnalyzer:
                 scores.append(50)
             else:  # CRITICAL
                 scores.append(25)
-        
+
         health_score = int(sum(scores) / len(scores))
-        
+
         if health_score >= 85:
             grade = "A"
         elif health_score >= 70:
@@ -518,7 +517,7 @@ class RestaurantAnalyzer:
             grade = "D"
         else:
             grade = "F"
-        
+
         return health_score, grade
 
 
@@ -528,12 +527,12 @@ def analyze_restaurant(
     **kwargs: Any,
 ) -> RestaurantAnalysisResult:
     """Convenience function for restaurant analysis.
-    
+
     Args:
         dataset: Financial data from connector.
         annual_revenue: Annual revenue estimate.
         **kwargs: Additional options (seat_count, operating_hours_per_week).
-        
+
     Returns:
         Full restaurant analysis with KPIs and recommendations.
     """

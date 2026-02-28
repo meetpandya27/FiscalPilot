@@ -10,7 +10,6 @@ import pytest
 from fiscalpilot.connectors.xero_connector import XeroConnector
 from fiscalpilot.models.company import CompanyProfile, CompanySize, Industry
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

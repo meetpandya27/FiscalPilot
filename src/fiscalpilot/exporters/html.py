@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import html
 import json
-from typing import Any
 
 from fiscalpilot.models.actions import ApprovalLevel
 from fiscalpilot.models.report import AuditReport, FindingCategory, Severity
@@ -67,30 +66,30 @@ def _health_score_color(score: int) -> str:
 def render_html(report: AuditReport) -> str:
     """Render an AuditReport as a responsive HTML page with charts."""
     summary = report.executive_summary
-    
+
     # Calculate chart data
     severity_counts = {s: 0 for s in Severity}
     category_savings: dict[str, float] = {}
-    
+
     for finding in report.findings:
         severity_counts[finding.severity] += 1
         cat_name = finding.category.value.replace("_", " ").title()
         category_savings[cat_name] = category_savings.get(cat_name, 0) + finding.potential_savings
-    
+
     # Prepare chart data as JSON
     severity_chart_data = {
         "labels": [s.value.title() for s in Severity if severity_counts[s] > 0],
         "data": [severity_counts[s] for s in Severity if severity_counts[s] > 0],
         "colors": [_severity_color(s) for s in Severity if severity_counts[s] > 0],
     }
-    
+
     # Sort categories by savings
     sorted_categories = sorted(category_savings.items(), key=lambda x: x[1], reverse=True)[:8]
     savings_chart_data = {
         "labels": [cat for cat, _ in sorted_categories],
         "data": [savings for _, savings in sorted_categories],
     }
-    
+
     # Build HTML
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -115,26 +114,26 @@ def render_html(report: AuditReport) -> str:
             --gray-800: #1f2937;
             --gray-900: #111827;
         }}
-        
+
         * {{
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }}
-        
+
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: var(--gray-50);
             color: var(--gray-800);
             line-height: 1.6;
         }}
-        
+
         .container {{
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }}
-        
+
         header {{
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
@@ -143,18 +142,18 @@ def render_html(report: AuditReport) -> str:
             border-radius: 1rem;
             box-shadow: 0 10px 40px rgba(37, 99, 235, 0.3);
         }}
-        
+
         header h1 {{
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }}
-        
+
         header .subtitle {{
             opacity: 0.9;
             font-size: 1.1rem;
         }}
-        
+
         .card {{
             background: white;
             border-radius: 1rem;
@@ -163,7 +162,7 @@ def render_html(report: AuditReport) -> str:
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--gray-200);
         }}
-        
+
         .card-title {{
             font-size: 1.25rem;
             font-weight: 600;
@@ -173,14 +172,14 @@ def render_html(report: AuditReport) -> str:
             align-items: center;
             gap: 0.5rem;
         }}
-        
+
         .stats-grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }}
-        
+
         .stat-card {{
             background: white;
             border-radius: 1rem;
@@ -190,22 +189,22 @@ def render_html(report: AuditReport) -> str:
             border: 1px solid var(--gray-200);
             transition: transform 0.2s, box-shadow 0.2s;
         }}
-        
+
         .stat-card:hover {{
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
         }}
-        
+
         .stat-value {{
             font-size: 2.5rem;
             font-weight: 700;
             color: var(--primary);
         }}
-        
+
         .stat-value.success {{ color: var(--success); }}
         .stat-value.warning {{ color: var(--warning); }}
         .stat-value.danger {{ color: var(--danger); }}
-        
+
         .stat-label {{
             font-size: 0.875rem;
             color: var(--gray-600);
@@ -213,26 +212,26 @@ def render_html(report: AuditReport) -> str:
             letter-spacing: 0.05em;
             margin-top: 0.5rem;
         }}
-        
+
         .charts-grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }}
-        
+
         .chart-container {{
             position: relative;
             height: 300px;
         }}
-        
+
         .health-gauge {{
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 2rem;
         }}
-        
+
         .gauge-circle {{
             width: 180px;
             height: 180px;
@@ -247,7 +246,7 @@ def render_html(report: AuditReport) -> str:
             justify-content: center;
             position: relative;
         }}
-        
+
         .gauge-inner {{
             width: 140px;
             height: 140px;
@@ -258,29 +257,29 @@ def render_html(report: AuditReport) -> str:
             align-items: center;
             justify-content: center;
         }}
-        
+
         .gauge-value {{
             font-size: 3rem;
             font-weight: 700;
             color: {_health_score_color(summary.health_score)};
         }}
-        
+
         .gauge-label {{
             font-size: 0.875rem;
             color: var(--gray-600);
         }}
-        
+
         table {{
             width: 100%;
             border-collapse: collapse;
         }}
-        
+
         th, td {{
             padding: 1rem;
             text-align: left;
             border-bottom: 1px solid var(--gray-200);
         }}
-        
+
         th {{
             background: var(--gray-50);
             font-weight: 600;
@@ -289,11 +288,11 @@ def render_html(report: AuditReport) -> str:
             letter-spacing: 0.05em;
             color: var(--gray-600);
         }}
-        
+
         tr:hover {{
             background: var(--gray-50);
         }}
-        
+
         .badge {{
             display: inline-block;
             padding: 0.25rem 0.75rem;
@@ -302,13 +301,13 @@ def render_html(report: AuditReport) -> str:
             font-weight: 600;
             text-transform: uppercase;
         }}
-        
+
         .badge-critical {{ background: #fee2e2; color: #991b1b; }}
         .badge-high {{ background: #ffedd5; color: #9a3412; }}
         .badge-medium {{ background: #fef3c7; color: #92400e; }}
         .badge-low {{ background: #dcfce7; color: #166534; }}
         .badge-info {{ background: #dbeafe; color: #1e40af; }}
-        
+
         .finding-card {{
             border-left: 4px solid var(--primary);
             margin-bottom: 1rem;
@@ -316,24 +315,24 @@ def render_html(report: AuditReport) -> str:
             background: var(--gray-50);
             border-radius: 0 0.5rem 0.5rem 0;
         }}
-        
+
         .finding-card.critical {{ border-left-color: var(--danger); }}
         .finding-card.high {{ border-left-color: #ea580c; }}
         .finding-card.medium {{ border-left-color: var(--warning); }}
         .finding-card.low {{ border-left-color: var(--success); }}
-        
+
         .finding-header {{
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 0.5rem;
         }}
-        
+
         .finding-title {{
             font-weight: 600;
             font-size: 1.1rem;
         }}
-        
+
         .finding-meta {{
             display: flex;
             gap: 1rem;
@@ -341,11 +340,11 @@ def render_html(report: AuditReport) -> str:
             color: var(--gray-600);
             margin-bottom: 0.5rem;
         }}
-        
+
         .finding-description {{
             color: var(--gray-700);
         }}
-        
+
         .finding-recommendation {{
             margin-top: 0.75rem;
             padding: 0.75rem;
@@ -353,41 +352,41 @@ def render_html(report: AuditReport) -> str:
             border-radius: 0.5rem;
             font-size: 0.9rem;
         }}
-        
+
         .finding-recommendation strong {{
             color: var(--primary);
         }}
-        
+
         .savings-highlight {{
             font-size: 1.1rem;
             font-weight: 600;
             color: var(--success);
         }}
-        
+
         footer {{
             text-align: center;
             padding: 2rem;
             color: var(--gray-600);
             font-size: 0.875rem;
         }}
-        
+
         @media (max-width: 768px) {{
             .container {{
                 padding: 1rem;
             }}
-            
+
             header {{
                 padding: 2rem 1.5rem;
             }}
-            
+
             header h1 {{
                 font-size: 1.75rem;
             }}
-            
+
             .charts-grid {{
                 grid-template-columns: 1fr;
             }}
-            
+
             .chart-container {{
                 height: 250px;
             }}
@@ -399,12 +398,12 @@ def render_html(report: AuditReport) -> str:
         <header>
             <h1>🛫 FiscalPilot Audit Report</h1>
             <div class="subtitle">
-                <strong>{_escape(report.company_name)}</strong> • 
+                <strong>{_escape(report.company_name)}</strong> •
                 Generated {report.generated_at.strftime('%B %d, %Y at %H:%M UTC')}
                 {f" • Period: {report.period_start} to {report.period_end}" if report.period_start else ""}
             </div>
         </header>
-        
+
         <!-- Executive Summary Stats -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -430,9 +429,9 @@ def render_html(report: AuditReport) -> str:
                 </div>
             </div>
         </div>
-        
+
         {f'<div class="card"><p>{_escape(summary.narrative)}</p></div>' if summary.narrative else ''}
-        
+
         <!-- Charts Section -->
         <div class="charts-grid">
             <div class="card">
@@ -448,25 +447,25 @@ def render_html(report: AuditReport) -> str:
                 </div>
             </div>
         </div>
-        
+
         <!-- Findings Detail -->
         <div class="card">
             <h2 class="card-title">🔍 Detailed Findings</h2>
             {_render_findings_html(report.findings)}
         </div>
-        
+
         <!-- Action Items Table -->
         {_render_action_items_html(report.action_items) if report.action_items else ''}
-        
+
         <!-- Proposed Actions -->
         {_render_proposed_actions_html(report.proposed_actions) if report.proposed_actions else ''}
-        
+
         <footer>
             <p>Generated by <strong>FiscalPilot</strong> — AI-Powered Financial Operations</p>
             <p>© {report.generated_at.year} FiscalPilot. All rights reserved.</p>
         </footer>
     </div>
-    
+
     <script>
         // Severity Doughnut Chart
         const severityCtx = document.getElementById('severityChart').getContext('2d');
@@ -497,7 +496,7 @@ def render_html(report: AuditReport) -> str:
                 cutout: '60%'
             }}
         }});
-        
+
         // Savings Bar Chart
         const savingsCtx = document.getElementById('savingsChart').getContext('2d');
         new Chart(savingsCtx, {{
@@ -545,32 +544,32 @@ def _render_findings_html(findings: list) -> str:
     """Render findings as HTML cards."""
     if not findings:
         return '<p style="color: var(--gray-600);">No findings to display.</p>'
-    
+
     # Group by severity
     severity_order = [Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM, Severity.LOW, Severity.INFO]
     html_parts = []
-    
+
     for severity in severity_order:
         severity_findings = [f for f in findings if f.severity == severity]
         if not severity_findings:
             continue
-        
+
         for finding in severity_findings:
             badge_class = f"badge-{finding.severity.value}"
             card_class = finding.severity.value
-            
+
             evidence_html = ""
             if finding.evidence:
                 evidence_items = "".join(f"<li>{_escape(ev)}</li>" for ev in finding.evidence[:5])
                 evidence_html = f'<ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: var(--gray-600);">{evidence_items}</ul>'
-            
+
             recommendation_html = ""
             if finding.recommendation:
                 recommendation_html = f'''
                 <div class="finding-recommendation">
                     <strong>💡 Recommendation:</strong> {_escape(finding.recommendation)}
                 </div>'''
-            
+
             html_parts.append(f'''
             <div class="finding-card {card_class}">
                 <div class="finding-header">
@@ -587,7 +586,7 @@ def _render_findings_html(findings: list) -> str:
                 {recommendation_html}
             </div>
             ''')
-    
+
     return "".join(html_parts)
 
 
@@ -595,7 +594,7 @@ def _render_action_items_html(action_items: list) -> str:
     """Render action items as an HTML table."""
     if not action_items:
         return ""
-    
+
     rows = []
     for i, item in enumerate(action_items, 1):
         priority_class = "badge-high" if item.priority.value in ["critical", "high"] else "badge-medium"
@@ -608,7 +607,7 @@ def _render_action_items_html(action_items: list) -> str:
             <td>{_escape(item.effort)}</td>
         </tr>
         ''')
-    
+
     return f'''
     <div class="card">
         <h2 class="card-title">✅ Action Items</h2>
@@ -634,18 +633,18 @@ def _render_proposed_actions_html(proposed_actions: list) -> str:
     """Render proposed actions with approval levels."""
     if not proposed_actions:
         return ""
-    
+
     approval_emoji = {
         ApprovalLevel.GREEN: "🟢",
         ApprovalLevel.YELLOW: "🟡",
         ApprovalLevel.RED: "🔴",
         ApprovalLevel.CRITICAL: "⛔",
     }
-    
+
     cards = []
     for action in proposed_actions:
         emoji = approval_emoji.get(action.approval_level, "📋")
-        
+
         steps_html = ""
         if action.steps:
             step_items = "".join(
@@ -658,7 +657,7 @@ def _render_proposed_actions_html(proposed_actions: list) -> str:
                 <ol style="margin-top: 0.5rem; padding-left: 1.5rem;">{step_items}</ol>
             </div>
             '''
-        
+
         cards.append(f'''
         <div class="finding-card" style="border-left-color: var(--primary);">
             <div class="finding-header">
@@ -673,7 +672,7 @@ def _render_proposed_actions_html(proposed_actions: list) -> str:
             {steps_html}
         </div>
         ''')
-    
+
     return f'''
     <div class="card">
         <h2 class="card-title">⚡ Proposed Actions (Execution Pipeline)</h2>

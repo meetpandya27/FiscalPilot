@@ -17,13 +17,12 @@ import asyncio
 import logging
 import time
 from datetime import date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from fiscalpilot.auth.oauth2 import OAuth2TokenManager
 from fiscalpilot.connectors.base import BaseConnector
-from fiscalpilot.models.company import CompanyProfile
 from fiscalpilot.models.financial import (
     AccountBalance,
     ExpenseCategory,
@@ -33,6 +32,9 @@ from fiscalpilot.models.financial import (
     Transaction,
     TransactionType,
 )
+
+if TYPE_CHECKING:
+    from fiscalpilot.models.company import CompanyProfile
 
 logger = logging.getLogger("fiscalpilot.connectors.quickbooks")
 
@@ -100,7 +102,7 @@ _RESTAURANT_QBO_MAP: dict[str, ExpenseCategory] = {
     "Dairy": ExpenseCategory.INVENTORY,
     "Dry Goods": ExpenseCategory.INVENTORY,
     "Frozen Foods": ExpenseCategory.INVENTORY,
-    
+
     # Labor costs (map to PAYROLL)
     "Kitchen Labor": ExpenseCategory.PAYROLL,
     "FOH Labor": ExpenseCategory.PAYROLL,
@@ -122,7 +124,7 @@ _RESTAURANT_QBO_MAP: dict[str, ExpenseCategory] = {
     "Employee Benefits": ExpenseCategory.PAYROLL,
     "Uniforms": ExpenseCategory.SUPPLIES,
     "Staff Meals": ExpenseCategory.MEALS,
-    
+
     # Operating expenses
     "Smallwares": ExpenseCategory.SUPPLIES,
     "Kitchen Supplies": ExpenseCategory.SUPPLIES,
@@ -226,7 +228,7 @@ class QuickBooksConnector(BaseConnector):
         self._base_url = _QBO_SANDBOX_URL if self.sandbox else _QBO_BASE_URL
         self._token_manager: OAuth2TokenManager | None = None
         self._http: httpx.AsyncClient | None = None
-        
+
         # Rate limiting state
         self._request_timestamps: list[float] = []
         self._rate_limit_lock = asyncio.Lock()
@@ -263,11 +265,11 @@ class QuickBooksConnector(BaseConnector):
             await self._http.aclose()
         if self._token_manager:
             await self._token_manager.close()
-    
+
     # ------------------------------------------------------------------
     # Interactive OAuth authorization
     # ------------------------------------------------------------------
-    
+
     async def authorize(
         self,
         *,
@@ -276,24 +278,24 @@ class QuickBooksConnector(BaseConnector):
         open_browser: bool = True,
     ) -> str:
         """Complete interactive OAuth2 authorization via browser.
-        
+
         Opens the user's browser to QuickBooks login, captures the callback,
         and stores tokens for future use.
-        
+
         Args:
             port: Local port for callback server (default 8080).
             timeout: Seconds to wait for user to complete auth.
             open_browser: Automatically open browser (set False for testing).
-        
+
         Returns:
             The realm_id (company ID) that was authorized.
-            
+
         Raises:
             TimeoutError: If user doesn't complete auth in time.
             ValueError: If authorization fails.
-            
+
         Usage::
-        
+
             connector = QuickBooksConnector(credentials={
                 "client_id": "...",
                 "client_secret": "...",
@@ -306,9 +308,9 @@ class QuickBooksConnector(BaseConnector):
                 "client_id and client_secret are required for OAuth. "
                 "Get them from https://developer.intuit.com/app/developer/dashboard"
             )
-        
+
         mgr = self._ensure_token_manager()
-        
+
         result = await mgr.authorize_interactive(
             authorize_url=_QBO_AUTH_URL,
             port=port,
@@ -316,28 +318,28 @@ class QuickBooksConnector(BaseConnector):
             use_pkce=True,
             open_browser=open_browser,
         )
-        
+
         # Store the realm_id from the callback
         if result.get("realm_id"):
             self.realm_id = result["realm_id"]
             logger.info("QuickBooks authorized for company: %s", self.realm_id)
         else:
             raise ValueError("No realm_id received from QuickBooks. Authorization may have failed.")
-        
+
         return self.realm_id
-    
+
     def is_connected(self) -> bool:
         """Check if valid credentials are stored for QuickBooks.
-        
+
         Returns:
             True if we have stored tokens, False otherwise.
         """
         mgr = self._ensure_token_manager()
         return mgr.has_token() and bool(self.realm_id)
-    
+
     async def disconnect(self) -> bool:
         """Remove stored QuickBooks credentials.
-        
+
         Returns:
             True if credentials were removed, False if none existed.
         """
@@ -356,7 +358,7 @@ class QuickBooksConnector(BaseConnector):
             self._request_timestamps = [
                 ts for ts in self._request_timestamps if now - ts < 60
             ]
-            
+
             # If we're at the limit, wait
             max_requests = _QBO_RATE_LIMIT_PER_MINUTE - _QBO_RATE_LIMIT_BUFFER
             if len(self._request_timestamps) >= max_requests:
@@ -373,13 +375,13 @@ class QuickBooksConnector(BaseConnector):
                     self._request_timestamps = [
                         ts for ts in self._request_timestamps if now - ts < 60
                     ]
-            
+
             self._request_timestamps.append(time.time())
 
     async def _api_get(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Make an authenticated GET request to the QBO API with retry logic."""
         await self._rate_limit_wait()
-        
+
         mgr = self._ensure_token_manager()
         token = await mgr.get_access_token()
         client = await self._get_client()
@@ -412,7 +414,7 @@ class QuickBooksConnector(BaseConnector):
                     )
                     await asyncio.sleep(retry_after)
                     continue
-                
+
                 # Handle server errors (5xx) with retry
                 if resp.status_code >= 500:
                     logger.warning(
@@ -424,7 +426,7 @@ class QuickBooksConnector(BaseConnector):
 
                 resp.raise_for_status()
                 return resp.json()
-                
+
             except httpx.TimeoutException as e:
                 logger.warning(
                     "QBO request timeout, retrying in %ds (attempt %d/%d)",
@@ -439,7 +441,7 @@ class QuickBooksConnector(BaseConnector):
                 )
                 last_error = e
                 await asyncio.sleep(backoff)
-        
+
         # All retries exhausted
         raise last_error or Exception("QBO API request failed after all retries")
 
@@ -459,7 +461,7 @@ class QuickBooksConnector(BaseConnector):
 
             # Find the entity list (it's the first key that isn't metadata)
             entities: list[dict[str, Any]] = []
-            for key, value in response.items():
+            for _key, value in response.items():
                 if isinstance(value, list):
                     entities = value
                     break

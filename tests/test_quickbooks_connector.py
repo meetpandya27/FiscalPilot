@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from datetime import date
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from fiscalpilot.connectors.quickbooks_connector import QuickBooksConnector
 from fiscalpilot.models.company import CompanyProfile, CompanySize, Industry
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

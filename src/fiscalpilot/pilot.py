@@ -11,13 +11,15 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fiscalpilot.agents.coordinator import CoordinatorAgent
 from fiscalpilot.config import FiscalPilotConfig
 from fiscalpilot.connectors.registry import ConnectorRegistry
-from fiscalpilot.models.company import CompanyProfile
-from fiscalpilot.models.report import AuditReport
+
+if TYPE_CHECKING:
+    from fiscalpilot.models.company import CompanyProfile
+    from fiscalpilot.models.report import AuditReport
 
 logger = logging.getLogger("fiscalpilot")
 

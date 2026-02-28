@@ -62,7 +62,7 @@ class CostCutterAgent(BaseAgent):
 
     @property
     def system_prompt(self) -> str:
-        return """You are a cost reduction specialist with expertise in procurement, 
+        return """You are a cost reduction specialist with expertise in procurement,
 vendor management, and operational efficiency. You specialize in:
 
 - Strategic sourcing and vendor negotiation

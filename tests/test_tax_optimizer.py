@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from fiscalpilot.analyzers.tax_optimizer import TaxOptimizer, TaxOptimizationResult
+from fiscalpilot.analyzers.tax_optimizer import TaxOptimizationResult, TaxOptimizer
 
 
 def _make_txns(entries: list[tuple[str, float, str]]) -> list[dict[str, Any]]:

@@ -6,13 +6,15 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
 from fiscalpilot.connectors.csv_connector import CSVConnector
-from fiscalpilot.models.company import CompanyProfile
 from fiscalpilot.models.financial import FinancialDataset
+
+if TYPE_CHECKING:
+    from fiscalpilot.models.company import CompanyProfile
 
 logger = logging.getLogger("fiscalpilot.connectors.excel")
 

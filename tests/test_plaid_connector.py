@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from datetime import date
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from fiscalpilot.connectors.plaid_connector import PlaidConnector
 from fiscalpilot.models.company import CompanyProfile, CompanySize, Industry
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -367,7 +365,7 @@ class TestPlaidConnector:
 
         plaid_connector._api_post = mock_api_post  # type: ignore
         result = await plaid_connector.create_link_token("user-123")
-        assert result["link_token"] == "link-sandbox-abc123"
+        assert result == "link-sandbox-abc123"
 
     @pytest.mark.asyncio
     async def test_exchange_public_token(self, plaid_connector: PlaidConnector) -> None:

@@ -15,13 +15,12 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from fiscalpilot.auth.oauth2 import OAuth2TokenManager
 from fiscalpilot.connectors.base import BaseConnector
-from fiscalpilot.models.company import CompanyProfile
 from fiscalpilot.models.financial import (
     AccountBalance,
     ExpenseCategory,
@@ -31,6 +30,9 @@ from fiscalpilot.models.financial import (
     Transaction,
     TransactionType,
 )
+
+if TYPE_CHECKING:
+    from fiscalpilot.models.company import CompanyProfile
 
 logger = logging.getLogger("fiscalpilot.connectors.xero")
 
@@ -161,11 +163,11 @@ class XeroConnector(BaseConnector):
             await self._http.aclose()
         if self._token_manager:
             await self._token_manager.close()
-    
+
     # ------------------------------------------------------------------
     # Interactive OAuth authorization
     # ------------------------------------------------------------------
-    
+
     async def authorize(
         self,
         *,
@@ -174,24 +176,24 @@ class XeroConnector(BaseConnector):
         open_browser: bool = True,
     ) -> str:
         """Complete interactive OAuth2 authorization via browser.
-        
+
         Opens the user's browser to Xero login, captures the callback,
         stores tokens, and fetches the organization list.
-        
+
         Args:
             port: Local port for callback server (default 8080).
             timeout: Seconds to wait for user to complete auth.
             open_browser: Automatically open browser (set False for testing).
-        
+
         Returns:
             The tenant_id (organization ID) that was selected.
-            
+
         Raises:
             TimeoutError: If user doesn't complete auth in time.
             ValueError: If authorization fails or no organizations found.
-            
+
         Usage::
-        
+
             connector = XeroConnector(credentials={
                 "client_id": "...",
                 "client_secret": "...",
@@ -204,9 +206,9 @@ class XeroConnector(BaseConnector):
                 "client_id and client_secret are required for OAuth. "
                 "Get them from https://developer.xero.com/myapps/"
             )
-        
+
         mgr = self._ensure_token_manager()
-        
+
         await mgr.authorize_interactive(
             authorize_url=_XERO_AUTH_URL,
             port=port,
@@ -214,16 +216,16 @@ class XeroConnector(BaseConnector):
             use_pkce=True,
             open_browser=open_browser,
         )
-        
+
         # Xero requires fetching tenant_id from the /connections endpoint
         tenants = await self._fetch_tenants()
-        
+
         if not tenants:
             raise ValueError(
                 "No Xero organizations found. Make sure you've authorized access "
                 "to at least one organization."
             )
-        
+
         # Use the first tenant (could enhance to let user pick)
         self.tenant_id = tenants[0]["tenantId"]
         logger.info(
@@ -231,24 +233,24 @@ class XeroConnector(BaseConnector):
             tenants[0].get("tenantName", "Unknown"),
             self.tenant_id,
         )
-        
+
         return self.tenant_id
-    
+
     async def _fetch_tenants(self) -> list[dict[str, Any]]:
         """Fetch available Xero organizations/tenants."""
         mgr = self._ensure_token_manager()
         token = await mgr.get_access_token()
         client = await self._get_client()
-        
+
         headers = {"Authorization": f"Bearer {token}"}
         resp = await client.get(_XERO_CONNECTIONS_URL, headers=headers)
         resp.raise_for_status()
-        
+
         return resp.json()
-    
+
     async def get_organizations(self) -> list[dict[str, str]]:
         """List all Xero organizations the user has access to.
-        
+
         Returns:
             List of dicts with 'id', 'name', and 'type'.
         """
@@ -261,19 +263,19 @@ class XeroConnector(BaseConnector):
             }
             for t in tenants
         ]
-    
+
     def is_connected(self) -> bool:
         """Check if valid credentials are stored for Xero.
-        
+
         Returns:
             True if we have stored tokens, False otherwise.
         """
         mgr = self._ensure_token_manager()
         return mgr.has_token() and bool(self.tenant_id)
-    
+
     async def disconnect(self) -> bool:
         """Remove stored Xero credentials.
-        
+
         Returns:
             True if credentials were removed, False if none existed.
         """
@@ -453,7 +455,7 @@ class XeroConnector(BaseConnector):
                 due_date_str = inv.get("DueDate", inv.get("Date", ""))
                 due_date = self._parse_xero_date(due_date_str)
                 total = float(inv.get("Total", 0))
-                amount_paid = float(inv.get("AmountPaid", 0))
+                float(inv.get("AmountPaid", 0))
 
                 # Xero statuses: DRAFT, SUBMITTED, AUTHORISED, PAID, VOIDED, DELETED
                 if status == "PAID":

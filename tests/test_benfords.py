@@ -1,10 +1,7 @@
 """Tests for Benford's Law analyzer."""
 
-import math
 import random
 from typing import Any
-
-import pytest
 
 from fiscalpilot.analyzers.benfords import BenfordsAnalyzer, BenfordsResult
 

@@ -15,7 +15,7 @@ import logging
 import math
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
 from typing import Any
 
 logger = logging.getLogger("fiscalpilot.analyzers.anomaly")
@@ -276,10 +276,7 @@ class AnomalyDetector:
             other_std = math.sqrt(sum((x - other_mean) ** 2 for x in others) / max(len(others) - 1, 1))
 
             actual = values[i]
-            if other_std > 0:
-                z = (actual - other_mean) / other_std
-            else:
-                z = 0
+            z = (actual - other_mean) / other_std if other_std > 0 else 0
 
             low_bound = max(0, other_mean - 2 * other_std)
             high_bound = other_mean + 2 * other_std

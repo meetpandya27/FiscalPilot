@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-import json
 import time
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from fiscalpilot.auth.oauth2 import OAuth2TokenManager, TokenData
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # TokenData tests

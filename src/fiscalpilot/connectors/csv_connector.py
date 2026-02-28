@@ -10,18 +10,20 @@ from __future__ import annotations
 import logging
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
 from fiscalpilot.connectors.base import BaseConnector
-from fiscalpilot.models.company import CompanyProfile
 from fiscalpilot.models.financial import (
     ExpenseCategory,
     FinancialDataset,
     Transaction,
     TransactionType,
 )
+
+if TYPE_CHECKING:
+    from fiscalpilot.models.company import CompanyProfile
 
 logger = logging.getLogger("fiscalpilot.connectors.csv")
 
@@ -191,7 +193,7 @@ class CSVConnector(BaseConnector):
             "inventory": ExpenseCategory.INVENTORY,
             "cogs": ExpenseCategory.INVENTORY,
             "cost of goods": ExpenseCategory.INVENTORY,
-            "food": ExpenseCategory.INVENTORY,
+            "food cost": ExpenseCategory.INVENTORY,
             "beverage": ExpenseCategory.INVENTORY,
             "shipping": ExpenseCategory.SHIPPING,
             "freight": ExpenseCategory.SHIPPING,

@@ -12,21 +12,24 @@ This is the main agent that:
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fiscalpilot.agents.base import BaseAgent
-from fiscalpilot.agents.cost_optimizer import CostOptimizerAgent
-from fiscalpilot.agents.risk_detector import RiskDetectorAgent
-from fiscalpilot.agents.margin_optimizer import MarginOptimizerAgent
 from fiscalpilot.agents.cost_cutter import CostCutterAgent
+from fiscalpilot.agents.cost_optimizer import CostOptimizerAgent
+from fiscalpilot.agents.margin_optimizer import MarginOptimizerAgent
 from fiscalpilot.agents.revenue_analyzer import RevenueAnalyzerAgent
+from fiscalpilot.agents.risk_detector import RiskDetectorAgent
 from fiscalpilot.agents.vendor_auditor import VendorAuditorAgent
-from fiscalpilot.config import FiscalPilotConfig
-from fiscalpilot.connectors.registry import ConnectorRegistry
-from fiscalpilot.models.company import CompanyProfile
+from fiscalpilot.models.actions import (
+    DEFAULT_APPROVAL_MAP,
+    ActionStep,
+    ActionType,
+    ApprovalLevel,
+    ProposedAction,
+)
 from fiscalpilot.models.financial import FinancialDataset
 from fiscalpilot.models.report import (
     ActionItem,
@@ -37,13 +40,11 @@ from fiscalpilot.models.report import (
     IntelligenceData,
     Severity,
 )
-from fiscalpilot.models.actions import (
-    ActionStep,
-    ActionType,
-    ApprovalLevel,
-    DEFAULT_APPROVAL_MAP,
-    ProposedAction,
-)
+
+if TYPE_CHECKING:
+    from fiscalpilot.config import FiscalPilotConfig
+    from fiscalpilot.connectors.registry import ConnectorRegistry
+    from fiscalpilot.models.company import CompanyProfile
 
 logger = logging.getLogger("fiscalpilot.agents.coordinator")
 
@@ -83,7 +84,7 @@ class CoordinatorAgent(BaseAgent):
 
     @property
     def system_prompt(self) -> str:
-        return """You are FiscalPilot's Coordinator — an expert AI CFO that orchestrates 
+        return """You are FiscalPilot's Coordinator — an expert AI CFO that orchestrates
 financial analysis. Your role is to:
 
 1. Review all findings from specialist agents (optimization, risk, margin, cost, revenue, vendor).
@@ -95,7 +96,7 @@ financial analysis. Your role is to:
 You serve businesses of ALL sizes — from a restaurant owner to a Fortune 500 CFO.
 Adapt your language and recommendations to the company's scale.
 
-Always be specific with dollar amounts and percentages. 
+Always be specific with dollar amounts and percentages.
 Never be vague. Every recommendation should have a clear next step."""
 
     async def run_audit(self, company: CompanyProfile) -> AuditReport:
@@ -516,12 +517,10 @@ Never be vague. Every recommendation should have a clear next step."""
             merged.transactions.extend(ds.transactions)
             merged.invoices.extend(ds.invoices)
             merged.balances.extend(ds.balances)
-            if ds.period_start:
-                if merged.period_start is None or ds.period_start < merged.period_start:
-                    merged.period_start = ds.period_start
-            if ds.period_end:
-                if merged.period_end is None or ds.period_end > merged.period_end:
-                    merged.period_end = ds.period_end
+            if ds.period_start and (merged.period_start is None or ds.period_start < merged.period_start):
+                merged.period_start = ds.period_start
+            if ds.period_end and (merged.period_end is None or ds.period_end > merged.period_end):
+                merged.period_end = ds.period_end
         return merged
 
     def _build_context(

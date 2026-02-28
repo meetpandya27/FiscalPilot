@@ -7,10 +7,11 @@ Supports auto-discovery from config and manual registration of custom connectors
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
-from fiscalpilot.config import ConnectorConfig, FiscalPilotConfig
-from fiscalpilot.connectors.base import BaseConnector
+if TYPE_CHECKING:
+    from fiscalpilot.config import ConnectorConfig, FiscalPilotConfig
+    from fiscalpilot.connectors.base import BaseConnector
 
 logger = logging.getLogger("fiscalpilot.connectors.registry")
 

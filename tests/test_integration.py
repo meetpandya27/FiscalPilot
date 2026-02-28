@@ -8,19 +8,19 @@ To run locally with sandbox credentials:
     export QUICKBOOKS_CLIENT_SECRET=xxx
     export QUICKBOOKS_REALM_ID=xxx
     export QUICKBOOKS_REFRESH_TOKEN=xxx
-    
+
     export XERO_CLIENT_ID=xxx
     export XERO_CLIENT_SECRET=xxx
     export XERO_TENANT_ID=xxx
     export XERO_REFRESH_TOKEN=xxx
-    
+
     export PLAID_CLIENT_ID=xxx
     export PLAID_SECRET=xxx
     export PLAID_ACCESS_TOKEN=xxx
-    
+
     export SQUARE_ACCESS_TOKEN=xxx
     export SQUARE_LOCATION_ID=xxx
-    
+
     pytest tests/test_integration.py -v --integration
 """
 
@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timedelta
-from typing import Any
 
 import pytest
 
@@ -69,9 +68,9 @@ def date_range() -> tuple[datetime, datetime]:
 # -------------------------------------------------------------------------
 
 
-def skip_unless_env(*vars: str) -> pytest.MarkDecorator:
+def skip_unless_env(*env_vars: str) -> pytest.MarkDecorator:
     """Skip test if any environment variable is missing."""
-    missing = [v for v in vars if not os.getenv(v)]
+    missing = [v for v in env_vars if not os.getenv(v)]
     return pytest.mark.skipif(
         len(missing) > 0,
         reason=f"Missing environment variables: {', '.join(missing)}",
@@ -516,9 +515,10 @@ class TestOAuth2Flows:
 
     def test_token_encryption(self) -> None:
         """Test token encryption/decryption roundtrip."""
-        from fiscalpilot.auth.oauth2 import OAuth2TokenManager
         import tempfile
         from pathlib import Path
+
+        from fiscalpilot.auth.oauth2 import OAuth2TokenManager
 
         with tempfile.TemporaryDirectory() as tmpdir:
             manager = OAuth2TokenManager(
@@ -548,9 +548,10 @@ class TestOAuth2Flows:
 
     def test_oauth2_authorization_url(self) -> None:
         """Test OAuth2 authorization URL generation."""
-        from fiscalpilot.auth.oauth2 import OAuth2TokenManager
         import tempfile
         from pathlib import Path
+
+        from fiscalpilot.auth.oauth2 import OAuth2TokenManager
 
         with tempfile.TemporaryDirectory() as tmpdir:
             manager = OAuth2TokenManager(

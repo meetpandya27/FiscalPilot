@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date
 from typing import Any
 
 logger = logging.getLogger("fiscalpilot.analyzers.tip_credit")
@@ -41,14 +40,14 @@ class TippedEmployee:
     hourly_wage: float = 0.0  # Cash wage paid (before tips)
     hours_worked: float = 0.0  # Hours in the period (month/year)
     tips_received: float = 0.0  # Total tips received
-    
+
     @property
     def tips_per_hour(self) -> float:
         """Average tips per hour."""
         if self.hours_worked > 0:
             return self.tips_received / self.hours_worked
         return 0.0
-    
+
     @property
     def total_hourly_compensation(self) -> float:
         """Total hourly compensation including tips."""
@@ -63,13 +62,13 @@ class EmployeeTipCreditResult:
     hourly_wage: float = 0.0
     tips_received: float = 0.0
     tips_per_hour: float = 0.0
-    
+
     # Calculation breakdown
     minimum_wage_used: float = FEDERAL_MINIMUM_WAGE
     tip_credit_taken: float = 0.0  # Portion of tips counting toward min wage
     qualifying_tips: float = 0.0  # Tips eligible for FICA credit
     fica_credit_amount: float = 0.0  # Actual credit earned
-    
+
     # Annualized projection
     annualized_credit: float = 0.0
 
@@ -77,30 +76,30 @@ class EmployeeTipCreditResult:
 @dataclass
 class TipCreditResult:
     """Complete tip credit analysis results."""
-    
+
     # Summary totals
     total_tipped_employees: int = 0
     total_hours_worked: float = 0.0
     total_tips_reported: float = 0.0
     total_qualifying_tips: float = 0.0
     total_fica_credit: float = 0.0
-    
+
     # Annualized projections
     annual_credit_projection: float = 0.0
-    
+
     # Per-employee breakdown
     employee_details: list[EmployeeTipCreditResult] = field(default_factory=list)
-    
+
     # Parameters used
     minimum_wage_used: float = FEDERAL_MINIMUM_WAGE
     fica_rate_used: float = FICA_RATE
-    
+
     # Insights
     insights: list[str] = field(default_factory=list)
-    
+
     # Compliance notes
     compliance_notes: list[str] = field(default_factory=list)
-    
+
     # Period
     period_type: str = "month"  # month, quarter, year
 
@@ -138,7 +137,7 @@ STATE_MINIMUM_WAGES: dict[str, StateMinimumWage] = {
 
 class TipCreditCalculator:
     """Calculate FICA tip credit (Section 45B) for restaurants."""
-    
+
     @classmethod
     def calculate(
         cls,
@@ -150,36 +149,36 @@ class TipCreditCalculator:
     ) -> TipCreditResult:
         """
         Calculate tip credit for all tipped employees.
-        
+
         Args:
             employees: List of tipped employee data.
             state: Two-letter state code for state-specific minimum wage.
             custom_minimum_wage: Override minimum wage (e.g., for local minimums).
             period_type: Period of the data (month, quarter, year).
-            
+
         Returns:
             TipCreditResult with credit calculations and insights.
         """
         # Determine minimum wage to use
         min_wage = cls._get_minimum_wage(state, custom_minimum_wage)
         tip_credit_allowed = cls._is_tip_credit_allowed(state)
-        
+
         # Calculate for each employee
         employee_results: list[EmployeeTipCreditResult] = []
         total_hours = 0.0
         total_tips = 0.0
         total_qualifying = 0.0
         total_credit = 0.0
-        
+
         for emp in employees:
             result = cls._calculate_employee_credit(emp, min_wage)
             employee_results.append(result)
-            
+
             total_hours += result.hours_worked
             total_tips += result.tips_received
             total_qualifying += result.qualifying_tips
             total_credit += result.fica_credit_amount
-        
+
         # Calculate annualization factor
         if period_type == "month":
             annual_factor = 12
@@ -187,9 +186,9 @@ class TipCreditCalculator:
             annual_factor = 4
         else:
             annual_factor = 1
-        
+
         annual_projection = total_credit * annual_factor
-        
+
         # Generate insights
         insights = cls._generate_insights(
             total_credit=total_credit,
@@ -200,10 +199,10 @@ class TipCreditCalculator:
             state=state,
             employee_count=len(employees),
         )
-        
+
         # Compliance notes
         compliance = cls._get_compliance_notes()
-        
+
         return TipCreditResult(
             total_tipped_employees=len(employees),
             total_hours_worked=total_hours,
@@ -218,7 +217,7 @@ class TipCreditCalculator:
             compliance_notes=compliance,
             period_type=period_type,
         )
-    
+
     @classmethod
     def quick_estimate(
         cls,
@@ -231,16 +230,16 @@ class TipCreditCalculator:
     ) -> TipCreditResult:
         """
         Quick estimate of annual tip credit without detailed employee data.
-        
+
         Useful for "napkin math" when you don't have detailed payroll.
-        
+
         Args:
             num_tipped_employees: Number of tipped employees.
             avg_hours_per_employee: Average hours per employee per WEEK.
             avg_tips_per_hour: Average tips per hour across all tipped staff.
             avg_cash_wage: Average cash wage paid (before tips).
             state: Two-letter state code.
-            
+
         Returns:
             TipCreditResult with annual estimate.
         """
@@ -248,7 +247,7 @@ class TipCreditCalculator:
         weekly_hours = avg_hours_per_employee
         monthly_hours = weekly_hours * 4.33
         monthly_tips = monthly_hours * avg_tips_per_hour
-        
+
         # Create synthetic employees
         employees = [
             TippedEmployee(
@@ -259,9 +258,9 @@ class TipCreditCalculator:
             )
             for i in range(num_tipped_employees)
         ]
-        
+
         return cls.calculate(employees, state=state, period_type="month")
-    
+
     @classmethod
     def _calculate_employee_credit(
         cls,
@@ -271,22 +270,22 @@ class TipCreditCalculator:
         """Calculate credit for a single employee."""
         # Tips per hour
         tips_per_hour = employee.tips_per_hour
-        
+
         # How much of tips are used to meet minimum wage?
         # tip_credit_taken = min_wage - cash_wage (but can't exceed tips_per_hour)
         wage_deficit = max(0, minimum_wage - employee.hourly_wage)
         tip_credit_taken = min(wage_deficit, tips_per_hour)
-        
+
         # Qualifying tips = tips above what's used for minimum wage
         qualifying_tips_per_hour = max(0, tips_per_hour - tip_credit_taken)
         qualifying_tips_total = qualifying_tips_per_hour * employee.hours_worked
-        
+
         # FICA credit = 7.65% of qualifying tips
         fica_credit = qualifying_tips_total * FICA_RATE
-        
+
         # Annualize (assume monthly data by default)
         annualized = fica_credit * 12
-        
+
         return EmployeeTipCreditResult(
             employee_name=employee.name,
             hours_worked=employee.hours_worked,
@@ -299,7 +298,7 @@ class TipCreditCalculator:
             fica_credit_amount=fica_credit,
             annualized_credit=annualized,
         )
-    
+
     @classmethod
     def _get_minimum_wage(
         cls,
@@ -312,14 +311,14 @@ class TipCreditCalculator:
         if state and state.upper() in STATE_MINIMUM_WAGES:
             return STATE_MINIMUM_WAGES[state.upper()].regular_minimum
         return FEDERAL_MINIMUM_WAGE
-    
+
     @classmethod
     def _is_tip_credit_allowed(cls, state: str | None) -> bool:
         """Check if state allows tip credit toward minimum wage."""
         if state and state.upper() in STATE_MINIMUM_WAGES:
             return STATE_MINIMUM_WAGES[state.upper()].tip_credit_allowed
         return True  # Default federal rules allow it
-    
+
     @classmethod
     def _generate_insights(
         cls,
@@ -333,19 +332,19 @@ class TipCreditCalculator:
     ) -> list[str]:
         """Generate insights about tip credit opportunity."""
         insights = []
-        
+
         # Main credit insight
         if annual_projection > 0:
             insights.append(
                 f"💰 ANNUAL TIP CREDIT: Estimated ${annual_projection:,.0f}/year in FICA tip credits. "
                 "This is a dollar-for-dollar reduction in taxes owed."
             )
-            
+
             per_employee = annual_projection / employee_count if employee_count > 0 else 0
             insights.append(
                 f"📊 Per tipped employee: ~${per_employee:,.0f}/year average credit."
             )
-        
+
         # State-specific notes
         if state:
             state_upper = state.upper()
@@ -356,39 +355,39 @@ class TipCreditCalculator:
                         f"⚠️ {state_info.state}: State does not allow tip credit toward minimum wage. "
                         "You must pay full minimum wage, but this maximizes your FICA credit."
                     )
-        
+
         # Optimization suggestions
         if total_qualifying > 0:
-            credit_rate = (total_credit / total_qualifying) * 100 if total_qualifying > 0 else 0
+            (total_credit / total_qualifying) * 100 if total_qualifying > 0 else 0
             insights.append(
                 f"📈 Qualifying tips: ${total_qualifying:,.0f} of ${total_tips:,.0f} total tips qualify "
                 f"for the {FICA_RATE*100:.2f}% FICA credit."
             )
-        
+
         # Call to action
         insights.append(
             "✅ ACTION: File Form 8846 with your tax return to claim this credit. "
             "Consult a CPA to ensure proper documentation."
         )
-        
+
         return insights
-    
+
     @classmethod
     def _get_compliance_notes(cls) -> list[str]:
         """Get compliance and documentation notes."""
         return [
             "📋 FORM 8846: Use IRS Form 8846 to claim the Credit for Employer Social Security "
             "and Medicare Taxes Paid on Certain Employee Tips.",
-            
+
             "📝 DOCUMENTATION: Maintain records of tip reports (Form 4070) or equivalent POS "
             "tip tracking for all employees.",
-            
+
             "⚠️ FOOD & BEVERAGE ONLY: Credit only applies to tips from food or beverage "
             "establishments where tipping is customary.",
-            
+
             "🔄 ANNUAL CLAIM: Credit is claimed annually on your business tax return. "
             "Cannot be claimed on payroll tax deposits.",
-            
+
             "💡 NO DOUBLE DIP: Tips credited against minimum wage don't reduce the FICA "
             "credit calculation - calculation is based on ALL tips above min wage threshold.",
         ]
@@ -399,7 +398,7 @@ def calculate_tip_credit(
     **kwargs: Any,
 ) -> TipCreditResult:
     """Convenience function for tip credit calculation.
-    
+
     See TipCreditCalculator.calculate() for full parameter documentation.
     """
     return TipCreditCalculator.calculate(employees, **kwargs)
@@ -407,7 +406,7 @@ def calculate_tip_credit(
 
 def quick_tip_credit_estimate(**kwargs: Any) -> TipCreditResult:
     """Convenience function for quick tip credit estimate.
-    
+
     See TipCreditCalculator.quick_estimate() for full parameter documentation.
     """
     return TipCreditCalculator.quick_estimate(**kwargs)

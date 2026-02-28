@@ -7,17 +7,14 @@ import pytest
 from fiscalpilot.execution.approval import ApprovalGate
 from fiscalpilot.execution.engine import ExecutionEngine
 from fiscalpilot.execution.executors.base import (
-    BaseExecutor,
     CategorizationExecutor,
     LogOnlyExecutor,
     NotificationExecutor,
 )
 from fiscalpilot.models.actions import (
     ActionStatus,
-    ActionStep,
     ActionType,
     ApprovalLevel,
-    ExecutionResult,
     ProposedAction,
 )
 

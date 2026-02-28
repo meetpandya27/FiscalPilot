@@ -1,14 +1,11 @@
 """Tests for the CSV connector."""
 
-import tempfile
 from pathlib import Path
 
 import pytest
 
 from fiscalpilot.connectors.csv_connector import CSVConnector
 from fiscalpilot.models.company import CompanyProfile
-from fiscalpilot.models.financial import TransactionType
-
 
 SAMPLE_CSV = """date,amount,description,category,vendor
 2025-01-01,-500.00,Office rent,Rent,Landlord Inc

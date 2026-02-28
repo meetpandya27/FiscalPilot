@@ -45,13 +45,13 @@ logger = logging.getLogger("fiscalpilot.auth.oauth2")
 
 def _get_encryption_key() -> bytes:
     """Derive an encryption key from machine-specific data.
-    
+
     Uses a combination of hostname and a stored salt to derive a key.
     This provides basic protection - tokens are only readable on the
     same machine where they were stored.
     """
     key_file = Path.home() / ".fiscalpilot" / ".key_salt"
-    
+
     if key_file.exists():
         salt = key_file.read_bytes()
     else:
@@ -59,10 +59,10 @@ def _get_encryption_key() -> bytes:
         key_file.parent.mkdir(parents=True, exist_ok=True)
         key_file.write_bytes(salt)
         key_file.chmod(0o600)
-    
+
     # Use hostname as part of the key derivation (machine-binding)
     password = socket.gethostname().encode() + b"fiscalpilot-v1"
-    
+
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -91,17 +91,17 @@ def _decrypt_data(encrypted: str) -> str:
 
 def generate_pkce_pair() -> tuple[str, str]:
     """Generate a PKCE code_verifier and code_challenge pair.
-    
+
     Returns:
         Tuple of (code_verifier, code_challenge) for OAuth2 PKCE flow.
     """
     # Generate a random 43-128 character code verifier
     code_verifier = secrets.token_urlsafe(64)[:128]
-    
+
     # Create SHA256 hash and base64url encode (without padding)
     digest = hashlib.sha256(code_verifier.encode()).digest()
     code_challenge = base64.urlsafe_b64encode(digest).decode().rstrip("=")
-    
+
     return code_verifier, code_challenge
 
 
@@ -111,17 +111,17 @@ def generate_pkce_pair() -> tuple[str, str]:
 
 class _OAuthCallbackHandler(BaseHTTPRequestHandler):
     """HTTP handler for OAuth2 callback."""
-    
+
     auth_code: str | None = None
     auth_state: str | None = None
     error: str | None = None
     realm_id: str | None = None  # QuickBooks-specific
-    
+
     def do_GET(self) -> None:
         """Handle the OAuth callback GET request."""
         parsed = urlparse(self.path)
         params = parse_qs(parsed.query)
-        
+
         # Extract auth code or error
         if "code" in params:
             _OAuthCallbackHandler.auth_code = params["code"][0]
@@ -133,7 +133,7 @@ class _OAuthCallbackHandler(BaseHTTPRequestHandler):
             self._send_error_page(_OAuthCallbackHandler.error)
         else:
             self._send_error_page("No authorization code received")
-    
+
     def _send_success_page(self) -> None:
         """Send a success HTML page."""
         html = """
@@ -142,7 +142,7 @@ class _OAuthCallbackHandler(BaseHTTPRequestHandler):
         <head>
             <title>FiscalPilot - Connected!</title>
             <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+                body { font-family: -apple-system, BlinkMacSystemFont, sans-serif;
                        display: flex; justify-content: center; align-items: center;
                        height: 100vh; margin: 0; background: #f0fdf4; }
                 .card { background: white; padding: 40px; border-radius: 12px;
@@ -163,7 +163,7 @@ class _OAuthCallbackHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html")
         self.end_headers()
         self.wfile.write(html.encode())
-    
+
     def _send_error_page(self, error: str) -> None:
         """Send an error HTML page."""
         html = f"""
@@ -172,7 +172,7 @@ class _OAuthCallbackHandler(BaseHTTPRequestHandler):
         <head>
             <title>FiscalPilot - Error</title>
             <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+                body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif;
                        display: flex; justify-content: center; align-items: center;
                        height: 100vh; margin: 0; background: #fef2f2; }}
                 .card {{ background: white; padding: 40px; border-radius: 12px;
@@ -194,33 +194,33 @@ class _OAuthCallbackHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html")
         self.end_headers()
         self.wfile.write(html.encode())
-    
-    def log_message(self, format: str, *args: Any) -> None:
+
+    def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
         """Suppress default logging."""
         pass
 
 
 class OAuthCallbackServer:
     """Local HTTP server to capture OAuth2 callback.
-    
+
     Usage::
-    
+
         server = OAuthCallbackServer(port=8080)
         redirect_uri = server.get_redirect_uri()
         # ... redirect user to auth URL with redirect_uri ...
         result = await server.wait_for_callback(timeout=300)
         # result = {"code": "...", "state": "...", "realm_id": "..."}
     """
-    
+
     def __init__(self, port: int = 8080) -> None:
         self.port = port
         self._server: HTTPServer | None = None
         self._thread: threading.Thread | None = None
-    
+
     def get_redirect_uri(self) -> str:
         """Get the redirect URI for this callback server."""
         return f"http://localhost:{self.port}/callback"
-    
+
     def start(self) -> None:
         """Start the callback server in a background thread."""
         # Reset state
@@ -228,33 +228,33 @@ class OAuthCallbackServer:
         _OAuthCallbackHandler.auth_state = None
         _OAuthCallbackHandler.error = None
         _OAuthCallbackHandler.realm_id = None
-        
+
         self._server = HTTPServer(("localhost", self.port), _OAuthCallbackHandler)
         self._thread = threading.Thread(target=self._server.handle_request, daemon=True)
         self._thread.start()
         logger.debug("OAuth callback server started on port %d", self.port)
-    
+
     def stop(self) -> None:
         """Stop the callback server."""
         if self._server:
             self._server.server_close()
             self._server = None
         logger.debug("OAuth callback server stopped")
-    
+
     async def wait_for_callback(self, timeout: float = 300) -> dict[str, str | None]:
         """Wait for the OAuth callback with timeout.
-        
+
         Args:
             timeout: Maximum seconds to wait for callback.
-            
+
         Returns:
             Dict with 'code', 'state', 'realm_id' (if QuickBooks), or 'error'.
-            
+
         Raises:
             TimeoutError: If callback not received within timeout.
         """
         start = time.time()
-        
+
         while time.time() - start < timeout:
             if _OAuthCallbackHandler.auth_code:
                 return {
@@ -264,9 +264,9 @@ class OAuthCallbackServer:
                 }
             if _OAuthCallbackHandler.error:
                 return {"error": _OAuthCallbackHandler.error}
-            
+
             await asyncio.sleep(0.5)
-        
+
         raise TimeoutError(f"OAuth callback not received within {timeout}s")
 
 # Default token storage location
@@ -395,9 +395,9 @@ class OAuth2TokenManager:
     def _save_token(self, token: TokenData, *, encrypt: bool = True) -> None:
         """Save token data to disk with optional encryption."""
         self.token_dir.mkdir(parents=True, exist_ok=True)
-        
+
         data_json = json.dumps(token.to_dict(), indent=2)
-        
+
         if encrypt:
             try:
                 encrypted = _encrypt_data(data_json)
@@ -407,7 +407,7 @@ class OAuth2TokenManager:
                 self._token_file.write_text(data_json)
         else:
             self._token_file.write_text(data_json)
-        
+
         # Restrict file permissions to owner only
         self._token_file.chmod(0o600)
         logger.debug("Saved %s token to %s", self.provider, self._token_file)
@@ -416,9 +416,9 @@ class OAuth2TokenManager:
         """Load token data from disk (handles both encrypted and plain)."""
         if not self._token_file.exists():
             return None
-        
+
         content = self._token_file.read_text()
-        
+
         # Try to decrypt first (it might be encrypted)
         try:
             decrypted = _decrypt_data(content)
@@ -427,7 +427,7 @@ class OAuth2TokenManager:
             return TokenData.from_dict(data)
         except Exception:
             pass
-        
+
         # Fall back to plain JSON (backward compatibility)
         try:
             data = json.loads(content)
@@ -438,12 +438,12 @@ class OAuth2TokenManager:
             return token
         except (json.JSONDecodeError, KeyError) as e:
             logger.warning("Failed to load %s token: %s", self.provider, e)
-        
+
         return None
-    
+
     def delete_token(self) -> bool:
         """Delete stored token for this provider.
-        
+
         Returns:
             True if token was deleted, False if no token existed.
         """
@@ -453,7 +453,7 @@ class OAuth2TokenManager:
             logger.info("Deleted %s token", self.provider)
             return True
         return False
-    
+
     def has_token(self) -> bool:
         """Check if a token is stored for this provider."""
         return self._token_file.exists()
@@ -590,7 +590,7 @@ class OAuth2TokenManager:
             "client_secret": self.client_secret,
             **self.extra_token_params,
         }
-        
+
         if code_verifier:
             payload["code_verifier"] = code_verifier
 
@@ -631,23 +631,23 @@ class OAuth2TokenManager:
             "redirect_uri": redirect_uri,
             "scope": " ".join(self.scopes),
         }
-        
+
         if state:
             params["state"] = state
-        
+
         if code_challenge:
             params["code_challenge"] = code_challenge
             params["code_challenge_method"] = "S256"
-        
+
         if extra_params:
             params.update(extra_params)
 
         return f"{authorize_url}?{urlencode(params)}"
-    
+
     # ------------------------------------------------------------------
     # Interactive browser flow
     # ------------------------------------------------------------------
-    
+
     async def authorize_interactive(
         self,
         authorize_url: str,
@@ -659,9 +659,9 @@ class OAuth2TokenManager:
         open_browser: bool = True,
     ) -> dict[str, Any]:
         """Complete interactive OAuth2 flow via browser.
-        
+
         Opens user's browser to authorize, then captures callback.
-        
+
         Args:
             authorize_url: The provider's authorization endpoint.
             port: Local port for callback server (default 8080).
@@ -669,10 +669,10 @@ class OAuth2TokenManager:
             use_pkce: Enable PKCE for enhanced security.
             extra_params: Additional provider-specific URL parameters.
             open_browser: Automatically open browser (set False for testing).
-        
+
         Returns:
             Dict with 'token' (TokenData) and optionally 'realm_id' for QuickBooks.
-            
+
         Raises:
             TimeoutError: If user doesn't complete auth in time.
             ValueError: If authorization fails.
@@ -682,15 +682,15 @@ class OAuth2TokenManager:
         code_challenge: str | None = None
         if use_pkce:
             code_verifier, code_challenge = generate_pkce_pair()
-        
+
         # Generate state for CSRF protection
         state = secrets.token_urlsafe(32)
-        
+
         # Start callback server
         server = OAuthCallbackServer(port=port)
         redirect_uri = server.get_redirect_uri()
         server.start()
-        
+
         try:
             # Build and open authorization URL
             auth_url = self.get_authorization_url(
@@ -700,33 +700,33 @@ class OAuth2TokenManager:
                 code_challenge=code_challenge,
                 extra_params=extra_params,
             )
-            
+
             logger.info("Opening browser for %s authorization", self.provider)
-            
+
             if open_browser:
                 webbrowser.open(auth_url)
-            
+
             # Wait for callback
             result = await server.wait_for_callback(timeout=timeout)
-            
+
             if "error" in result:
                 raise ValueError(f"Authorization failed: {result['error']}")
-            
+
             # Verify state
             if result.get("state") != state:
                 raise ValueError("State mismatch - possible CSRF attack")
-            
+
             # Exchange code for tokens
             token = await self.exchange_code(
                 code=result["code"],  # type: ignore
                 redirect_uri=redirect_uri,
                 code_verifier=code_verifier,
             )
-            
+
             return {
                 "token": token,
                 "realm_id": result.get("realm_id"),  # QuickBooks-specific
             }
-            
+
         finally:
             server.stop()

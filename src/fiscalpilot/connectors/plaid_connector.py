@@ -14,14 +14,14 @@ Plaid API docs:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from datetime import date, datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from fiscalpilot.connectors.base import BaseConnector
-from fiscalpilot.models.company import CompanyProfile
 from fiscalpilot.models.financial import (
     AccountBalance,
     ExpenseCategory,
@@ -29,6 +29,9 @@ from fiscalpilot.models.financial import (
     Transaction,
     TransactionType,
 )
+
+if TYPE_CHECKING:
+    from fiscalpilot.models.company import CompanyProfile
 
 logger = logging.getLogger("fiscalpilot.connectors.plaid")
 
@@ -158,11 +161,11 @@ class PlaidConnector(BaseConnector):
         """Clean up HTTP client."""
         if self._http and not self._http.is_closed:
             await self._http.aclose()
-    
+
     # ------------------------------------------------------------------
     # Plaid Link flow
     # ------------------------------------------------------------------
-    
+
     async def create_link_token(
         self,
         user_id: str = "fiscalpilot_user",
@@ -173,16 +176,16 @@ class PlaidConnector(BaseConnector):
         redirect_uri: str | None = None,
     ) -> str:
         """Create a Link token to initialize Plaid Link.
-        
+
         This is step 1 of the Plaid integration flow.
-        
+
         Args:
             user_id: Unique identifier for the end user.
             products: Plaid products to enable (default: transactions).
             country_codes: Countries to show institutions for (default: US).
             language: Language for Link interface.
             redirect_uri: OAuth redirect URI (for OAuth institutions).
-        
+
         Returns:
             link_token to use with Plaid Link.
         """
@@ -193,67 +196,67 @@ class PlaidConnector(BaseConnector):
             "country_codes": country_codes or ["US"],
             "language": language,
         }
-        
+
         if redirect_uri:
             payload["redirect_uri"] = redirect_uri
-        
+
         data = await self._api_post("link/token/create", payload)
         return data["link_token"]
-    
+
     async def exchange_public_token(self, public_token: str) -> str:
         """Exchange a public_token for an access_token.
-        
+
         This is step 3 of the Plaid integration flow, after user
         completes authorization in Plaid Link.
-        
+
         Args:
             public_token: The public_token from Plaid Link callback.
-        
+
         Returns:
             access_token to use for API calls.
         """
         data = await self._api_post("item/public_token/exchange", {
             "public_token": public_token,
         })
-        
+
         access_token = data["access_token"]
-        
+
         # Add to our list of tokens
         if access_token not in self.access_tokens:
             self.access_tokens.append(access_token)
-        
+
         # Store the token for future use
         self._save_access_tokens()
-        
+
         logger.info("Plaid: Exchanged public_token for access_token")
         return access_token
-    
+
     def _save_access_tokens(self) -> None:
         """Save access tokens to disk for persistence."""
         import json
         from pathlib import Path
-        
+
         token_dir = Path.home() / ".fiscalpilot" / "tokens"
         token_dir.mkdir(parents=True, exist_ok=True)
-        
+
         token_file = token_dir / "plaid.json"
         data = {
             "client_id": self.client_id,
             "environment": self.environment,
             "access_tokens": self.access_tokens,
         }
-        
+
         token_file.write_text(json.dumps(data, indent=2))
         token_file.chmod(0o600)
         logger.debug("Saved Plaid tokens to %s", token_file)
-    
+
     def _load_access_tokens(self) -> None:
         """Load access tokens from disk."""
         import json
         from pathlib import Path
-        
+
         token_file = Path.home() / ".fiscalpilot" / "tokens" / "plaid.json"
-        
+
         if token_file.exists():
             try:
                 data = json.loads(token_file.read_text())
@@ -265,7 +268,7 @@ class PlaidConnector(BaseConnector):
                 logger.debug("Loaded %d Plaid tokens from disk", len(stored_tokens))
             except (json.JSONDecodeError, KeyError) as e:
                 logger.warning("Failed to load Plaid tokens: %s", e)
-    
+
     async def authorize(
         self,
         *,
@@ -275,41 +278,41 @@ class PlaidConnector(BaseConnector):
         open_browser: bool = True,
     ) -> str:
         """Complete interactive Plaid Link flow via browser.
-        
+
         Opens browser with Plaid Link, waits for user to connect bank,
         then exchanges the public_token for an access_token.
-        
+
         Args:
             port: Local port for callback server.
             timeout: Seconds to wait for user to complete auth.
             user_id: Unique identifier for the user.
             open_browser: Automatically open browser.
-        
+
         Returns:
             The new access_token.
-            
+
         Raises:
             TimeoutError: If user doesn't complete auth in time.
             ValueError: If authorization fails.
         """
+        import asyncio
+        import threading
         import webbrowser
         from http.server import BaseHTTPRequestHandler, HTTPServer
-        import threading
-        import asyncio
-        
+
         if not self.client_id or not self.secret:
             raise ValueError(
                 "client_id and secret are required. "
                 "Get them from https://dashboard.plaid.com/developers/keys"
             )
-        
+
         # Create link token
         link_token = await self.create_link_token(user_id=user_id)
-        
+
         # State for callback
         public_token: str | None = None
         error: str | None = None
-        
+
         # HTML page that loads Plaid Link
         html_page = f"""
         <!DOCTYPE html>
@@ -353,15 +356,15 @@ class PlaidConnector(BaseConnector):
         </body>
         </html>
         """
-        
+
         class PlaidCallbackHandler(BaseHTTPRequestHandler):
             def do_GET(self) -> None:
                 nonlocal public_token, error
                 from urllib.parse import parse_qs, urlparse
-                
+
                 parsed = urlparse(self.path)
                 params = parse_qs(parsed.query)
-                
+
                 if parsed.path == "/":
                     # Serve the HTML page
                     self.send_response(200)
@@ -379,22 +382,22 @@ class PlaidConnector(BaseConnector):
                 else:
                     self.send_response(404)
                     self.end_headers()
-            
-            def log_message(self, format: str, *args) -> None:
+
+            def log_message(self, format: str, *args) -> None:  # noqa: A002
                 pass
-        
+
         # Start server
         server = HTTPServer(("localhost", port), PlaidCallbackHandler)
         thread = threading.Thread(target=lambda: server.handle_request() or server.handle_request(), daemon=True)
         thread.start()
-        
+
         # Open browser
         url = f"http://localhost:{port}/"
         logger.info("Opening browser for Plaid Link")
-        
+
         if open_browser:
             webbrowser.open(url)
-        
+
         # Wait for callback
         start_time = asyncio.get_event_loop().time()
         while not public_token and not error:
@@ -402,39 +405,37 @@ class PlaidConnector(BaseConnector):
                 server.server_close()
                 raise TimeoutError(f"Plaid authorization timed out after {timeout}s")
             await asyncio.sleep(0.5)
-        
+
         server.server_close()
-        
+
         if error:
             raise ValueError(f"Plaid authorization failed: {error}")
-        
+
         # Exchange public token for access token
         access_token = await self.exchange_public_token(public_token)  # type: ignore
-        
+
         logger.info("Plaid bank connected successfully")
         return access_token
-    
+
     def is_connected(self) -> bool:
         """Check if any bank accounts are connected."""
         self._load_access_tokens()
         return len(self.access_tokens) > 0
-    
+
     async def disconnect(self, access_token: str | None = None) -> bool:
         """Remove a bank connection.
-        
+
         Args:
             access_token: Specific token to remove. If None, removes all.
-        
+
         Returns:
             True if any connections were removed.
         """
         if access_token:
             if access_token in self.access_tokens:
                 # Also call Plaid to invalidate
-                try:
+                with contextlib.suppress(Exception):
                     await self._api_post("item/remove", {"access_token": access_token})
-                except Exception:
-                    pass  # Best effort
                 self.access_tokens.remove(access_token)
                 self._save_access_tokens()
                 return True
@@ -442,29 +443,27 @@ class PlaidConnector(BaseConnector):
         else:
             # Remove all
             for token in self.access_tokens[:]:
-                try:
+                with contextlib.suppress(Exception):
                     await self._api_post("item/remove", {"access_token": token})
-                except Exception:
-                    pass
             removed = len(self.access_tokens) > 0
             self.access_tokens.clear()
             self._save_access_tokens()
             return removed
-    
+
     async def get_institutions(self) -> list[dict[str, Any]]:
         """Get info about connected bank institutions.
-        
+
         Returns:
             List of institution info for each connected bank.
         """
         self._load_access_tokens()
         institutions = []
-        
+
         for access_token in self.access_tokens:
             try:
                 data = await self._api_post("item/get", {"access_token": access_token})
                 item = data.get("item", {})
-                
+
                 inst_id = item.get("institution_id")
                 if inst_id:
                     inst_data = await self._api_post("institutions/get_by_id", {
@@ -479,7 +478,7 @@ class PlaidConnector(BaseConnector):
                     })
             except Exception as e:
                 logger.warning("Failed to get institution info: %s", e)
-        
+
         return institutions
 
     # ------------------------------------------------------------------
@@ -702,74 +701,6 @@ class PlaidConnector(BaseConnector):
         return dataset
 
     # ------------------------------------------------------------------
-    # Plaid Link helpers
-    # ------------------------------------------------------------------
-
-    async def create_link_token(
-        self,
-        user_id: str,
-        *,
-        products: list[str] | None = None,
-        country_codes: list[str] | None = None,
-        redirect_uri: str | None = None,
-    ) -> dict[str, Any]:
-        """Create a Plaid Link token for the bank connection UI.
-
-        This token is used to initialize Plaid Link in the browser,
-        where the user selects their bank and authenticates.
-
-        Args:
-            user_id: Unique identifier for this user/company.
-            products: Plaid products to request (default: transactions).
-            country_codes: Country codes (default: US).
-            redirect_uri: Redirect URI for OAuth-based institutions.
-
-        Returns:
-            Dict with "link_token" and "expiration".
-        """
-        payload: dict[str, Any] = {
-            "user": {"client_user_id": user_id},
-            "client_name": "FiscalPilot",
-            "products": products or ["transactions"],
-            "country_codes": country_codes or ["US"],
-            "language": "en",
-        }
-
-        if redirect_uri:
-            payload["redirect_uri"] = redirect_uri
-
-        data = await self._api_post("link/token/create", payload)
-        return {
-            "link_token": data["link_token"],
-            "expiration": data.get("expiration"),
-        }
-
-    async def exchange_public_token(self, public_token: str) -> str:
-        """Exchange a Plaid public_token for a permanent access_token.
-
-        Called after the user completes the Plaid Link flow. The public_token
-        is returned by Plaid Link and must be exchanged for a permanent token.
-
-        Args:
-            public_token: The public token from Plaid Link.
-
-        Returns:
-            The permanent access_token to use for API calls.
-        """
-        data = await self._api_post("item/public_token/exchange", {
-            "public_token": public_token,
-        })
-
-        access_token = data["access_token"]
-
-        # Add to our list of tokens
-        if access_token not in self.access_tokens:
-            self.access_tokens.append(access_token)
-
-        logger.info("Exchanged Plaid public token for access token")
-        return access_token
-
-    # ------------------------------------------------------------------
     # Auth & health
     # ------------------------------------------------------------------
 
@@ -887,7 +818,7 @@ class PlaidConnector(BaseConnector):
             account=account_id or None,
             tags=[
                 f"plaid:{payment_channel}" if payment_channel else "plaid:txn",
-                f"plaid:pending" if txn.get("pending") else "plaid:posted",
+                "plaid:pending" if txn.get("pending") else "plaid:posted",
             ],
             raw_data=txn,
         )

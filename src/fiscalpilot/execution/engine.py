@@ -20,9 +20,6 @@ from fiscalpilot.execution.approval import ApprovalGate
 from fiscalpilot.execution.executors.base import BaseExecutor, LogOnlyExecutor
 from fiscalpilot.models.actions import (
     ActionStatus,
-    ActionType,
-    ApprovalLevel,
-    ApprovalRule,
     ExecutionResult,
     ProposedAction,
 )

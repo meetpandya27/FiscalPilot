@@ -8,7 +8,6 @@ import pytest
 
 from fiscalpilot.analyzers.restaurant import (
     RestaurantAnalyzer,
-    RestaurantKPI,
     RestaurantKPISeverity,
     analyze_restaurant,
 )
@@ -19,7 +18,6 @@ from fiscalpilot.models.financial import (
     TransactionType,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -28,7 +26,7 @@ from fiscalpilot.models.financial import (
 @pytest.fixture
 def sample_transactions() -> list[Transaction]:
     """Generate sample restaurant transactions with realistic ratios.
-    
+
     Using annual totals directly (full year data):
     - Revenue: $1,000,000
     - Food cost: $300,000 (30%)
@@ -145,7 +143,7 @@ def high_food_cost_transactions() -> list[Transaction]:
 class TestRestaurantAnalyzer:
     def test_analyze_returns_result(self, sample_dataset: FinancialDataset) -> None:
         result = RestaurantAnalyzer.analyze(sample_dataset, annual_revenue=1_000_000)
-        
+
         assert result is not None
         assert result.kpis is not None
         assert len(result.kpis) >= 4  # At least food, labor, prime, occupancy, margin
@@ -153,34 +151,34 @@ class TestRestaurantAnalyzer:
     def test_analyze_calculates_food_cost(self, sample_dataset: FinancialDataset) -> None:
         # $300k food on $1M revenue = 30%
         result = RestaurantAnalyzer.analyze(sample_dataset, annual_revenue=1_000_000)
-        
+
         food_kpi = next(k for k in result.kpis if k.name == "food_cost_pct")
         assert 28 <= food_kpi.actual <= 32  # Should be around 30%
 
     def test_analyze_calculates_labor_cost(self, sample_dataset: FinancialDataset) -> None:
         # $300k labor on $1M revenue = 30%
         result = RestaurantAnalyzer.analyze(sample_dataset, annual_revenue=1_000_000)
-        
+
         labor_kpi = next(k for k in result.kpis if k.name == "labor_cost_pct")
         assert 28 <= labor_kpi.actual <= 32  # Should be around 30%
 
     def test_analyze_calculates_prime_cost(self, sample_dataset: FinancialDataset) -> None:
         # Prime = food (30%) + labor (30%) = 60%
         result = RestaurantAnalyzer.analyze(sample_dataset, annual_revenue=1_000_000)
-        
+
         prime_kpi = next(k for k in result.kpis if k.name == "prime_cost_pct")
         assert 58 <= prime_kpi.actual <= 62  # Should be around 60%
 
     def test_analyze_calculates_occupancy_cost(self, sample_dataset: FinancialDataset) -> None:
         # Rent (8%) + Utilities (4%) = 12%
         result = RestaurantAnalyzer.analyze(sample_dataset, annual_revenue=1_000_000)
-        
+
         occupancy_kpi = next(k for k in result.kpis if k.name == "occupancy_cost_pct")
         assert 10 <= occupancy_kpi.actual <= 14  # Should be around 12%
 
     def test_health_grade_calculation(self, sample_dataset: FinancialDataset) -> None:
         result = RestaurantAnalyzer.analyze(sample_dataset, annual_revenue=1_000_000)
-        
+
         assert result.health_grade in ["A", "B", "C", "D", "F"]
         assert 0 <= result.health_score <= 100
 
@@ -193,14 +191,14 @@ class TestSeverityRatings:
             Transaction(date=date(2024, 1, 1), amount=420_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),
         ]
         dataset = FinancialDataset(
-            transactions=transactions, 
-            period_start=date(2024, 1, 1), 
+            transactions=transactions,
+            period_start=date(2024, 1, 1),
             period_end=date(2024, 12, 31)
         )
-        
+
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
         food_kpi = next(k for k in result.kpis if k.name == "food_cost_pct")
-        
+
         assert food_kpi.actual > 38
         assert food_kpi.severity == RestaurantKPISeverity.CRITICAL
 
@@ -211,14 +209,14 @@ class TestSeverityRatings:
             Transaction(date=date(2024, 1, 1), amount=200_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),
         ]
         dataset = FinancialDataset(
-            transactions=transactions, 
-            period_start=date(2024, 1, 1), 
+            transactions=transactions,
+            period_start=date(2024, 1, 1),
             period_end=date(2024, 12, 31)
         )
-        
+
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
         food_kpi = next(k for k in result.kpis if k.name == "food_cost_pct")
-        
+
         assert food_kpi.actual < 25
         assert food_kpi.severity == RestaurantKPISeverity.EXCELLENT
 
@@ -229,14 +227,14 @@ class TestSeverityRatings:
             Transaction(date=date(2024, 1, 1), amount=360_000, type=TransactionType.EXPENSE, category=ExpenseCategory.PAYROLL),
         ]
         dataset = FinancialDataset(
-            transactions=transactions, 
-            period_start=date(2024, 1, 1), 
+            transactions=transactions,
+            period_start=date(2024, 1, 1),
             period_end=date(2024, 12, 31)
         )
-        
+
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
         labor_kpi = next(k for k in result.kpis if k.name == "labor_cost_pct")
-        
+
         assert 35 <= labor_kpi.actual <= 38
         assert labor_kpi.severity in [RestaurantKPISeverity.WARNING, RestaurantKPISeverity.CRITICAL]
 
@@ -249,13 +247,13 @@ class TestAlertsAndOpportunities:
             Transaction(date=date(2024, 1, 1), amount=450_000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),
         ]
         dataset = FinancialDataset(
-            transactions=transactions, 
-            period_start=date(2024, 1, 1), 
+            transactions=transactions,
+            period_start=date(2024, 1, 1),
             period_end=date(2024, 12, 31)
         )
-        
+
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
-        
+
         assert len(result.critical_alerts) > 0
         assert any("food" in alert.lower() for alert in result.critical_alerts)
 
@@ -268,13 +266,13 @@ class TestAlertsAndOpportunities:
             Transaction(date=date(2024, 1, 1), amount=5_000, type=TransactionType.EXPENSE, category=ExpenseCategory.MARKETING),
         ]
         dataset = FinancialDataset(
-            transactions=transactions, 
-            period_start=date(2024, 1, 1), 
+            transactions=transactions,
+            period_start=date(2024, 1, 1),
             period_end=date(2024, 12, 31)
         )
-        
+
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
-        
+
         assert any("marketing" in opp.lower() for opp in result.opportunities)
 
 
@@ -289,13 +287,13 @@ class TestHealthScore:
             Transaction(date=date(2024, 1, 1), amount=60_000, type=TransactionType.EXPENSE, category=ExpenseCategory.UTILITIES),
         ]
         dataset = FinancialDataset(
-            transactions=transactions, 
-            period_start=date(2024, 1, 1), 
+            transactions=transactions,
+            period_start=date(2024, 1, 1),
             period_end=date(2024, 12, 31)
         )
-        
+
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
-        
+
         assert result.health_score < 50
         assert result.health_grade in ["D", "F"]
 
@@ -309,13 +307,13 @@ class TestHealthScore:
             Transaction(date=date(2024, 1, 1), amount=20_000, type=TransactionType.EXPENSE, category=ExpenseCategory.UTILITIES),
         ]
         dataset = FinancialDataset(
-            transactions=transactions, 
-            period_start=date(2024, 1, 1), 
+            transactions=transactions,
+            period_start=date(2024, 1, 1),
             period_end=date(2024, 12, 31)
         )
-        
+
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
-        
+
         assert result.health_score >= 60
         assert result.health_grade in ["A", "B", "C"]
 
@@ -324,7 +322,7 @@ class TestConvenienceFunction:
     def test_analyze_restaurant_function(self, sample_dataset: FinancialDataset) -> None:
         """Test the convenience function works."""
         result = analyze_restaurant(sample_dataset, annual_revenue=1_000_000)
-        
+
         assert result is not None
         assert result.kpis is not None
         assert len(result.kpis) >= 4
@@ -333,14 +331,14 @@ class TestConvenienceFunction:
 class TestExpenseBreakdown:
     def test_expense_breakdown_calculated(self, sample_dataset: FinancialDataset) -> None:
         result = RestaurantAnalyzer.analyze(sample_dataset, annual_revenue=1_000_000)
-        
+
         assert result.expense_breakdown is not None
         assert "inventory" in result.expense_breakdown
         assert "payroll" in result.expense_breakdown
 
     def test_expense_ratios_calculated(self, sample_dataset: FinancialDataset) -> None:
         result = RestaurantAnalyzer.analyze(sample_dataset, annual_revenue=1_000_000)
-        
+
         assert result.expense_ratios is not None
         # Ratios should be percentages
         for ratio in result.expense_ratios.values():
@@ -355,9 +353,9 @@ class TestEdgeCases:
             period_start=date(2024, 1, 1),
             period_end=date(2024, 12, 31),
         )
-        
+
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=100000)
-        
+
         assert result is not None
         assert result.health_score >= 0
 
@@ -367,13 +365,13 @@ class TestEdgeCases:
             Transaction(date=date(2024, 1, 1), amount=1000, type=TransactionType.EXPENSE, category=ExpenseCategory.INVENTORY),
         ]
         dataset = FinancialDataset(
-            transactions=transactions, 
-            period_start=date(2024, 1, 1), 
+            transactions=transactions,
+            period_start=date(2024, 1, 1),
             period_end=date(2024, 12, 31)
         )
-        
+
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=0)
-        
+
         # Should estimate revenue from expenses
         assert result is not None
         assert result.total_revenue > 0  # Estimated
@@ -385,12 +383,12 @@ class TestEdgeCases:
             Transaction(date=date(2024, 1, 1), amount=50_000, type=TransactionType.EXPENSE),  # No category
         ]
         dataset = FinancialDataset(
-            transactions=transactions, 
-            period_start=date(2024, 1, 1), 
+            transactions=transactions,
+            period_start=date(2024, 1, 1),
             period_end=date(2024, 12, 31)
         )
-        
+
         result = RestaurantAnalyzer.analyze(dataset, annual_revenue=1_000_000)
-        
+
         assert result is not None
         # Should be placed in "other" bucket

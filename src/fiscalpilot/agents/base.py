@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import litellm
 
-from fiscalpilot.config import FiscalPilotConfig, LLMConfig
+if TYPE_CHECKING:
+    from fiscalpilot.config import FiscalPilotConfig, LLMConfig
 
 logger = logging.getLogger("fiscalpilot.agents")
 

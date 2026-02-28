@@ -21,32 +21,34 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import asdict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fiscalpilot.agents.base import BaseAgent
-from fiscalpilot.analyzers.restaurant import RestaurantAnalyzer, RestaurantAnalysisResult
+from fiscalpilot.analyzers.breakeven import (
+    BreakevenCalculator,
+    BreakevenResult,
+)
+from fiscalpilot.analyzers.delivery_roi import (
+    DeliveryOrderData,
+    DeliveryPlatform,
+    DeliveryROIAnalyzer,
+    DeliveryROIResult,
+)
 from fiscalpilot.analyzers.menu_engineering import (
     MenuEngineeringAnalyzer,
     MenuEngineeringResult,
     MenuItemData,
 )
-from fiscalpilot.analyzers.breakeven import (
-    BreakevenCalculator,
-    BreakevenResult,
-)
+from fiscalpilot.analyzers.restaurant import RestaurantAnalysisResult, RestaurantAnalyzer
 from fiscalpilot.analyzers.tip_credit import (
     TipCreditCalculator,
     TipCreditResult,
     TippedEmployee,
 )
-from fiscalpilot.analyzers.delivery_roi import (
-    DeliveryROIAnalyzer,
-    DeliveryROIResult,
-    DeliveryOrderData,
-    DeliveryPlatform,
-)
-from fiscalpilot.models.actions import ActionStep, ActionType, ProposedAction, ApprovalLevel
-from fiscalpilot.models.financial import FinancialDataset
+from fiscalpilot.models.actions import ActionStep, ActionType, ApprovalLevel, ProposedAction
+
+if TYPE_CHECKING:
+    from fiscalpilot.models.financial import FinancialDataset
 
 logger = logging.getLogger("fiscalpilot.agents.restaurant")
 
@@ -98,23 +100,23 @@ Return ONLY valid JSON array. No markdown, no explanations outside JSON."""
 
 class RestaurantAgent(BaseAgent):
     """Specialized agent for restaurant financial analysis and optimization.
-    
+
     Combines:
     1. Pure-computation KPI analysis (no LLM) via RestaurantAnalyzer
     2. LLM-powered strategic recommendations
     3. Industry-specific action proposals
     """
-    
+
     name = "restaurant"
     description = "Restaurant-specialized AI CFO: KPI analysis, menu engineering, labor optimization"
-    
+
     def __init__(self, config):
         super().__init__(config)
         self._last_analysis: RestaurantAnalysisResult | None = None
-    
+
     @property
     def system_prompt(self) -> str:
-        return """You are an elite restaurant financial consultant with 20+ years of experience 
+        return """You are an elite restaurant financial consultant with 20+ years of experience
 turnaround struggling restaurants and optimizing profitable ones. You've worked with:
 
 - Fast casual chains ($5M-$50M revenue)
@@ -134,13 +136,13 @@ You always provide SPECIFIC dollar amounts and CONCRETE action steps.
 You understand that restaurants operate on thin margins (3-6% net) and every percentage point matters.
 
 Always return your recommendations as a valid JSON array."""
-    
+
     async def analyze(self, context: dict[str, Any]) -> dict[str, Any]:
         """Run complete restaurant analysis: KPIs + strategic recommendations.
-        
+
         Args:
             context: Must include 'dataset' (FinancialDataset) and optionally 'annual_revenue'.
-            
+
         Returns:
             Dict with 'kpi_results', 'findings', 'actions', and 'recommendations'.
         """
@@ -149,9 +151,9 @@ Always return your recommendations as a valid JSON array."""
         if not dataset:
             logger.error("No dataset provided to RestaurantAgent")
             return {"findings": [], "error": "Missing financial dataset"}
-        
+
         annual_revenue = context.get("annual_revenue", context.get("company", {}).get("annual_revenue"))
-        
+
         kpi_result = RestaurantAnalyzer.analyze(
             dataset,
             annual_revenue=annual_revenue,
@@ -159,13 +161,13 @@ Always return your recommendations as a valid JSON array."""
             operating_hours_per_week=context.get("operating_hours_per_week"),
         )
         self._last_analysis = kpi_result
-        
+
         # Step 2: Build strategic prompt with KPI data
         prompt = self._build_prompt({
             **context,
             "kpi_result": kpi_result,
         })
-        
+
         # Step 3: Get LLM recommendations
         messages = [{"role": "user", "content": prompt}]
         try:
@@ -174,13 +176,13 @@ Always return your recommendations as a valid JSON array."""
         except Exception as e:
             logger.warning("LLM call failed, returning KPI-only results: %s", e)
             recommendations = []
-        
+
         # Step 4: Generate action proposals from KPIs
         actions = self._generate_actions(kpi_result)
-        
+
         # Step 5: Combine KPI findings with LLM recommendations
         findings = self._kpi_to_findings(kpi_result)
-        
+
         return {
             "kpi_results": asdict(kpi_result),
             "health_grade": kpi_result.health_grade,
@@ -191,12 +193,12 @@ Always return your recommendations as a valid JSON array."""
             "critical_alerts": kpi_result.critical_alerts,
             "opportunities": kpi_result.opportunities,
         }
-    
+
     def _build_prompt(self, context: dict[str, Any]) -> str:
         """Build the strategic analysis prompt."""
         kpi_result: RestaurantAnalysisResult = context["kpi_result"]
         company = context.get("company", {})
-        
+
         # Format KPI summary
         kpi_lines = []
         for kpi in kpi_result.kpis:
@@ -211,16 +213,16 @@ Always return your recommendations as a valid JSON array."""
                 f"(target: {kpi.benchmark_low:.0f}-{kpi.benchmark_high:.0f}%) "
                 f"{status_icon} {kpi.severity.value}"
             )
-        
+
         # Format expense breakdown
         expense_lines = []
         for cat, amount in sorted(kpi_result.expense_breakdown.items(), key=lambda x: -x[1])[:10]:
             pct = kpi_result.expense_ratios.get(cat, 0)
             expense_lines.append(f"- {cat}: ${amount:,.0f} ({pct:.1f}% of revenue)")
-        
+
         # Format alerts
         alerts = kpi_result.critical_alerts if kpi_result.critical_alerts else ["None — performing within targets"]
-        
+
         return RESTAURANT_STRATEGY_PROMPT.format(
             restaurant_name=company.get("name", "Restaurant"),
             health_grade=kpi_result.health_grade,
@@ -232,16 +234,16 @@ Always return your recommendations as a valid JSON array."""
             expense_breakdown="\n".join(expense_lines) or "No expense breakdown available",
             critical_alerts="\n".join(f"- {a}" for a in alerts),
         )
-    
+
     def _parse_response(self, response: str, context: dict[str, Any]) -> dict[str, Any]:
         """Parse LLM response into structured findings.
-        
+
         Note: RestaurantAgent overrides analyze() and uses _parse_recommendations instead.
         This method exists to satisfy the BaseAgent abstract method requirement.
         """
         recommendations = self._parse_recommendations(response)
         return {"recommendations": recommendations}
-    
+
     def _parse_recommendations(self, response: str) -> list[dict[str, Any]]:
         """Parse LLM recommendations from JSON response."""
         try:
@@ -256,7 +258,7 @@ Always return your recommendations as a valid JSON array."""
                     elif part.strip().startswith("["):
                         response = part.strip()
                         break
-            
+
             recommendations = json.loads(response)
             if isinstance(recommendations, dict):
                 recommendations = recommendations.get("recommendations", [recommendations])
@@ -264,11 +266,11 @@ Always return your recommendations as a valid JSON array."""
         except json.JSONDecodeError as e:
             logger.warning("Failed to parse restaurant recommendations: %s", e)
             return []
-    
+
     def _kpi_to_findings(self, result: RestaurantAnalysisResult) -> list[dict[str, Any]]:
         """Convert KPI analysis to standard findings format."""
         findings = []
-        
+
         for kpi in result.kpis:
             severity_map = {
                 "critical": "critical",
@@ -276,7 +278,7 @@ Always return your recommendations as a valid JSON array."""
                 "healthy": "low",
                 "excellent": "info",
             }
-            
+
             finding = {
                 "title": f"{kpi.display_name}: {kpi.actual:.1f}%",
                 "category": "restaurant_kpi",
@@ -292,29 +294,29 @@ Always return your recommendations as a valid JSON array."""
                 "recommendation": kpi.action,
             }
             findings.append(finding)
-        
+
         return findings
-    
+
     def _make_steps(self, descriptions: list[str]) -> list[ActionStep]:
         """Convert step descriptions to ActionStep objects."""
         return [
             ActionStep(order=i + 1, description=desc, reversible=False)
             for i, desc in enumerate(descriptions)
         ]
-    
+
     def _generate_actions(self, result: RestaurantAnalysisResult) -> list[ProposedAction]:
         """Generate action proposals based on KPI analysis."""
         actions = []
-        
+
         for kpi in result.kpis:
             if kpi.severity.value not in ("critical", "warning"):
                 continue
-            
+
             if kpi.name == "food_cost_pct" and kpi.actual > 32:
                 # Food cost action
                 excess_pct = kpi.actual - 30  # vs typical
                 potential_savings = result.total_revenue * (excess_pct / 100)
-                
+
                 actions.append(ProposedAction(
                     id=f"act_food_cost_{int(kpi.actual)}",
                     title=f"Reduce Food Cost from {kpi.actual:.1f}% to 30%",
@@ -335,12 +337,12 @@ Always return your recommendations as a valid JSON array."""
                         "Consider menu engineering to promote high-margin items",
                     ]),
                 ))
-            
+
             elif kpi.name == "labor_cost_pct" and kpi.actual > 32:
                 # Labor cost action
                 excess_pct = kpi.actual - 30
                 potential_savings = result.total_revenue * (excess_pct / 100)
-                
+
                 actions.append(ProposedAction(
                     id=f"act_labor_cost_{int(kpi.actual)}",
                     title=f"Optimize Labor Cost from {kpi.actual:.1f}% to 30%",
@@ -361,7 +363,7 @@ Always return your recommendations as a valid JSON array."""
                         "Review overtime patterns and adjust scheduling",
                     ]),
                 ))
-            
+
             elif kpi.name == "prime_cost_pct" and kpi.actual > 68:
                 # Prime cost critical action
                 actions.append(ProposedAction(
@@ -383,7 +385,7 @@ Always return your recommendations as a valid JSON array."""
                         "Weekly prime cost tracking until below 65%",
                     ]),
                 ))
-        
+
         # Add marketing opportunity if spend is low
         marketing_pct = result.expense_ratios.get("marketing", 0)
         if marketing_pct < 1.0:
@@ -407,20 +409,20 @@ Always return your recommendations as a valid JSON array."""
                     "Track marketing ROI by channel",
                 ]),
             ))
-        
+
         return actions
-    
+
     # =========================================================================
     # NEW: Menu Engineering Analysis
     # =========================================================================
-    
+
     def analyze_menu(
         self,
         menu_items: list[dict[str, Any]],
     ) -> MenuEngineeringResult:
         """
         Analyze menu items using BCG matrix (Stars/Plowhorses/Puzzles/Dogs).
-        
+
         Args:
             menu_items: List of dicts with keys:
                 - name: str
@@ -428,10 +430,10 @@ Always return your recommendations as a valid JSON array."""
                 - food_cost: float
                 - quantity_sold: int
                 - category: str (optional)
-        
+
         Returns:
             MenuEngineeringResult with classifications and recommendations.
-        
+
         Example:
             result = agent.analyze_menu([
                 {"name": "Burger", "menu_price": 16, "food_cost": 4.50, "quantity_sold": 500},
@@ -449,11 +451,11 @@ Always return your recommendations as a valid JSON array."""
             for item in menu_items
         ]
         return MenuEngineeringAnalyzer.analyze(items)
-    
+
     # =========================================================================
     # NEW: Break-even Calculator
     # =========================================================================
-    
+
     def calculate_breakeven(
         self,
         *,
@@ -481,9 +483,9 @@ Always return your recommendations as a valid JSON array."""
     ) -> BreakevenResult:
         """
         Calculate break-even point: how many covers/revenue needed to cover costs.
-        
+
         Answers the critical question: "How many customers do I need to make money?"
-        
+
         Example:
             result = agent.calculate_breakeven(
                 rent=5000,
@@ -514,11 +516,11 @@ Always return your recommendations as a valid JSON array."""
             days_operating_per_week=days_operating_per_week,
             current_monthly_revenue=current_monthly_revenue,
         )
-    
+
     # =========================================================================
     # NEW: Tip Tax Credit Calculator
     # =========================================================================
-    
+
     def estimate_tip_credit(
         self,
         *,
@@ -531,10 +533,10 @@ Always return your recommendations as a valid JSON array."""
     ) -> TipCreditResult:
         """
         Estimate annual FICA tip credit (Section 45B) — "free money" most owners miss.
-        
+
         The IRS allows restaurants to claim a tax credit for employer FICA taxes
         paid on tips that exceed minimum wage requirements.
-        
+
         Example:
             result = agent.estimate_tip_credit(
                 num_tipped_employees=15,
@@ -552,7 +554,7 @@ Always return your recommendations as a valid JSON array."""
             avg_cash_wage=avg_cash_wage,
             state=state,
         )
-    
+
     def calculate_tip_credit_detailed(
         self,
         employees: list[dict[str, Any]],
@@ -562,7 +564,7 @@ Always return your recommendations as a valid JSON array."""
     ) -> TipCreditResult:
         """
         Calculate tip credit with detailed employee data.
-        
+
         Args:
             employees: List of dicts with keys:
                 - name: str
@@ -571,7 +573,7 @@ Always return your recommendations as a valid JSON array."""
                 - tips_received: float (in period)
             state: Two-letter state code for state minimum wage.
             period_type: "month", "quarter", or "year"
-        
+
         Returns:
             TipCreditResult with per-employee breakdown.
         """
@@ -589,11 +591,11 @@ Always return your recommendations as a valid JSON array."""
             state=state,
             period_type=period_type,
         )
-    
+
     # =========================================================================
     # NEW: Delivery Platform ROI Analyzer
     # =========================================================================
-    
+
     def analyze_delivery_roi(
         self,
         platform_data: list[dict[str, Any]],
@@ -603,13 +605,13 @@ Always return your recommendations as a valid JSON array."""
     ) -> DeliveryROIResult:
         """
         Analyze true profitability of delivery platforms (DoorDash, UberEats, etc.).
-        
+
         Most owners see delivery revenue as "extra" but don't account for:
         - Platform commissions (15-30%)
         - Packaging costs ($0.50-2.00/order)
         - Refunds/adjustments
         - Additional labor
-        
+
         Args:
             platform_data: List of dicts with keys:
                 - platform: str ("doordash", "uber_eats", "grubhub", "direct")
@@ -622,7 +624,7 @@ Always return your recommendations as a valid JSON array."""
                 - total_refunds: float (optional)
             dine_in_food_cost_pct: For comparison
             dine_in_labor_pct: For comparison
-        
+
         Example:
             result = agent.analyze_delivery_roi([
                 {"platform": "doordash", "total_orders": 800, "total_gross_revenue": 24000, "commission_pct": 20},
@@ -640,12 +642,12 @@ Always return your recommendations as a valid JSON array."""
             "direct": DeliveryPlatform.DIRECT,
             "phone": DeliveryPlatform.PHONE,
         }
-        
+
         delivery_data = []
         for data in platform_data:
             platform_str = data.get("platform", "doordash").lower().replace(" ", "_")
             platform = platform_map.get(platform_str, DeliveryPlatform.DOORDASH)
-            
+
             delivery_data.append(DeliveryOrderData(
                 platform=platform,
                 total_orders=data.get("total_orders", 0),
@@ -658,16 +660,16 @@ Always return your recommendations as a valid JSON array."""
                 total_refunds=data.get("total_refunds", 0),
                 total_adjustments=data.get("total_adjustments", 0),
             ))
-        
+
         from fiscalpilot.analyzers.delivery_roi import DineInComparison
-        
+
         dine_in = DineInComparison(
             food_cost_pct=dine_in_food_cost_pct,
             labor_cost_pct=dine_in_labor_pct,
         )
-        
+
         return DeliveryROIAnalyzer.analyze(delivery_data, dine_in_comparison=dine_in)
-    
+
     def quick_delivery_check(
         self,
         *,
@@ -679,7 +681,7 @@ Always return your recommendations as a valid JSON array."""
     ) -> DeliveryROIResult:
         """
         Quick delivery ROI check with minimal inputs.
-        
+
         Example:
             result = agent.quick_delivery_check(
                 platform="doordash",

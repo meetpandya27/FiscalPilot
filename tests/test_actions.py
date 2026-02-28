@@ -3,13 +3,13 @@ Tests for the action models (v0.4).
 """
 
 from fiscalpilot.models.actions import (
+    DEFAULT_APPROVAL_MAP,
     ActionStatus,
     ActionStep,
     ActionType,
     ApprovalDecision,
     ApprovalLevel,
     ApprovalRule,
-    DEFAULT_APPROVAL_MAP,
     ExecutionResult,
     ProposedAction,
 )

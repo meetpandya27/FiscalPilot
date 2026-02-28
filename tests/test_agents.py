@@ -19,7 +19,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from fiscalpilot.agents.base import BaseAgent
 from fiscalpilot.agents.coordinator import CoordinatorAgent
 from fiscalpilot.agents.cost_cutter import CostCutterAgent
 from fiscalpilot.agents.cost_optimizer import CostOptimizerAgent
@@ -28,7 +27,6 @@ from fiscalpilot.agents.revenue_analyzer import RevenueAnalyzerAgent
 from fiscalpilot.agents.risk_detector import RiskDetectorAgent
 from fiscalpilot.agents.vendor_auditor import VendorAuditorAgent
 from fiscalpilot.config import (
-    AnalyzerConfig,
     ConnectorConfig,
     FiscalPilotConfig,
     LLMConfig,
@@ -37,7 +35,6 @@ from fiscalpilot.connectors.registry import ConnectorRegistry
 from fiscalpilot.models.company import CompanyProfile, CompanySize, Industry
 from fiscalpilot.models.financial import FinancialDataset, Transaction, TransactionType
 from fiscalpilot.models.report import AuditReport, FindingCategory, Severity
-
 
 # ── Fixtures ────────────────────────────────────────────────────────
 
@@ -436,7 +433,7 @@ class TestCoordinatorLocalAudit:
         coordinator = CoordinatorAgent(config=config, connectors=registry)
 
         with patch("fiscalpilot.agents.base.litellm.acompletion") as mock_llm:
-            report = await coordinator.run_local_audit(_company())
+            await coordinator.run_local_audit(_company())
             mock_llm.assert_not_called()
 
 

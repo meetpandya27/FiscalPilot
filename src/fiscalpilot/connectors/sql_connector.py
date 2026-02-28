@@ -7,14 +7,16 @@ Works with PostgreSQL, MySQL, SQLite, SQL Server, etc. via SQLAlchemy.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 from sqlalchemy import create_engine, text
 
 from fiscalpilot.connectors.csv_connector import CSVConnector
-from fiscalpilot.models.company import CompanyProfile
 from fiscalpilot.models.financial import FinancialDataset
+
+if TYPE_CHECKING:
+    from fiscalpilot.models.company import CompanyProfile
 
 logger = logging.getLogger("fiscalpilot.connectors.sql")
 

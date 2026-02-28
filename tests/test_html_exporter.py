@@ -1,19 +1,19 @@
 """Tests for HTML report exporter."""
 
-from datetime import date, datetime
+from datetime import datetime
 from uuid import uuid4
 
 import pytest
 
 from fiscalpilot.exporters.html import (
-    render_html,
-    _escape,
-    _severity_color,
     _category_color,
+    _escape,
     _health_score_color,
-    _render_findings_html,
     _render_action_items_html,
+    _render_findings_html,
     _render_proposed_actions_html,
+    _severity_color,
+    render_html,
 )
 from fiscalpilot.models.actions import (
     ActionStep,
@@ -29,7 +29,6 @@ from fiscalpilot.models.report import (
     FindingCategory,
     Severity,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -168,7 +167,7 @@ class TestRenderHtml:
     def test_renders_complete_html_document(self, sample_report):
         """Test that render_html produces a complete HTML document."""
         html = render_html(sample_report)
-        
+
         assert "<!DOCTYPE html>" in html
         assert "<html lang=\"en\">" in html
         assert "</html>" in html
@@ -388,7 +387,7 @@ class TestEdgeCases:
                 description="Test description",
                 potential_savings=100.0,
             ))
-        
+
         html = _render_findings_html(findings)
         for severity in Severity:
             assert f"badge-{severity.value}" in html
@@ -433,7 +432,7 @@ class TestIntegration:
     def test_full_report_is_valid_html(self, sample_report):
         """Test that generated HTML is structurally valid."""
         html = render_html(sample_report)
-        
+
         # Check for balanced tags (using > to avoid partial matches like <header matching <head)
         assert html.count("<html") == html.count("</html>")
         assert html.count("<head>") == html.count("</head>")

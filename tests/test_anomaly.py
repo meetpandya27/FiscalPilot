@@ -3,8 +3,6 @@
 from datetime import date, timedelta
 from typing import Any
 
-import pytest
-
 from fiscalpilot.analyzers.anomaly import AnomalyDetector, AnomalyResult
 
 

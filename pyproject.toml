@@ -86,11 +86,17 @@ packages = ["src/fiscalpilot"]
 
 [tool.ruff]
 target-version = "py311"
-line-length = 100
+line-length = 120
 src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "A", "SIM", "TCH"]
+ignore = ["E501"]  # Line too long - handled by formatter
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B904", "SIM105", "SIM108"]  # Allow common test patterns
+"src/fiscalpilot/cli.py" = ["B904"]  # Click/typer patterns
+"src/fiscalpilot/models/*" = ["TC001", "TC003"]  # Pydantic models need runtime imports
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

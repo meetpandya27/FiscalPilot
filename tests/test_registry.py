@@ -1,6 +1,5 @@
 """Tests for the connector registry."""
 
-import pytest
 
 from fiscalpilot.config import ConnectorConfig, FiscalPilotConfig
 from fiscalpilot.connectors.base import BaseConnector

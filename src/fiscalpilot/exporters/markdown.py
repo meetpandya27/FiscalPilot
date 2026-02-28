@@ -27,8 +27,8 @@ def render_markdown(report: AuditReport) -> str:
     summary = report.executive_summary
     lines.append("## 📊 Executive Summary")
     lines.append("")
-    lines.append(f"| Metric | Value |")
-    lines.append(f"|--------|-------|")
+    lines.append("| Metric | Value |")
+    lines.append("|--------|-------|")
     lines.append(f"| **Total Findings** | {summary.total_findings} |")
     lines.append(f"| **Critical Issues** | {summary.critical_findings} |")
     lines.append(f"| **Potential Savings** | ${summary.total_potential_savings:,.2f} |")

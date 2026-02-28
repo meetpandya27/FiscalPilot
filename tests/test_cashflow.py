@@ -3,9 +3,7 @@
 from datetime import date, timedelta
 from typing import Any
 
-import pytest
-
-from fiscalpilot.analyzers.cashflow import CashFlowForecaster, CashFlowForecast
+from fiscalpilot.analyzers.cashflow import CashFlowForecast, CashFlowForecaster
 
 
 def _monthly_txns(
@@ -121,7 +119,7 @@ class TestCashFlowForecasterEdgeCases:
 
     def test_seasonal_patterns_with_long_history(self) -> None:
         """12+ months should enable seasonal index computation."""
-        start = date(2023, 1, 1)
+        date(2023, 1, 1)
         txns: list[dict[str, Any]] = []
         idx = 0
         for m in range(14):

@@ -9,10 +9,11 @@ normalize it into FiscalPilot's standard FinancialDataset format.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from fiscalpilot.models.company import CompanyProfile
-from fiscalpilot.models.financial import FinancialDataset
+if TYPE_CHECKING:
+    from fiscalpilot.models.company import CompanyProfile
+    from fiscalpilot.models.financial import FinancialDataset
 
 
 class BaseConnector(ABC):

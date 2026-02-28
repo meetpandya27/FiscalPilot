@@ -14,10 +14,9 @@ No LLM needed — pure time-series math.
 from __future__ import annotations
 
 import logging
-import math
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
 from typing import Any
 
 logger = logging.getLogger("fiscalpilot.analyzers.cashflow")
@@ -169,7 +168,7 @@ class CashFlowForecaster:
         last_year, last_month = int(last_period[:4]), int(last_period[5:7])
         running_forecast = current_balance
 
-        for i in range(forecast_months):
+        for _ in range(forecast_months):
             last_month += 1
             if last_month > 12:
                 last_month = 1
