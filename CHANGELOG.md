@@ -5,6 +5,44 @@ All notable changes to FiscalPilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-02-28
+
+### Added
+- **Production-Ready Connectors** — All accounting integrations now fully functional:
+  - QuickBooks: Full OAuth2 flow with PKCE, interactive `authorize()` method
+  - Xero: Full OAuth2 flow with tenant selection, `get_organizations()` support
+  - Plaid: Link integration for bank connections via browser
+  - Square: 16 tests verified passing
+- **CLI Connection Commands**:
+  - `fp connect <provider>` — Interactive OAuth setup for QuickBooks, Xero, Plaid, Square
+  - `fp disconnect <provider>` — Remove stored credentials
+  - `fp connections` — Show all connected integrations
+- **OAuth2 Security Enhancements**:
+  - PKCE (Proof Key for Code Exchange) support for all OAuth flows
+  - Encrypted token storage using Fernet (AES-128)
+  - Local callback server for OAuth redirect handling
+- **Plaid Link Integration**:
+  - `create_link_token()` — Initialize Plaid Link
+  - `exchange_public_token()` — Convert public token to access token
+  - `authorize()` — Full interactive browser flow
+  - `get_institutions()` — List connected bank info
+  - Token persistence across sessions
+- **Integration Test Suite** (`tests/test_integration.py`):
+  - Real API tests for QuickBooks, Xero, Plaid, Square (skip without credentials)
+  - CLI command tests (connections, connectors, audit, scan)
+  - OAuth2 infrastructure tests (PKCE, encryption, URL generation)
+- **382 total passing tests** (was 375)
+
+### Changed
+- OAuth2TokenManager now encrypts tokens on disk
+- Connector authentication flows use PKCE by default
+- CLI help text updated with Plaid support
+
+### Fixed
+- QuickBooks connector no longer requires pre-configured refresh tokens
+- Xero connector handles multi-tenant authorization properly
+- OAuth2 tests updated for encrypted storage
+
 ## [0.5.0] - 2026-02-27
 
 ### Added

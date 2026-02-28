@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fiscalpilot"
-version = "0.5.0"
+version = "0.6.0"
 description = "The Open-Source AI CFO — Analyze, recommend, and execute. Your AI-powered Chief Financial Officer."
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -95,6 +95,9 @@ select = ["E", "F", "I", "N", "W", "UP", "B", "A", "SIM", "TCH"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "integration: marks tests as integration tests (require real API credentials)",
+]
 
 [tool.mypy]
 python_version = "3.11"

@@ -99,20 +99,25 @@ class TestOAuth2TokenManager:
         # Should be saved to disk
         token_file = tmp_path / "test_provider.json"
         assert token_file.exists()
-        data = json.loads(token_file.read_text())
-        assert data["refresh_token"] == "new_refresh"
+        # Token file is now encrypted, so load through manager
+        loaded = mgr._load_token()
+        assert loaded is not None
+        assert loaded.refresh_token == "new_refresh"
 
     def test_load_or_set_existing(self, tmp_path: Path) -> None:
-        # Pre-seed a token file
-        token_file = tmp_path / "test_provider.json"
-        token_file.write_text(json.dumps({
-            "access_token": "old_access",
-            "refresh_token": "old_refresh",
-            "expires_at": time.time() + 3600,
-        }))
-
         mgr = self._make_manager(tmp_path)
-        token = mgr.load_or_set(refresh_token="should_be_ignored")
+        # Pre-save a token through the manager (will be encrypted)
+        from fiscalpilot.auth.oauth2 import TokenData
+        pre_token = TokenData(
+            access_token="old_access",
+            refresh_token="old_refresh",
+            expires_at=time.time() + 3600,
+        )
+        mgr._save_token(pre_token)
+
+        # Now load should get the existing token
+        mgr2 = self._make_manager(tmp_path)
+        token = mgr2.load_or_set(refresh_token="should_be_ignored")
         assert token.refresh_token == "old_refresh"
 
     def test_get_auth_header(self, tmp_path: Path) -> None:

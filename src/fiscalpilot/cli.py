@@ -437,193 +437,281 @@ def connectors() -> None:
 def connect(
     provider: str = typer.Argument(
         ...,
-        help="Provider to connect: quickbooks, xero, plaid",
+        help="Provider to connect: quickbooks, xero, square, plaid",
     ),
     sandbox: bool = typer.Option(
         False,
         "--sandbox",
         help="Use sandbox/development environment",
     ),
+    port: int = typer.Option(
+        8080,
+        "--port",
+        help="Local port for OAuth callback",
+    ),
 ) -> None:
-    """Interactive setup wizard for accounting integrations."""
-    if provider.lower() == "quickbooks":
-        _connect_quickbooks(sandbox=sandbox)
-    elif provider.lower() == "xero":
-        console.print("[yellow]Xero connection wizard coming soon![/yellow]")
-    elif provider.lower() == "plaid":
-        console.print("[yellow]Plaid connection wizard coming soon![/yellow]")
+    """Connect to an accounting platform via OAuth2."""
+    provider_lower = provider.lower()
+    
+    if provider_lower == "quickbooks":
+        _connect_quickbooks_interactive(sandbox=sandbox, port=port)
+    elif provider_lower == "xero":
+        _connect_xero_interactive(port=port)
+    elif provider_lower == "square":
+        _connect_square_interactive(sandbox=sandbox)
+    elif provider_lower == "plaid":
+        _connect_plaid_interactive(sandbox=sandbox, port=port)
     else:
         console.print(f"[red]Unknown provider: {provider}[/red]")
-        console.print("Supported: quickbooks, xero, plaid")
+        console.print("Supported: quickbooks, xero, square, plaid")
         raise typer.Exit(1)
 
 
-def _connect_quickbooks(sandbox: bool = False) -> None:
-    """Interactive QuickBooks connection wizard."""
-    import json
-    import secrets
-    import webbrowser
-    from http.server import BaseHTTPRequestHandler, HTTPServer
-    from urllib.parse import parse_qs, urlparse
+@app.command()
+def disconnect(
+    provider: str = typer.Argument(
+        ...,
+        help="Provider to disconnect: quickbooks, xero, square",
+    ),
+) -> None:
+    """Remove stored credentials for a provider."""
+    from pathlib import Path
+    
+    token_dir = Path.home() / ".fiscalpilot" / "tokens"
+    token_file = token_dir / f"{provider.lower()}.json"
+    
+    if token_file.exists():
+        token_file.unlink()
+        console.print(f"[green]✓[/green] Disconnected from {provider}")
+    else:
+        console.print(f"[yellow]No credentials found for {provider}[/yellow]")
 
+
+@app.command()
+def connections() -> None:
+    """Show connected integrations."""
+    from pathlib import Path
+    
+    token_dir = Path.home() / ".fiscalpilot" / "tokens"
+    
+    table = Table(title="Connected Integrations")
+    table.add_column("Provider", style="bold cyan")
+    table.add_column("Status")
+    table.add_column("Token File")
+    
+    providers = ["quickbooks", "xero", "square", "plaid"]
+    
+    for provider in providers:
+        token_file = token_dir / f"{provider}.json"
+        if token_file.exists():
+            status = "[green]✓ Connected[/green]"
+            file_info = str(token_file)
+        else:
+            status = "[dim]Not connected[/dim]"
+            file_info = "-"
+        table.add_row(provider.title(), status, file_info)
+    
+    console.print(table)
+    console.print()
+    console.print("[dim]Connect with:[/dim] fp connect <provider>")
+    console.print("[dim]Disconnect with:[/dim] fp disconnect <provider>")
+
+
+def _connect_quickbooks_interactive(sandbox: bool = False, port: int = 8080) -> None:
+    """Interactive QuickBooks OAuth2 connection."""
+    from fiscalpilot.connectors.quickbooks_connector import QuickBooksConnector
+    
     console.print(Panel.fit(
-        "[bold blue]🔗 QuickBooks Connection Wizard[/bold blue]",
+        "[bold blue]🔗 QuickBooks Connection[/bold blue]",
         subtitle="OAuth2 Setup",
     ))
-
     console.print()
-    console.print("[bold]Step 1: Developer App Credentials[/bold]")
-    console.print("You'll need a QuickBooks Developer account and app.")
-    console.print("If you don't have one, visit: [link]https://developer.intuit.com[/link]")
+    
+    # Get credentials
+    console.print("[bold]Step 1: Enter API Credentials[/bold]")
+    console.print("Get these from: [link]https://developer.intuit.com/app/developer/dashboard[/link]")
     console.print()
-
-    client_id = typer.prompt("Enter your Client ID")
-    client_secret = typer.prompt("Enter your Client Secret", hide_input=True)
-
-    # Generate CSRF token
-    state = secrets.token_urlsafe(16)
-
-    # Set up local callback server
-    redirect_uri = "http://localhost:8765/callback"
-    auth_code: list[str] = []
-    realm_id: list[str] = []
-
-    class CallbackHandler(BaseHTTPRequestHandler):
-        def do_GET(self) -> None:
-            parsed = urlparse(self.path)
-            if parsed.path == "/callback":
-                params = parse_qs(parsed.query)
-                if "code" in params:
-                    auth_code.append(params["code"][0])
-                if "realmId" in params:
-                    realm_id.append(params["realmId"][0])
-                if params.get("state", [""])[0] != state:
-                    self.send_response(400)
-                    self.end_headers()
-                    self.wfile.write(b"Invalid state - possible CSRF attack")
-                    return
-
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
-                self.wfile.write(
-                    b"<html><body><h1>Success!</h1>"
-                    b"<p>You can close this window and return to the terminal.</p>"
-                    b"</body></html>"
-                )
-            else:
-                self.send_response(404)
-                self.end_headers()
-
-        def log_message(self, format: str, *args) -> None:  # noqa: A002
-            pass  # Suppress logging
-
-    # Build auth URL
-    base_url = "https://appcenter.intuit.com/connect/oauth2"
-    scope = "com.intuit.quickbooks.accounting"
-    auth_url = (
-        f"{base_url}?"
-        f"client_id={client_id}&"
-        f"response_type=code&"
-        f"scope={scope}&"
-        f"redirect_uri={redirect_uri}&"
-        f"state={state}"
-    )
-
-    console.print()
-    console.print("[bold]Step 2: Authorize in Browser[/bold]")
-    console.print("Opening your browser to authorize FiscalPilot...")
-    console.print()
-
-    # Start callback server
-    server = HTTPServer(("localhost", 8765), CallbackHandler)
-    server.timeout = 120  # 2 minute timeout
-
-    # Open browser
-    webbrowser.open(auth_url)
-
-    console.print("[dim]Waiting for authorization... (2 minute timeout)[/dim]")
-    console.print("[dim]If browser didn't open, visit:[/dim]")
-    console.print(f"[dim]{auth_url}[/dim]")
-    console.print()
-
-    # Wait for callback
-    while not auth_code:
-        server.handle_request()
-        if not auth_code:
-            break
-
-    server.server_close()
-
-    if not auth_code:
-        console.print("[red]Authorization timed out or was cancelled.[/red]")
-        raise typer.Exit(1)
-
-    console.print("[green]✓ Authorization received![/green]")
-    console.print()
-    console.print("[bold]Step 3: Exchanging code for tokens...[/bold]")
-
-    # Exchange auth code for tokens
-    async def exchange_tokens() -> dict:
-        from fiscalpilot.auth.oauth2 import OAuth2TokenManager
-
-        mgr = OAuth2TokenManager(
-            provider="quickbooks",
-            client_id=client_id,
-            client_secret=client_secret,
-            token_url="https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer",
-            scopes=[scope],
-        )
-
-        await mgr.exchange_code(code=auth_code[0], redirect_uri=redirect_uri)
-        await mgr.close()
-
-        return {
+    
+    client_id = typer.prompt("Client ID")
+    client_secret = typer.prompt("Client Secret", hide_input=True)
+    
+    connector = QuickBooksConnector(
+        credentials={
             "client_id": client_id,
             "client_secret": client_secret,
-            "refresh_token": mgr._token.refresh_token if mgr._token else "",
-            "realm_id": realm_id[0] if realm_id else "",
-            "sandbox": sandbox,
-        }
-
+        },
+        sandbox=sandbox,
+    )
+    
+    console.print()
+    console.print("[bold]Step 2: Authorize in Browser[/bold]")
+    console.print("[dim]Opening browser for QuickBooks login...[/dim]")
+    console.print()
+    
     try:
-        credentials = asyncio.run(exchange_tokens())
+        realm_id = asyncio.run(connector.authorize(port=port, timeout=300))
+        console.print()
+        console.print("[green]✓ QuickBooks connected successfully![/green]")
+        console.print()
+        console.print(f"Company ID: [bold]{realm_id}[/bold]")
+        console.print(f"Tokens saved to: [bold]~/.fiscalpilot/tokens/quickbooks.json[/bold]")
+        console.print()
+        console.print("Add to fiscalpilot.yaml:")
+        console.print("[dim]connectors:")
+        console.print(f"  - type: quickbooks")
+        console.print(f"    credentials:")
+        console.print(f"      client_id: {client_id}")
+        console.print(f"      client_secret: <YOUR_SECRET>")
+        console.print(f"      realm_id: {realm_id}")
+        console.print(f"    sandbox: {sandbox}[/dim]")
+    except TimeoutError:
+        console.print("[red]Authorization timed out. Please try again.[/red]")
+        raise typer.Exit(1)
     except Exception as e:
-        console.print(f"[red]Token exchange failed: {e}[/red]")
+        console.print(f"[red]Connection failed: {e}[/red]")
         raise typer.Exit(1)
 
-    console.print("[green]✓ Tokens acquired and saved![/green]")
-    console.print()
 
-    # Save to config file suggestion
-    config_snippet = {
-        "connectors": [{
-            "type": "quickbooks",
-            "credentials": {
-                "client_id": client_id,
-                "client_secret": "YOUR_CLIENT_SECRET",  # Don't log actual secret
-                "realm_id": credentials["realm_id"],
-            },
-            "sandbox": sandbox,
-        }]
-    }
+def _connect_xero_interactive(port: int = 8080) -> None:
+    """Interactive Xero OAuth2 connection."""
+    from fiscalpilot.connectors.xero_connector import XeroConnector
+    
+    console.print(Panel.fit(
+        "[bold blue]🔗 Xero Connection[/bold blue]",
+        subtitle="OAuth2 Setup",
+    ))
+    console.print()
+    
+    # Get credentials
+    console.print("[bold]Step 1: Enter API Credentials[/bold]")
+    console.print("Get these from: [link]https://developer.xero.com/myapps/[/link]")
+    console.print()
+    
+    client_id = typer.prompt("Client ID")
+    client_secret = typer.prompt("Client Secret", hide_input=True)
+    
+    connector = XeroConnector(
+        credentials={
+            "client_id": client_id,
+            "client_secret": client_secret,
+        },
+    )
+    
+    console.print()
+    console.print("[bold]Step 2: Authorize in Browser[/bold]")
+    console.print("[dim]Opening browser for Xero login...[/dim]")
+    console.print()
+    
+    try:
+        tenant_id = asyncio.run(connector.authorize(port=port, timeout=300))
+        console.print()
+        console.print("[green]✓ Xero connected successfully![/green]")
+        console.print()
+        console.print(f"Organization ID: [bold]{tenant_id}[/bold]")
+        console.print(f"Tokens saved to: [bold]~/.fiscalpilot/tokens/xero.json[/bold]")
+        console.print()
+        console.print("Add to fiscalpilot.yaml:")
+        console.print("[dim]connectors:")
+        console.print(f"  - type: xero")
+        console.print(f"    credentials:")
+        console.print(f"      client_id: {client_id}")
+        console.print(f"      client_secret: <YOUR_SECRET>")
+        console.print(f"      tenant_id: {tenant_id}[/dim]")
+    except TimeoutError:
+        console.print("[red]Authorization timed out. Please try again.[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]Connection failed: {e}[/red]")
+        raise typer.Exit(1)
 
-    console.print("[bold]Step 4: Configuration[/bold]")
-    console.print()
-    console.print("Add this to your [bold]fiscalpilot.yaml[/bold]:")
-    console.print()
 
-    import yaml
-    console.print(f"[dim]{yaml.dump(config_snippet, default_flow_style=False)}[/dim]")
+def _connect_square_interactive(sandbox: bool = False) -> None:
+    """Interactive Square connection (access token based)."""
+    console.print(Panel.fit(
+        "[bold blue]🔗 Square Connection[/bold blue]",
+        subtitle="Access Token Setup",
+    ))
+    console.print()
+    
+    console.print("[bold]Square uses personal access tokens[/bold]")
+    console.print("Get yours from: [link]https://developer.squareup.com/apps[/link]")
+    console.print()
+    
+    access_token = typer.prompt("Access Token", hide_input=True)
+    location_id = typer.prompt("Location ID (optional, press Enter to skip)", default="")
+    
+    # Save to a config suggestion
+    console.print()
+    console.print("[green]✓ Square credentials ready![/green]")
+    console.print()
+    console.print("Add to fiscalpilot.yaml:")
+    console.print("[dim]connectors:")
+    console.print(f"  - type: square")
+    console.print(f"    credentials:")
+    console.print(f"      access_token: <YOUR_TOKEN>")
+    if location_id:
+        console.print(f"      location_id: {location_id}")
+    console.print(f"    sandbox: {sandbox}[/dim]")
+    console.print()
+    console.print("[yellow]Note: Square tokens are not stored. Add them to your config file.[/yellow]")
 
+
+def _connect_plaid_interactive(sandbox: bool = False, port: int = 8080) -> None:
+    """Interactive Plaid Link connection."""
+    from fiscalpilot.connectors.plaid_connector import PlaidConnector
+    
+    console.print(Panel.fit(
+        "[bold blue]🏦 Plaid Bank Connection[/bold blue]",
+        subtitle="Plaid Link Setup",
+    ))
     console.print()
-    console.print("[green]✓ QuickBooks connection complete![/green]")
+    
+    # Get credentials
+    console.print("[bold]Step 1: Enter API Credentials[/bold]")
+    console.print("Get these from: [link]https://dashboard.plaid.com/developers/keys[/link]")
     console.print()
-    console.print(f"Tokens are stored in: [bold]~/.fiscalpilot/tokens/quickbooks.json[/bold]")
-    console.print(f"Company ID (realm_id): [bold]{credentials['realm_id']}[/bold]")
+    
+    client_id = typer.prompt("Client ID")
+    secret = typer.prompt("Secret", hide_input=True)
+    
+    environment = "sandbox" if sandbox else "development"
+    
+    connector = PlaidConnector(
+        credentials={
+            "client_id": client_id,
+            "secret": secret,
+        },
+        environment=environment,
+    )
+    
     console.print()
-    console.print("Run an audit with:")
-    console.print("[bold]  fiscalpilot audit --config fiscalpilot.yaml[/bold]")
+    console.print("[bold]Step 2: Connect Bank via Plaid Link[/bold]")
+    console.print("[dim]Opening browser for bank connection...[/dim]")
+    console.print()
+    
+    try:
+        access_token = asyncio.run(connector.authorize(port=port, timeout=300))
+        console.print()
+        console.print("[green]✓ Bank connected successfully![/green]")
+        console.print()
+        console.print(f"Access token: [bold]{access_token[:20]}...[/bold]")
+        console.print(f"Tokens saved to: [bold]~/.fiscalpilot/tokens/plaid.json[/bold]")
+        console.print()
+        console.print("Add to fiscalpilot.yaml:")
+        console.print("[dim]connectors:")
+        console.print(f"  - type: plaid")
+        console.print(f"    credentials:")
+        console.print(f"      client_id: {client_id}")
+        console.print(f"      secret: <YOUR_SECRET>")
+        console.print(f"    environment: {environment}[/dim]")
+        console.print()
+        console.print("[dim]Run 'fp connect plaid' again to connect additional banks[/dim]")
+    except TimeoutError:
+        console.print("[red]Authorization timed out. Please try again.[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]Connection failed: {e}[/red]")
+        raise typer.Exit(1)
 
 
 @app.command()

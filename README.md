@@ -479,19 +479,39 @@ Execution: Carries out approved version with full audit log
 
 ## 🔌 Connectors
 
-| Connector | Status | Install |
-|-----------|--------|---------|
-| **CSV** | ✅ Ready | Built-in |
-| **Excel** | ✅ Ready | Built-in |
-| **SQL** (PostgreSQL, MySQL, SQLite) | ✅ Ready | Built-in |
-| **QuickBooks Online** | ✅ Ready | Built-in |
-| **Xero** | ✅ Ready | Built-in |
-| **Plaid** (bank data) | ✅ Ready | Built-in |
-| **SAP** | 🗓️ Planned | — |
-| **NetSuite** | 🗓️ Planned | — |
-| **FreshBooks** | 🗓️ Planned | — |
-| **Stripe** | 🗓️ Planned | — |
-| **Wave** | 🗓️ Planned | — |
+| Connector | Status | Auth | Install |
+|-----------|--------|------|---------|
+| **CSV** | ✅ Ready | File | Built-in |
+| **Excel** | ✅ Ready | File | Built-in |
+| **SQL** (PostgreSQL, MySQL, SQLite) | ✅ Ready | Connection string | Built-in |
+| **QuickBooks Online** | ✅ Ready | OAuth2 + PKCE | Built-in |
+| **Xero** | ✅ Ready | OAuth2 + PKCE | Built-in |
+| **Plaid** (bank data) | ✅ Ready | Plaid Link | Built-in |
+| **Square** (POS) | ✅ Ready | Access Token | Built-in |
+| **SAP** | 🗓️ Planned | — | — |
+| **NetSuite** | 🗓️ Planned | — | — |
+| **FreshBooks** | 🗓️ Planned | — | — |
+| **Stripe** | 🗓️ Planned | — | — |
+| **Wave** | 🗓️ Planned | — | — |
+
+### Connect to Accounting Platforms
+
+```bash
+# QuickBooks
+fp connect quickbooks
+
+# Xero
+fp connect xero
+
+# Plaid (bank connections)
+fp connect plaid
+
+# Square POS
+fp connect square
+
+# Check what's connected
+fp connections
+```
 
 ### Build Your Own Connector
 

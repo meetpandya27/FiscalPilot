@@ -161,6 +161,124 @@ class XeroConnector(BaseConnector):
             await self._http.aclose()
         if self._token_manager:
             await self._token_manager.close()
+    
+    # ------------------------------------------------------------------
+    # Interactive OAuth authorization
+    # ------------------------------------------------------------------
+    
+    async def authorize(
+        self,
+        *,
+        port: int = 8080,
+        timeout: float = 300,
+        open_browser: bool = True,
+    ) -> str:
+        """Complete interactive OAuth2 authorization via browser.
+        
+        Opens the user's browser to Xero login, captures the callback,
+        stores tokens, and fetches the organization list.
+        
+        Args:
+            port: Local port for callback server (default 8080).
+            timeout: Seconds to wait for user to complete auth.
+            open_browser: Automatically open browser (set False for testing).
+        
+        Returns:
+            The tenant_id (organization ID) that was selected.
+            
+        Raises:
+            TimeoutError: If user doesn't complete auth in time.
+            ValueError: If authorization fails or no organizations found.
+            
+        Usage::
+        
+            connector = XeroConnector(credentials={
+                "client_id": "...",
+                "client_secret": "...",
+            })
+            tenant_id = await connector.authorize()
+            # Now connector is ready to pull data
+        """
+        if not self.client_id or not self.client_secret:
+            raise ValueError(
+                "client_id and client_secret are required for OAuth. "
+                "Get them from https://developer.xero.com/myapps/"
+            )
+        
+        mgr = self._ensure_token_manager()
+        
+        await mgr.authorize_interactive(
+            authorize_url=_XERO_AUTH_URL,
+            port=port,
+            timeout=timeout,
+            use_pkce=True,
+            open_browser=open_browser,
+        )
+        
+        # Xero requires fetching tenant_id from the /connections endpoint
+        tenants = await self._fetch_tenants()
+        
+        if not tenants:
+            raise ValueError(
+                "No Xero organizations found. Make sure you've authorized access "
+                "to at least one organization."
+            )
+        
+        # Use the first tenant (could enhance to let user pick)
+        self.tenant_id = tenants[0]["tenantId"]
+        logger.info(
+            "Xero authorized for organization: %s (%s)",
+            tenants[0].get("tenantName", "Unknown"),
+            self.tenant_id,
+        )
+        
+        return self.tenant_id
+    
+    async def _fetch_tenants(self) -> list[dict[str, Any]]:
+        """Fetch available Xero organizations/tenants."""
+        mgr = self._ensure_token_manager()
+        token = await mgr.get_access_token()
+        client = await self._get_client()
+        
+        headers = {"Authorization": f"Bearer {token}"}
+        resp = await client.get(_XERO_CONNECTIONS_URL, headers=headers)
+        resp.raise_for_status()
+        
+        return resp.json()
+    
+    async def get_organizations(self) -> list[dict[str, str]]:
+        """List all Xero organizations the user has access to.
+        
+        Returns:
+            List of dicts with 'id', 'name', and 'type'.
+        """
+        tenants = await self._fetch_tenants()
+        return [
+            {
+                "id": t["tenantId"],
+                "name": t.get("tenantName", "Unknown"),
+                "type": t.get("tenantType", "ORGANISATION"),
+            }
+            for t in tenants
+        ]
+    
+    def is_connected(self) -> bool:
+        """Check if valid credentials are stored for Xero.
+        
+        Returns:
+            True if we have stored tokens, False otherwise.
+        """
+        mgr = self._ensure_token_manager()
+        return mgr.has_token() and bool(self.tenant_id)
+    
+    async def disconnect(self) -> bool:
+        """Remove stored Xero credentials.
+        
+        Returns:
+            True if credentials were removed, False if none existed.
+        """
+        mgr = self._ensure_token_manager()
+        return mgr.delete_token()
 
     # ------------------------------------------------------------------
     # API helpers
