@@ -18,7 +18,62 @@ from fiscalpilot.analyzers.restaurant import RestaurantAnalyzer, analyze_restaur
 from fiscalpilot.analyzers.tax_optimizer import TaxOptimizer
 from fiscalpilot.analyzers.tip_credit import TipCreditCalculator, calculate_tip_credit
 
+# New competitor-inspired analyzers
+from fiscalpilot.analyzers.chat import FinancialChatAssistant, ChatResponse, ask
+from fiscalpilot.analyzers.invoice_processor import (
+    InvoiceProcessor,
+    ExtractedInvoice,
+    process_invoice,
+    process_invoice_folder,
+)
+from fiscalpilot.analyzers.auto_categorizer import (
+    AutoCategorizer,
+    CategoryRule,
+    CategorizationResult,
+    categorize,
+    batch_categorize,
+)
+from fiscalpilot.analyzers.duplicate_detector import (
+    DuplicateDetector,
+    DuplicateMatch,
+    DuplicateReport,
+    find_duplicates,
+    find_invoice_duplicates,
+)
+from fiscalpilot.analyzers.reconciliation import (
+    BankReconciler,
+    BankEntry,
+    ReconciliationReport,
+    reconcile_bank_statement,
+)
+from fiscalpilot.analyzers.policy_engine import (
+    SpendPolicyEngine,
+    SpendPolicy,
+    PolicyCondition,
+    PolicyEvaluationResult,
+    evaluate_transaction,
+    create_default_policy_engine,
+)
+from fiscalpilot.analyzers.budget import (
+    BudgetManager,
+    Budget,
+    BudgetProgress,
+    BudgetReport,
+    BudgetPeriod,
+    create_monthly_budget,
+    check_budgets,
+)
+from fiscalpilot.analyzers.currency import (
+    CurrencyConverter,
+    Currency,
+    ExchangeRate,
+    ConversionResult,
+    convert_amount,
+    format_currency,
+)
+
 __all__ = [
+    # Core analyzers
     "BenfordsAnalyzer",
     "AnomalyDetector",
     "BenchmarkAnalyzer",
@@ -34,4 +89,52 @@ __all__ = [
     "calculate_tip_credit",
     "DeliveryROIAnalyzer",
     "analyze_delivery_roi",
+    # AI Chat Interface (Digits-inspired)
+    "FinancialChatAssistant",
+    "ChatResponse",
+    "ask",
+    # Invoice Processing (Vic.ai, Stampli-inspired)
+    "InvoiceProcessor",
+    "ExtractedInvoice",
+    "process_invoice",
+    "process_invoice_folder",
+    # Auto-Categorization (Digits, Maybe Finance-inspired)
+    "AutoCategorizer",
+    "CategoryRule",
+    "CategorizationResult",
+    "categorize",
+    "batch_categorize",
+    # Duplicate Detection (Vic.ai-inspired)
+    "DuplicateDetector",
+    "DuplicateMatch",
+    "DuplicateReport",
+    "find_duplicates",
+    "find_invoice_duplicates",
+    # Bank Reconciliation (Akaunting-inspired)
+    "BankReconciler",
+    "BankEntry",
+    "ReconciliationReport",
+    "reconcile_bank_statement",
+    # Spend Policy Engine (Ramp-inspired)
+    "SpendPolicyEngine",
+    "SpendPolicy",
+    "PolicyCondition",
+    "PolicyEvaluationResult",
+    "evaluate_transaction",
+    "create_default_policy_engine",
+    # Budget Management (xtraCHEF, Firefly III-inspired)
+    "BudgetManager",
+    "Budget",
+    "BudgetProgress",
+    "BudgetReport",
+    "BudgetPeriod",
+    "create_monthly_budget",
+    "check_budgets",
+    # Multi-Currency Support (Akaunting-inspired)
+    "CurrencyConverter",
+    "Currency",
+    "ExchangeRate",
+    "ConversionResult",
+    "convert_amount",
+    "format_currency",
 ]
