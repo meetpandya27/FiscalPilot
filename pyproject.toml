@@ -53,12 +53,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ocr = ["pytesseract>=0.3", "pdf2image>=1.16", "Pillow>=10.0"]
+ocr = ["pytesseract>=0.3", "pdf2image>=1.16", "Pillow>=12.2.0"]
 web = ["streamlit>=1.32"]
 all = [
     "pytesseract>=0.3",
     "pdf2image>=1.16",
-    "Pillow>=10.0",
+    "Pillow>=12.2.0",
     "streamlit>=1.32",
 ]
 dev = [
